@@ -52,9 +52,24 @@
 
   document.body.classList.add("is-game");
 
+  /* Which theme the page has resolved to, counting both an explicit choice
+     and the computer's own setting. CodeMirror carries its own theme and does
+     NOT follow the page's CSS, so this has to be asked and then applied —
+     otherwise a light page gets a dark editor bolted into the middle of it,
+     which is what shipped the first time. */
+  function isDark() {
+    var set = document.documentElement.getAttribute("data-theme");
+    if (set === "dark") return true;
+    if (set === "light") return false;
+    return window.matchMedia
+      && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+
+  function cmTheme() { return isDark() ? "material-darker" : "default"; }
+
   var editor = CodeMirror.fromTextArea($("editor"), {
     mode: "python",
-    theme: "material-darker",
+    theme: cmTheme(),
     lineNumbers: true,
     indentUnit: 4,
     tabSize: 4,
@@ -257,13 +272,22 @@
   /* Light and dark, remembered per browser under this site's own key so a
      choice here does not reach into PyIDE, or the reverse. */
   $("theme").addEventListener("click", function () {
-    var root = document.documentElement;
-    var dark = getComputedStyle(root)
-      .getPropertyValue("--bg").trim().toLowerCase() === "#12151c";
-    var next = dark ? "light" : "dark";
-    root.setAttribute("data-theme", next);
+    var next = isDark() ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    editor.setOption("theme", next === "dark" ? "material-darker" : "default");
     try { window.localStorage.setItem("kaypy-theme", next); } catch (e) {}
   });
+
+  /* And follow the computer if the reader has not chosen for themselves. */
+  if (window.matchMedia) {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener
+      && window.matchMedia("(prefers-color-scheme: dark)")
+           .addEventListener("change", function () {
+             if (!document.documentElement.getAttribute("data-theme")) {
+               editor.setOption("theme", cmTheme());
+             }
+           });
+  }
 
   // -------------------------------------------------------------- export
 
