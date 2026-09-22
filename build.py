@@ -51,8 +51,11 @@ SITE_NAME = "KayPy"
 TAGLINE = ("A game engine for learning Python — build a game out of "
            "components, run it in the browser, share it as one file.")
 
-#: Pages in the order they appear in the nav. (slug, title, source or None)
-NAV = [
+#: Every page the site can have, in nav order. (slug, title, source or None)
+#:
+#: A source of None means the page is not built from markdown — Home comes
+#: from templates/home.html, the playground from play/.
+PAGES = [
     ("", "Home", None),
     ("start", "Get started", "start.md"),
     ("guide", "Guide", "guide.md"),
@@ -60,6 +63,25 @@ NAV = [
     ("tutorials", "Tutorials", "tutorials.md"),
     ("play", "Playground", None),
 ]
+
+
+def nav_pages():
+    """The pages that actually exist, which is what the nav may link to.
+
+    A nav entry for a page with no content is a dead link in the header of
+    every page on the site — the most visible possible place for one, and it
+    does not fail anywhere: the build succeeds, the deploy succeeds, and a
+    reader clicks Guide and gets a 404. So the nav is derived rather than
+    declared, and a page joins it by existing. Writing content/guide.md is
+    the whole of adding the Guide back.
+    """
+    return [(slug, title, source) for slug, title, source in PAGES
+            if source is None or (CONTENT / source).is_file()]
+
+
+#: Kept as a module-level name because page_shell() and the playground both
+#: read it, and both want the same answer.
+NAV = nav_pages()
 
 
 def need(module, why):
@@ -227,7 +249,13 @@ def build(into=DIST):
     missing = CONTENT / "404.md"
     if missing.is_file():
         body, _ = render_markdown(missing.read_text())
-        (into / "404.html").write_text(page_shell(".", "Not found", body))
+        # Root-absolute, not relative. A 404 is served for whatever the
+        # reader typed — /guide/oops, /a/b/c — and the browser resolves the
+        # page's links against THAT address, not against /404.html. Relative
+        # links would point somewhere different on every wrong URL.
+        page = page_shell(".", "Not found", body)
+        page = page.replace('href="./', 'href="/').replace('src="./', 'src="/')
+        (into / "404.html").write_text(page)
         written.append("404.html")
 
     return written
