@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}} · {{SITE}}</title>
+<meta name="description" content="{{SUBTITLE}}">
+<meta property="og:title" content="{{TITLE}} · {{SITE}}">
+<meta property="og:description" content="{{SUBTITLE}}">
+<meta property="og:image" content="{{ROOT}}static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="{{ROOT}}static/favicon.png">
+<link rel="apple-touch-icon" href="{{ROOT}}static/icon-180.png">
+<link rel="stylesheet" href="{{ROOT}}static/site.css">
+</head>
+<body>
+
+<a class="skip" href="#content">Skip to content</a>
+
+<header class="top">
+  <a class="brand" href="{{ROOT}}">
+    <img src="{{ROOT}}static/creature.png" alt="" width="38" height="40">
+    <span class="brand-name">KayPy</span>
+  </a>
+  <nav class="top-nav" aria-label="Main">{{NAV}}</nav>
+  <a class="gh" href="https://github.com/sfranz2422/kaypy"
+     aria-label="KayPy on GitHub">GitHub</a>
+</header>
+
+<main id="content" class="{{CLASS}}">
+  {{TOC}}
+  <article class="prose">
+{{BODY}}
+  </article>
+</main>
+
+<footer class="foot">
+  <p class="dim">
+    MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+    Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+    Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+    and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+  </p>
+  <p class="dim">
+    KayPy is an independent project, not affiliated with or endorsed by the
+    KAPLAY team.
+  </p>
+</footer>
+
+</body>
+</html>

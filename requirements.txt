@@ -1,0 +1,4 @@
+# Only needed to BUILD the site. Render does not run build.py — it serves the
+# committed dist/ — so nothing a visitor touches depends on these.
+markdown>=3.5
+pygments>=2.17

@@ -1,0 +1,1094 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API · KayPy</title>
+<meta name="description" content="A game engine for learning Python — build a game out of components, run it in the browser, share it as one file.">
+<meta property="og:title" content="API · KayPy">
+<meta property="og:description" content="A game engine for learning Python — build a game out of components, run it in the browser, share it as one file.">
+<meta property="og:image" content="../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../static/favicon.png">
+<link rel="apple-touch-icon" href="../static/icon-180.png">
+<link rel="stylesheet" href="../static/site.css">
+</head>
+<body>
+
+<a class="skip" href="#content">Skip to content</a>
+
+<header class="top">
+  <a class="brand" href="../">
+    <img src="../static/creature.png" alt="" width="38" height="40">
+    <span class="brand-name">KayPy</span>
+  </a>
+  <nav class="top-nav" aria-label="Main"><a href="../">Home</a><a href="../start/">Get started</a><a href="../guide/">Guide</a><a href="../api/" class="current">API</a><a href="../tutorials/">Tutorials</a><a href="../play/">Playground</a></nav>
+  <a class="gh" href="https://github.com/sfranz2422/kaypy"
+     aria-label="KayPy on GitHub">GitHub</a>
+</header>
+
+<main id="content" class="with-toc">
+  <nav class="toc" aria-label="On this page"><p class="toc-head">On this page</p><a href="#api-reference" class="d1">API reference</a><a href="#starting-a-game" class="d2">Starting a game</a><a href="#loading-pictures-and-sounds" class="d2">Loading pictures and sounds</a><a href="#making-things" class="d2">Making things</a><a href="#components" class="d2">Components</a><a href="#every-frame" class="d2">Every frame</a><a href="#keyboard" class="d2">Keyboard</a><a href="#mouse" class="d2">Mouse</a><a href="#drawing-straight-to-the-screen" class="d2">Drawing straight to the screen</a><a href="#collisions" class="d2">Collisions</a><a href="#camera" class="d2">Camera</a><a href="#sound" class="d2">Sound</a><a href="#time_1" class="d2">Time</a><a href="#scenes" class="d2">Scenes</a><a href="#saving" class="d2">Saving</a><a href="#maths-and-helpers" class="d2">Maths and helpers</a><a href="#debugging" class="d2">Debugging</a><a href="#what-you-can-call-on-an-object" class="d2">What you can call on an object</a></nav>
+  <article class="prose">
+<h1 id="api-reference">API reference</h1>
+<p>Every function KayPy gives you, with a working example for each one.</p>
+<p><strong>Every example below assumes these lines at the top:</strong></p>
+<div class="hl"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">kaypy</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">kaypy</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="p">[</span><span class="mi">141</span><span class="p">,</span> <span class="mi">183</span><span class="p">,</span> <span class="mi">255</span><span class="p">])</span>
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">,</span> <span class="s2">"images/bean.png"</span><span class="p">)</span>
+</code></pre></div>
+
+<p>That is what the <a href="../play/">playground</a> starts with, so you can paste any
+example straight in and press Run. Examples are fragments — they make whatever
+else they need.</p>
+<p>The names follow <a href="https://kaplayjs.com">KAPLAY</a>'s, so its documentation and
+examples describe these functions too. Where Python makes a difference, this
+page says so.</p>
+<hr />
+<h2 id="starting-a-game">Starting a game</h2>
+<h3 id="kaypywidth-height-background">kaypy(width, height, background)</h3>
+<p>Starts the engine. It must come first — before loading anything, before adding
+anything. There is no <code>run()</code> to call afterwards: the loop starts by itself
+once your file has been read.</p>
+<div class="hl"><pre><span></span><code><span class="n">kaypy</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">768</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">40</span><span class="p">])</span>
+</code></pre></div>
+
+<h3 id="width">width()</h3>
+<p>How wide the window is, in pixels. Use it instead of typing the number twice.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="n">width</span><span class="p">(),</span> <span class="mi">20</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">70</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="height">height()</h3>
+<p>How tall the window is.</p>
+<div class="hl"><pre><span></span><code><span class="c1"># A floor along the bottom, whatever size the window is.</span>
+<span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="n">width</span><span class="p">(),</span> <span class="mi">48</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">()</span> <span class="o">-</span> <span class="mi">48</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">(</span><span class="n">isStatic</span><span class="o">=</span><span class="kc">True</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="center">center()</h3>
+<p>The middle of the window, as a <code>vec2</code>.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="n">center</span><span class="p">()),</span> <span class="n">anchor</span><span class="p">(</span><span class="s2">"center"</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="dt">dt()</h3>
+<p>How many seconds the last frame took. Multiply by <code>dt()</code> to move at the same
+speed on a fast computer and a slow one.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">drift</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="mi">60</span> <span class="o">*</span> <span class="n">dt</span><span class="p">()</span>      <span class="c1"># 60 pixels a second, not 60 a frame</span>
+</code></pre></div>
+
+<h3 id="time">time()</h3>
+<p>Seconds since <code>kaypy()</code> started.</p>
+<div class="hl"><pre><span></span><code><span class="n">label</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">text</span><span class="p">(</span><span class="s2">"0"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">fixed</span><span class="p">()])</span>
+
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">tick</span><span class="p">():</span>
+    <span class="n">label</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">time</span><span class="p">(),</span> <span class="mi">1</span><span class="p">))</span>
+</code></pre></div>
+
+<h3 id="setgravityn">setGravity(n)</h3>
+<p>How hard things with a <code>body()</code> fall. Off by default — a top-down game wants no
+gravity at all.</p>
+<div class="hl"><pre><span></span><code><span class="n">setGravity</span><span class="p">(</span><span class="mi">2400</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="setbackgroundr-g-b">setBackground(r, g, b)</h3>
+<p>Change the background colour after the game has started.</p>
+<div class="hl"><pre><span></span><code><span class="n">setBackground</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<h2 id="loading-pictures-and-sounds">Loading pictures and sounds</h2>
+<p>Loading and using are separate steps. Forgetting the load is the commonest
+reason a sprite does not appear.</p>
+<h3 id="loadspritename-path-slicex-slicey-anims">loadSprite(name, path, sliceX, sliceY, anims)</h3>
+<p>Make a picture available under a name. <code>sliceX</code> and <code>sliceY</code> cut a strip of
+frames out of one image, and <code>anims</code> names runs of those frames.</p>
+<div class="hl"><pre><span></span><code><span class="n">loadSprite</span><span class="p">(</span><span class="s2">"coin"</span><span class="p">,</span> <span class="s2">"images/coin.png"</span><span class="p">)</span>
+
+<span class="c1"># A strip of 8 frames across, with two named animations cut out of it.</span>
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"angel"</span><span class="p">,</span> <span class="s2">"dungeon/angel.png"</span><span class="p">,</span> <span class="n">sliceX</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">anims</span><span class="o">=</span><span class="p">{</span>
+    <span class="s2">"idle"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"from"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"to"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">"speed"</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="s2">"loop"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="s2">"run"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"from"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"to"</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span> <span class="s2">"speed"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">"loop"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+<span class="p">})</span>
+</code></pre></div>
+
+<h3 id="loadspriteatlaspath-atlas">loadSpriteAtlas(path, atlas)</h3>
+<p>One image holding many sprites, cut up by coordinates. More work than separate
+files, and it is how most real sprite sheets arrive.</p>
+<div class="hl"><pre><span></span><code><span class="n">loadSpriteAtlas</span><span class="p">(</span><span class="s2">"dungeon.png"</span><span class="p">,</span> <span class="p">{</span>
+    <span class="s2">"wall"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"x"</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span> <span class="s2">"width"</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span> <span class="s2">"height"</span><span class="p">:</span> <span class="mi">16</span><span class="p">},</span>
+    <span class="s2">"hero"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"x"</span><span class="p">:</span> <span class="mi">128</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">:</span> <span class="mi">196</span><span class="p">,</span> <span class="s2">"width"</span><span class="p">:</span> <span class="mi">144</span><span class="p">,</span> <span class="s2">"height"</span><span class="p">:</span> <span class="mi">28</span><span class="p">,</span> <span class="s2">"sliceX"</span><span class="p">:</span> <span class="mi">9</span><span class="p">},</span>
+<span class="p">})</span>
+
+<span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"hero"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="loadsoundname-path">loadSound(name, path)</h3>
+<p>Make a sound available under a name.</p>
+<div class="hl"><pre><span></span><code><span class="n">loadSound</span><span class="p">(</span><span class="s2">"ding"</span><span class="p">,</span> <span class="s2">"sounds/ding.wav"</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<h2 id="making-things">Making things</h2>
+<h3 id="addcomponents">add(components)</h3>
+<p>Build a game object out of a list of components, and put it in the world.
+Returns the object, so you can keep it in a variable.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span>
+    <span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span>
+    <span class="n">pos</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span>
+    <span class="n">area</span><span class="p">(),</span>
+    <span class="n">body</span><span class="p">(),</span>
+    <span class="s2">"player"</span><span class="p">,</span>        <span class="c1"># a plain string is a tag</span>
+<span class="p">])</span>
+</code></pre></div>
+
+<h3 id="gettag">get(tag)</h3>
+<p>Every object carrying a tag, as a list.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="s2">"enemy"</span><span class="p">])</span>
+<span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="s2">"enemy"</span><span class="p">])</span>
+
+<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">get</span><span class="p">(</span><span class="s2">"enemy"</span><span class="p">):</span>
+    <span class="n">e</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="mi">10</span>
+</code></pre></div>
+
+<h3 id="destroyobj">destroy(obj)</h3>
+<p>Remove one object. <code>obj.destroy()</code> does the same thing.</p>
+<div class="hl"><pre><span></span><code><span class="n">coin</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="s2">"coin"</span><span class="p">])</span>
+<span class="n">destroy</span><span class="p">(</span><span class="n">coin</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="destroyalltag">destroyAll(tag)</h3>
+<p>Remove every object carrying a tag. Returns how many went.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="s2">"bullet"</span><span class="p">])</span>
+<span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="s2">"bullet"</span><span class="p">])</span>
+
+<span class="n">gone</span> <span class="o">=</span> <span class="n">destroyAll</span><span class="p">(</span><span class="s2">"bullet"</span><span class="p">)</span>      <span class="c1"># 2</span>
+</code></pre></div>
+
+<h3 id="addlevellayout-config">addLevel(layout, config)</h3>
+<p>Build a level out of a picture made of characters. Each character maps to a
+list of components; a space is nothing.</p>
+<div class="hl"><pre><span></span><code><span class="n">addLevel</span><span class="p">([</span>
+    <span class="s2">"                    "</span><span class="p">,</span>
+    <span class="s2">"         @          "</span><span class="p">,</span>
+    <span class="s2">"  ====        ===   "</span><span class="p">,</span>
+    <span class="s2">"===================="</span><span class="p">,</span>
+<span class="p">],</span> <span class="p">{</span>
+    <span class="s2">"tileWidth"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>
+    <span class="s2">"tileHeight"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>
+    <span class="s2">"tiles"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"="</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">rect</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">(</span><span class="n">isStatic</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">70</span><span class="p">)],</span>
+        <span class="s2">"@"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">(),</span> <span class="s2">"player"</span><span class="p">],</span>
+    <span class="p">},</span>
+<span class="p">})</span>
+</code></pre></div>
+
+<h3 id="addkaboomposition-scale">addKaboom(position, scale)</h3>
+<p>The explosion from KAPLAY, at a point. Cleans itself up.</p>
+<div class="hl"><pre><span></span><code><span class="n">addKaboom</span><span class="p">(</span><span class="n">vec2</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<h2 id="components">Components</h2>
+<p>A component is one thing an object <em>has</em>. Add one, get one behaviour; delete
+one, lose exactly that. Most give the object some attributes and methods of
+its own, which are listed with each.</p>
+<h3 id="posx-y">pos(x, y)</h3>
+<p>Where the object is. Without it, an object has no place in the world.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="mi">80</span><span class="p">)])</span>
+
+<span class="n">player</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">300</span>           <span class="c1"># .pos is a vec2 you can read and set</span>
+<span class="n">player</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>          <span class="c1"># move, in pixels per second</span>
+<span class="n">player</span><span class="o">.</span><span class="n">moveTo</span><span class="p">(</span><span class="n">vec2</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="mi">200</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="spritename-anim-frame">sprite(name, anim, frame)</h3>
+<p>Draw a loaded picture. <code>anim</code> starts a named animation straight away.</p>
+<div class="hl"><pre><span></span><code><span class="n">loadSprite</span><span class="p">(</span><span class="s2">"angel"</span><span class="p">,</span> <span class="s2">"dungeon/angel.png"</span><span class="p">,</span> <span class="n">sliceX</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">anims</span><span class="o">=</span><span class="p">{</span>
+    <span class="s2">"idle"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"from"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"to"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">"speed"</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="s2">"loop"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="s2">"run"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"from"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"to"</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span> <span class="s2">"speed"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">"loop"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+<span class="p">})</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"angel"</span><span class="p">,</span> <span class="n">anim</span><span class="o">=</span><span class="s2">"idle"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+<span class="n">a</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="s2">"run"</span><span class="p">)</span>                <span class="c1"># switch animation</span>
+<span class="n">a</span><span class="o">.</span><span class="n">flipX</span> <span class="o">=</span> <span class="kc">True</span>               <span class="c1"># face the other way</span>
+</code></pre></div>
+
+<h3 id="rectwidth-height-radius">rect(width, height, radius)</h3>
+<p>A rectangle, for a platform or a bar when a picture would be overkill.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mi">6</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">70</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="circleradius">circle(radius)</h3>
+<p>A circle.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">circle</span><span class="p">(</span><span class="mi">18</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">60</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="texttext_str-size-width">text(text_str, size, width)</h3>
+<p>Words on the screen. <code>width</code> wraps them.</p>
+<div class="hl"><pre><span></span><code><span class="n">label</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">text</span><span class="p">(</span><span class="s2">"Score: 0"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">28</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span> <span class="n">fixed</span><span class="p">()])</span>
+<span class="n">label</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s2">"Score: 1"</span>      <span class="c1"># change it whenever</span>
+</code></pre></div>
+
+<h3 id="area">area()</h3>
+<p>A collision box, so the object can touch things. On its own it is a trigger you
+pass through; add <code>body()</code> to make it solid.</p>
+<div class="hl"><pre><span></span><code><span class="n">coin</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="s2">"coin"</span><span class="p">])</span>
+
+<span class="k">if</span> <span class="n">coin</span><span class="o">.</span><span class="n">isHovering</span><span class="p">():</span>
+    <span class="k">pass</span>                     <span class="c1"># the mouse is over it</span>
+</code></pre></div>
+
+<h3 id="bodyisstatic-mass-jumpforce">body(isStatic, mass, jumpForce)</h3>
+<p>Gravity, falling and jumping. <code>isStatic=True</code> means the thing never moves and
+everything else lands on it.</p>
+<div class="hl"><pre><span></span><code><span class="n">setGravity</span><span class="p">(</span><span class="mi">2400</span><span class="p">)</span>
+
+<span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="n">width</span><span class="p">(),</span> <span class="mi">48</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">()</span> <span class="o">-</span> <span class="mi">48</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">(</span><span class="n">isStatic</span><span class="o">=</span><span class="kc">True</span><span class="p">)])</span>
+<span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">(</span><span class="n">jumpForce</span><span class="o">=</span><span class="mi">900</span><span class="p">)])</span>
+
+<span class="nd">@onKeyPress</span><span class="p">(</span><span class="s2">"space"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">jump</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">player</span><span class="o">.</span><span class="n">isGrounded</span><span class="p">():</span>
+        <span class="n">player</span><span class="o">.</span><span class="n">jump</span><span class="p">()</span>
+</code></pre></div>
+
+<h3 id="anchorvalue">anchor(value)</h3>
+<p>Which part of the object <code>pos()</code> refers to. <code>"topleft"</code> by default; <code>"center"</code>
+and <code>"bot"</code> are the two you will reach for.</p>
+<div class="hl"><pre><span></span><code><span class="c1"># pos() now means where its feet are, which is what you want on a floor.</span>
+<span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span> <span class="n">anchor</span><span class="p">(</span><span class="s2">"bot"</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="scalex-y">scale(x, y)</h3>
+<p>Bigger or smaller. One number scales both ways.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span> <span class="n">scale</span><span class="p">(</span><span class="mi">2</span><span class="p">)])</span>
+<span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span> <span class="n">scale</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="rotateangle">rotate(angle)</h3>
+<p>Turn the object, in degrees.</p>
+<div class="hl"><pre><span></span><code><span class="n">arrow</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">anchor</span><span class="p">(</span><span class="s2">"center"</span><span class="p">),</span> <span class="n">rotate</span><span class="p">(</span><span class="mi">0</span><span class="p">)])</span>
+
+<span class="n">arrow</span><span class="o">.</span><span class="n">angle</span> <span class="o">=</span> <span class="mi">45</span>
+<span class="n">arrow</span><span class="o">.</span><span class="n">rotateBy</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">arrow</span><span class="o">.</span><span class="n">rotateTo</span><span class="p">(</span><span class="mi">90</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="colorr-g-b">color(r, g, b)</h3>
+<p>Tint. On a <code>rect()</code> or <code>circle()</code> it is the fill; on a sprite it multiplies.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="opacityn">opacity(n)</h3>
+<p>How solid, from <code>0</code> to <code>1</code>.</p>
+<div class="hl"><pre><span></span><code><span class="n">ghost</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span> <span class="n">opacity</span><span class="p">(</span><span class="mf">0.4</span><span class="p">)])</span>
+<span class="n">ghost</span><span class="o">.</span><span class="n">opacity</span> <span class="o">=</span> <span class="mf">1.0</span>
+</code></pre></div>
+
+<h3 id="outlinewidth-color">outline(width, color)</h3>
+<p>A border, for a shape.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span> <span class="n">outline</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">))])</span>
+</code></pre></div>
+
+<h3 id="zvalue">z(value)</h3>
+<p>What draws on top. Higher is nearer the front.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span> <span class="n">z</span><span class="p">(</span><span class="mi">0</span><span class="p">)])</span>
+<span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">150</span><span class="p">),</span> <span class="n">z</span><span class="p">(</span><span class="mi">10</span><span class="p">)])</span>      <span class="c1"># in front</span>
+</code></pre></div>
+
+<h3 id="fixed">fixed()</h3>
+<p>Stay put when the camera moves. Everything on a HUD wants this.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">text</span><span class="p">(</span><span class="s2">"Score: 0"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">24</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span> <span class="n">fixed</span><span class="p">()])</span>
+</code></pre></div>
+
+<h3 id="movedirection-speed">move(direction, speed)</h3>
+<p>Drift in a direction for ever, without an <code>onUpdate</code> of your own. Good for
+bullets.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">move</span><span class="p">(</span><span class="n">vec2</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">400</span><span class="p">),</span> <span class="n">offscreen</span><span class="p">(</span><span class="n">destroy</span><span class="o">=</span><span class="kc">True</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="offscreendestroy-distance">offscreen(destroy, distance)</h3>
+<p>What to do once the object is off the edge. Bullets that leave and are never
+cleaned up are the commonest slow leak in a first game.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">move</span><span class="p">(</span><span class="n">vec2</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">500</span><span class="p">),</span>
+     <span class="n">offscreen</span><span class="p">(</span><span class="n">destroy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="mi">100</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="tileisobstacle">tile(isObstacle)</h3>
+<p>Marks an object as part of a tile grid, for <code>addLevel()</code>. <code>isObstacle=True</code>
+means paths do not go through it.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">(</span><span class="n">isStatic</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">tile</span><span class="p">(</span><span class="n">isObstacle</span><span class="o">=</span><span class="kc">True</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="statestart-states">state(start, states)</h3>
+<p>A named state machine, so an enemy can idle, chase and attack without a tangle
+of booleans.</p>
+<div class="hl"><pre><span></span><code><span class="n">enemy</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">state</span><span class="p">(</span><span class="s2">"idle"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"idle"</span><span class="p">,</span> <span class="s2">"chase"</span><span class="p">])])</span>
+
+<span class="nd">@enemy</span><span class="o">.</span><span class="n">onStateEnter</span><span class="p">(</span><span class="s2">"chase"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">start_chase</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"chasing"</span><span class="p">)</span>
+
+<span class="nd">@enemy</span><span class="o">.</span><span class="n">onStateUpdate</span><span class="p">(</span><span class="s2">"idle"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">waiting</span><span class="p">():</span>
+    <span class="k">pass</span>
+
+<span class="n">enemy</span><span class="o">.</span><span class="n">enterState</span><span class="p">(</span><span class="s2">"chase"</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="healthhp-maxhp">health(hp, maxHP)</h3>
+<p>Hit points, and the handlers that go with them. <code>onDeath</code> fires exactly once,
+however many things land in the same frame — a death handler that runs twice
+drops two coins and scores twice.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">health</span><span class="p">(</span><span class="mi">3</span><span class="p">)])</span>
+
+<span class="nd">@player</span><span class="o">.</span><span class="n">onHurt</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">ouch</span><span class="p">(</span><span class="n">amount</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"hp now"</span><span class="p">,</span> <span class="n">player</span><span class="o">.</span><span class="n">hp</span><span class="p">)</span>
+
+<span class="nd">@player</span><span class="o">.</span><span class="n">onDeath</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">died</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+
+<span class="n">player</span><span class="o">.</span><span class="n">hurt</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">player</span><span class="o">.</span><span class="n">heal</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">player</span><span class="o">.</span><span class="n">isAlive</span><span class="p">()</span>
+</code></pre></div>
+
+<h3 id="lifespanseconds-fade">lifespan(seconds, fade)</h3>
+<p>Destroy the object after a while, fading out first if you ask. Belongs to the
+bullet, rather than to a timer somewhere else holding it alive.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span> <span class="n">lifespan</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">fade</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)])</span>
+</code></pre></div>
+
+<hr />
+<h2 id="every-frame">Every frame</h2>
+<h3 id="onupdatefn-onupdatetag-fn">onUpdate(fn) / onUpdate(tag, fn)</h3>
+<p>Run something on every frame. With a tag, it runs once per object carrying it,
+and the object is passed in.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">follow</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="s2">"enemy"</span><span class="p">])</span>
+
+<span class="nd">@onUpdate</span><span class="p">(</span><span class="s2">"enemy"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">drift</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+    <span class="n">e</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">y</span> <span class="o">+=</span> <span class="mf">0.5</span>
+</code></pre></div>
+
+<h3 id="run">run()</h3>
+<p>Not KAPLAY's API, and you almost never want it. The loop starts by itself once
+your file has finished — that is the whole point. It exists for the rare
+program that must start the loop early, on purpose.</p>
+<div class="hl"><pre><span></span><code><span class="c1"># Written for completeness. A normal game never calls this.</span>
+<span class="c1"># run()</span>
+</code></pre></div>
+
+<hr />
+<h2 id="keyboard">Keyboard</h2>
+<p>Key names are KAPLAY's: <code>"left"</code>, <code>"right"</code>, <code>"up"</code>, <code>"down"</code>, <code>"space"</code>,
+<code>"enter"</code>, <code>"escape"</code>, and any letter or digit as itself.</p>
+<h3 id="onkeydownkey-fn">onKeyDown(key, fn)</h3>
+<p>Every frame the key is held. This is the one for walking.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+
+<span class="nd">@onKeyDown</span><span class="p">(</span><span class="s2">"right"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">go_right</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="mi">320</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="onkeypresskey-fn">onKeyPress(key, fn)</h3>
+<p>Once, the frame the key goes down. This is the one for jumping — <code>onKeyDown</code>
+would fire every frame you hold space.</p>
+<div class="hl"><pre><span></span><code><span class="n">setGravity</span><span class="p">(</span><span class="mi">2400</span><span class="p">)</span>
+<span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">()])</span>
+
+<span class="nd">@onKeyPress</span><span class="p">(</span><span class="s2">"space"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">jump</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">player</span><span class="o">.</span><span class="n">isGrounded</span><span class="p">():</span>
+        <span class="n">player</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="mi">900</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="onkeyreleasekey-fn">onKeyRelease(key, fn)</h3>
+<p>Once, when the key comes back up.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@onKeyRelease</span><span class="p">(</span><span class="s2">"space"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">let_go</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"released"</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="iskeydownkey">isKeyDown(key)</h3>
+<p>Ask, rather than being told. Useful inside an <code>onUpdate</code> that already has a
+reason to run.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">walk</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">isKeyDown</span><span class="p">(</span><span class="s2">"left"</span><span class="p">):</span>
+        <span class="n">player</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="o">-</span><span class="mi">320</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">isKeyDown</span><span class="p">(</span><span class="s2">"right"</span><span class="p">):</span>
+        <span class="n">player</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="mi">320</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<h2 id="mouse">Mouse</h2>
+<p>Buttons are named — <code>"left"</code>, <code>"right"</code>, <code>"middle"</code> — and default to the left
+one. pygame numbers them 1, 2, 3 with middle in the middle, which is not the
+order anyone guesses.</p>
+<h3 id="onclickfn">onClick(fn)</h3>
+<p>A left click anywhere. On an object with <code>area()</code>, use <code>obj.onClick</code> instead
+and it only fires on that object.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@onClick</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">clicked</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"clicked at"</span><span class="p">,</span> <span class="n">mousePos</span><span class="p">())</span>
+</code></pre></div>
+
+<h3 id="onmousepressbutton-fn">onMousePress(button, fn)</h3>
+<p>Once, when a button goes down.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@onMousePress</span><span class="p">(</span><span class="s2">"right"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">aim</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"right button down"</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="onmousereleasebutton-fn">onMouseRelease(button, fn)</h3>
+<p>Once, when a button comes back up.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@onMouseRelease</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">fire</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"let go"</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="onmousedownbutton-fn">onMouseDown(button, fn)</h3>
+<p>Every frame a button is held — for dragging or hold-to-charge.</p>
+<div class="hl"><pre><span></span><code><span class="n">brush</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">circle</span><span class="p">(</span><span class="mi">6</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">)])</span>
+
+<span class="nd">@onMouseDown</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">drag</span><span class="p">():</span>
+    <span class="n">brush</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">mousePos</span><span class="p">()</span>
+</code></pre></div>
+
+<h3 id="onmousemovefn">onMouseMove(fn)</h3>
+<p>Whenever the mouse moves.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@onMouseMove</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">look</span><span class="p">():</span>
+    <span class="k">pass</span>
+</code></pre></div>
+
+<h3 id="ismousedownbutton">isMouseDown(button)</h3>
+<p>Is that button held right now?</p>
+<div class="hl"><pre><span></span><code><span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">isMouseDown</span><span class="p">(</span><span class="s2">"left"</span><span class="p">):</span>
+        <span class="k">pass</span>
+</code></pre></div>
+
+<h3 id="ismousepressedbutton">isMousePressed(button)</h3>
+<p>Did it go down this frame?</p>
+<div class="hl"><pre><span></span><code><span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">isMousePressed</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"just pressed"</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="ismousereleasedbutton">isMouseReleased(button)</h3>
+<p>Did it come up this frame?</p>
+<div class="hl"><pre><span></span><code><span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">isMouseReleased</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"just released"</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="ismousemoved">isMouseMoved()</h3>
+<p>Did the mouse move this frame?</p>
+<div class="hl"><pre><span></span><code><span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">isMouseMoved</span><span class="p">():</span>
+        <span class="k">pass</span>
+</code></pre></div>
+
+<h3 id="mousepos">mousePos()</h3>
+<p>Where the mouse is, as a <code>vec2</code>, in screen coordinates.</p>
+<div class="hl"><pre><span></span><code><span class="n">aim</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">circle</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])</span>
+
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">follow</span><span class="p">():</span>
+    <span class="n">aim</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">mousePos</span><span class="p">()</span>
+</code></pre></div>
+
+<h3 id="mousedeltapos">mouseDeltaPos()</h3>
+<p>How far the mouse moved this frame, as a <code>vec2</code>.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">look</span><span class="p">():</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">mouseDeltaPos</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">x</span> <span class="ow">or</span> <span class="n">d</span><span class="o">.</span><span class="n">y</span><span class="p">:</span>
+        <span class="k">pass</span>
+</code></pre></div>
+
+<h3 id="toworldpos">toWorld(pos)</h3>
+<p>Turn a screen position into a world position. With the camera moved, the mouse
+is not where it looks.</p>
+<div class="hl"><pre><span></span><code><span class="n">setCamPos</span><span class="p">(</span><span class="n">vec2</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">where</span><span class="p">():</span>
+    <span class="n">spot</span> <span class="o">=</span> <span class="n">toWorld</span><span class="p">(</span><span class="n">mousePos</span><span class="p">())</span>
+</code></pre></div>
+
+<hr />
+<h2 id="drawing-straight-to-the-screen">Drawing straight to the screen</h2>
+<p>Marks for one frame — a health bar, an aim line, a grid — rather than things in
+the world. They only work inside <code>onDraw</code>, and say so if you call them
+elsewhere: a drawing that silently never appears is close to undebuggable.</p>
+<h3 id="ondrawfn">onDraw(fn)</h3>
+<p>Where the draw functions below are allowed. Runs after the game objects.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@onDraw</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">hud</span><span class="p">():</span>
+    <span class="n">drawText</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">"Score: 0"</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">vec2</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">fixed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="drawrectpos-width-height-color">drawRect(pos, width, height, color, ...)</h3>
+<p>A rectangle. <code>radius</code> rounds the corners, <code>fixed=True</code> pins it to the screen.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@onDraw</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">bar</span><span class="p">():</span>
+    <span class="n">drawRect</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="n">vec2</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span> <span class="n">fixed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">drawRect</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="n">vec2</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span> <span class="n">fixed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="drawcirclepos-radius-color">drawCircle(pos, radius, color, ...)</h3>
+<p>A circle, centred on <code>pos</code>.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@onDraw</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">blip</span><span class="p">():</span>
+    <span class="n">drawCircle</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="n">vec2</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">radius</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="drawlinep1-p2-width-color">drawLine(p1, p2, width, color, ...)</h3>
+<p>A line from one point to another.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+
+<span class="nd">@onDraw</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">aim_line</span><span class="p">():</span>
+    <span class="n">drawLine</span><span class="p">(</span><span class="n">p1</span><span class="o">=</span><span class="n">player</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span> <span class="n">p2</span><span class="o">=</span><span class="n">mousePos</span><span class="p">(),</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span>
+</code></pre></div>
+
+<h3 id="drawlinespoints-width-color-close">drawLines(points, width, color, close, ...)</h3>
+<p>A run of connected lines. <code>close=True</code> joins the last point back to the first.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@onDraw</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">shape</span><span class="p">():</span>
+    <span class="n">drawLines</span><span class="p">(</span><span class="n">points</span><span class="o">=</span><span class="p">[</span><span class="n">vec2</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">vec2</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">140</span><span class="p">),</span> <span class="n">vec2</span><span class="p">(</span><span class="mi">160</span><span class="p">,</span> <span class="mi">220</span><span class="p">)],</span>
+              <span class="n">width</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span> <span class="n">close</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="drawtexttext-pos-size-color">drawText(text, pos, size, color, ...)</h3>
+<p>Words, in the same font as the <code>text()</code> component.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@onDraw</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">label</span><span class="p">():</span>
+    <span class="n">drawText</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">"Paused"</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">vec2</span><span class="p">(</span><span class="mi">340</span><span class="p">,</span> <span class="mi">280</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span>
+</code></pre></div>
+
+<h3 id="drawspritesprite-pos-frame">drawSprite(sprite, pos, frame, ...)</h3>
+<p>One frame of a loaded sprite, without making a game object out of it. Good for
+a row of lives.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@onDraw</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">lives</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+        <span class="n">drawSprite</span><span class="p">(</span><span class="n">sprite</span><span class="o">=</span><span class="s2">"bean"</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">vec2</span><span class="p">(</span><span class="mi">12</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">70</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
+                   <span class="n">fixed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<h2 id="collisions">Collisions</h2>
+<h3 id="oncollidetag_a-tag_b-fn">onCollide(tag_a, tag_b, fn)</h3>
+<p>Every time anything tagged <code>tag_a</code> touches anything tagged <code>tag_b</code>. For one
+particular object, use <code>obj.onCollide(tag)</code> instead.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="s2">"player"</span><span class="p">])</span>
+<span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">110</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="s2">"coin"</span><span class="p">])</span>
+
+<span class="nd">@onCollide</span><span class="p">(</span><span class="s2">"player"</span><span class="p">,</span> <span class="s2">"coin"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">got</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+</code></pre></div>
+
+<hr />
+<h2 id="camera">Camera</h2>
+<h3 id="setcampospos">setCamPos(pos)</h3>
+<p>Move the camera. Anything with <code>fixed()</code> stays where it is.</p>
+<div class="hl"><pre><span></span><code><span class="n">setCamPos</span><span class="p">(</span><span class="n">vec2</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="mi">200</span><span class="p">))</span>
+</code></pre></div>
+
+<h3 id="setcamscalen">setCamScale(n)</h3>
+<p>Zoom. Above 1 is closer in.</p>
+<div class="hl"><pre><span></span><code><span class="n">setCamScale</span><span class="p">(</span><span class="mf">1.5</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="shaken">shake(n)</h3>
+<p>Shake the camera, once. Settles by itself.</p>
+<div class="hl"><pre><span></span><code><span class="n">shake</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<h2 id="sound">Sound</h2>
+<h3 id="playname-loop-paused-volume">play(name, loop, paused, volume)</h3>
+<p>Play a loaded sound. Returns a handle whose <code>.volume</code> and <code>.paused</code> you can
+change while it plays.</p>
+<div class="hl"><pre><span></span><code><span class="n">loadSound</span><span class="p">(</span><span class="s2">"ding"</span><span class="p">,</span> <span class="s2">"sounds/ding.wav"</span><span class="p">)</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">play</span><span class="p">(</span><span class="s2">"ding"</span><span class="p">,</span> <span class="n">volume</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">s</span><span class="o">.</span><span class="n">volume</span> <span class="o">=</span> <span class="mf">0.2</span>
+<span class="n">s</span><span class="o">.</span><span class="n">paused</span> <span class="o">=</span> <span class="kc">True</span>
+</code></pre></div>
+
+<hr />
+<h2 id="time_1">Time</h2>
+<h3 id="waitseconds-fn">wait(seconds, fn)</h3>
+<p>Do something once, later.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@wait</span><span class="p">(</span><span class="mf">1.5</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">later</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"one and a half seconds in"</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="loopseconds-fn">loop(seconds, fn)</h3>
+<p>Do something over and over, for ever.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@loop</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">spawn</span><span class="p">():</span>
+    <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="n">rand</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="p">()),</span> <span class="mi">0</span><span class="p">),</span> <span class="n">area</span><span class="p">()])</span>
+</code></pre></div>
+
+<h3 id="tweenstart-end-duration-setter-ease">tween(start, end, duration, setter, ease)</h3>
+<p>Change a value smoothly over time. <code>setter</code> is called with each step.</p>
+<div class="hl"><pre><span></span><code><span class="n">box</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">60</span><span class="p">)])</span>
+
+<span class="n">tween</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">600</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">setattr</span><span class="p">(</span><span class="n">box</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">easings</span><span class="o">.</span><span class="n">easeOutQuad</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="easings">easings</h3>
+<p>The curves <code>tween</code> can take, as attributes: <code>linear</code>, <code>easeInQuad</code>,
+<code>easeOutQuad</code>, <code>easeInOutQuad</code>, <code>easeOutBounce</code> and the rest.</p>
+<div class="hl"><pre><span></span><code><span class="n">box</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">circle</span><span class="p">(</span><span class="mi">12</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">300</span><span class="p">)])</span>
+
+<span class="n">tween</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">700</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">setattr</span><span class="p">(</span><span class="n">box</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">easings</span><span class="o">.</span><span class="n">easeOutBounce</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<h2 id="scenes">Scenes</h2>
+<h3 id="scenename-fn">scene(name, fn)</h3>
+<p>Define a named screen — a menu, a level, a game-over. The function builds it.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@scene</span><span class="p">(</span><span class="s2">"menu"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">menu</span><span class="p">():</span>
+    <span class="n">add</span><span class="p">([</span><span class="n">text</span><span class="p">(</span><span class="s2">"Press space"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">32</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">280</span><span class="p">)])</span>
+
+    <span class="nd">@onKeyPress</span><span class="p">(</span><span class="s2">"space"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">():</span>
+        <span class="n">go</span><span class="p">(</span><span class="s2">"game"</span><span class="p">)</span>
+
+<span class="nd">@scene</span><span class="p">(</span><span class="s2">"game"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">game</span><span class="p">():</span>
+    <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+
+<span class="n">go</span><span class="p">(</span><span class="s2">"menu"</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="goname-args">go(name, *args)</h3>
+<p>Switch to a scene. Everything from the old one is thrown away first —
+objects, handlers and timers — so nothing leaks between screens.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@scene</span><span class="p">(</span><span class="s2">"level"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">level</span><span class="p">(</span><span class="n">number</span><span class="p">):</span>
+    <span class="n">add</span><span class="p">([</span><span class="n">text</span><span class="p">(</span><span class="s2">"Level "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">number</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">28</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">)])</span>
+
+<span class="n">go</span><span class="p">(</span><span class="s2">"level"</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<h2 id="saving">Saving</h2>
+<p>Kept in a file next to the game on a computer, and in the browser's own
+storage on the web. Only things that can be written down: numbers, text,
+<code>True</code>/<code>False</code>, <code>None</code>, and lists and dicts of those.</p>
+<h3 id="setdatakey-value">setData(key, value)</h3>
+<p>Remember something under a name. Returns <code>True</code> if it was written — a
+locked-down school account is not a reason to crash.</p>
+<div class="hl"><pre><span></span><code><span class="n">setData</span><span class="p">(</span><span class="s2">"highscore"</span><span class="p">,</span> <span class="mi">1200</span><span class="p">)</span>
+<span class="n">setData</span><span class="p">(</span><span class="s2">"settings"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"sound"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"level"</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+</code></pre></div>
+
+<h3 id="getdatakey-default">getData(key, default)</h3>
+<p>What was remembered, or <code>default</code> if there is nothing.</p>
+<div class="hl"><pre><span></span><code><span class="n">best</span> <span class="o">=</span> <span class="n">getData</span><span class="p">(</span><span class="s2">"highscore"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<h2 id="maths-and-helpers">Maths and helpers</h2>
+<h3 id="vec2x-y">vec2(x, y)</h3>
+<p>A pair of numbers, with the arithmetic that goes with them. <code>vec2(3)</code> means
+<code>(3, 3)</code>; <code>vec2(other)</code> copies.</p>
+<div class="hl"><pre><span></span><code><span class="n">a</span> <span class="o">=</span> <span class="n">vec2</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">vec2</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">a</span><span class="o">.</span><span class="n">len</span><span class="p">()</span>
+<span class="n">a</span><span class="o">.</span><span class="n">unit</span><span class="p">()</span>
+<span class="n">a</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="n">a</span><span class="o">.</span><span class="n">lerp</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="vec2">Vec2</h3>
+<p>The class itself, for <code>isinstance</code> checks. <code>vec2()</code> is how you make one.</p>
+<div class="hl"><pre><span></span><code><span class="n">p</span> <span class="o">=</span> <span class="n">vec2</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">Vec2</span><span class="p">):</span>
+    <span class="k">pass</span>
+</code></pre></div>
+
+<h3 id="randa-b">rand(a, b)</h3>
+<p>A random float. One argument means from zero.</p>
+<div class="hl"><pre><span></span><code><span class="n">x</span> <span class="o">=</span> <span class="n">rand</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="p">())</span>
+</code></pre></div>
+
+<h3 id="randia-b">randi(a, b)</h3>
+<p>A random whole number, <code>b</code> not included.</p>
+<div class="hl"><pre><span></span><code><span class="n">n</span> <span class="o">=</span> <span class="n">randi</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>          <span class="c1"># 1 to 6</span>
+</code></pre></div>
+
+<h3 id="chooseseq">choose(seq)</h3>
+<p>One item from a list, at random.</p>
+<div class="hl"><pre><span></span><code><span class="n">name</span> <span class="o">=</span> <span class="n">choose</span><span class="p">([</span><span class="s2">"bean"</span><span class="p">,</span> <span class="s2">"bean"</span><span class="p">,</span> <span class="s2">"bean"</span><span class="p">])</span>
+</code></pre></div>
+
+<h3 id="chanceprobability">chance(probability)</h3>
+<p><code>True</code> that often. <code>chance(0.2)</code> is true one time in five.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@loop</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">maybe</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">chance</span><span class="p">(</span><span class="mf">0.3</span><span class="p">):</span>
+        <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="n">rand</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="p">()),</span> <span class="mi">0</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="lerpa-b-t">lerp(a, b, t)</h3>
+<p>Blend from <code>a</code> to <code>b</code>. Works on numbers and on <code>vec2</code>.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+<span class="n">target</span> <span class="o">=</span> <span class="n">vec2</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="mi">400</span><span class="p">)</span>
+
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">chase</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">lerp</span><span class="p">(</span><span class="n">player</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="clampvalue-low-high">clamp(value, low, high)</h3>
+<p>Keep a number inside a range.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">keep_in</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">clamp</span><span class="p">(</span><span class="n">player</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="p">())</span>
+</code></pre></div>
+
+<h3 id="wavelow-high-t-func">wave(low, high, t, func)</h3>
+<p>A value swinging between two others, for ever. Good for bobbing and pulsing.</p>
+<div class="hl"><pre><span></span><code><span class="n">cloud</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">bob</span><span class="p">():</span>
+    <span class="n">cloud</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">wave</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="n">time</span><span class="p">()</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="rgbr-g-b">rgb(r, g, b)</h3>
+<p>A colour as a plain tuple. One argument means grey.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="o">*</span><span class="n">rgb</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">60</span><span class="p">))])</span>
+</code></pre></div>
+
+<h3 id="deg2raddegrees">deg2rad(degrees)</h3>
+<p>Degrees to radians.</p>
+<div class="hl"><pre><span></span><code><span class="n">r</span> <span class="o">=</span> <span class="n">deg2rad</span><span class="p">(</span><span class="mi">90</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="rad2degradians">rad2deg(radians)</h3>
+<p>Radians to degrees.</p>
+<div class="hl"><pre><span></span><code><span class="n">d</span> <span class="o">=</span> <span class="n">rad2deg</span><span class="p">(</span><span class="mf">3.14159</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<h2 id="debugging">Debugging</h2>
+<h3 id="debug">debug</h3>
+<p><code>debug.inspect = True</code> draws every collision box, so you can see why two
+things are not touching. <strong>F1</strong> toggles it while the game runs.</p>
+<div class="hl"><pre><span></span><code><span class="n">debug</span><span class="o">.</span><span class="n">inspect</span> <span class="o">=</span> <span class="kc">True</span>
+</code></pre></div>
+
+<hr />
+<h2 id="what-you-can-call-on-an-object">What you can call on an object</h2>
+<p><code>add()</code> hands back an object, and what that object can do depends on which
+components it has. These are written <code>obj.name()</code> because you call them on the
+thing, not on their own.</p>
+<h3 id="destroy">.destroy()</h3>
+<p>Remove it from the world. Same as <code>destroy(obj)</code>.</p>
+<div class="hl"><pre><span></span><code><span class="n">coin</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">area</span><span class="p">()])</span>
+<span class="n">coin</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+</code></pre></div>
+
+<h3 id="exists">.exists()</h3>
+<p>Is it still in the world? A handler holding an object that has already been
+destroyed is a common shape for a crash.</p>
+<div class="hl"><pre><span></span><code><span class="n">coin</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">)])</span>
+<span class="n">coin</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">coin</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+    <span class="k">pass</span>
+</code></pre></div>
+
+<h3 id="hascomp_id">.has(comp_id)</h3>
+<p>Does it have that component?</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">()])</span>
+<span class="k">if</span> <span class="n">player</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="s2">"body"</span><span class="p">):</span>
+    <span class="k">pass</span>
+</code></pre></div>
+
+<h3 id="is_tag">.is_(tag)</h3>
+<p>Does it carry that tag? Named with a trailing underscore because <code>is</code> is a
+Python keyword — one of the few places the API cannot match KAPLAY exactly.</p>
+<div class="hl"><pre><span></span><code><span class="n">e</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="s2">"enemy"</span><span class="p">])</span>
+<span class="n">e</span><span class="o">.</span><span class="n">is_</span><span class="p">(</span><span class="s2">"enemy"</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="usecomp">.use(comp)</h3>
+<p>Add a component after the object has been made.</p>
+<div class="hl"><pre><span></span><code><span class="n">ghost</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+<span class="n">ghost</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="n">area</span><span class="p">())</span>
+<span class="n">ghost</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="n">body</span><span class="p">())</span>
+</code></pre></div>
+
+<h3 id="compcomp_id">.comp(comp_id)</h3>
+<p>The component object itself, when you need at its internals.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">()])</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">player</span><span class="o">.</span><span class="n">comp</span><span class="p">(</span><span class="s2">"body"</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="movedx-dy">.move(dx, dy)</h3>
+<p>Move, in pixels per second — so it is frame-rate independent already and does
+not need <code>dt()</code>. From <code>pos()</code>.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+
+<span class="nd">@onKeyDown</span><span class="p">(</span><span class="s2">"right"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">go</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="mi">320</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="movetotarget-speed">.moveTo(target, speed)</h3>
+<p>Head towards a point. Without a speed it arrives at once.</p>
+<div class="hl"><pre><span></span><code><span class="n">enemy</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="mi">300</span><span class="p">)])</span>
+
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">chase</span><span class="p">():</span>
+    <span class="n">enemy</span><span class="o">.</span><span class="n">moveTo</span><span class="p">(</span><span class="n">vec2</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="mi">80</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="jumpforce">.jump(force)</h3>
+<p>Jump, if it has a <code>body()</code>. Uses the component's <code>jumpForce</code> when you give no
+number.</p>
+<div class="hl"><pre><span></span><code><span class="n">setGravity</span><span class="p">(</span><span class="mi">2400</span><span class="p">)</span>
+<span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">(</span><span class="n">jumpForce</span><span class="o">=</span><span class="mi">900</span><span class="p">)])</span>
+
+<span class="nd">@onKeyPress</span><span class="p">(</span><span class="s2">"space"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">jump</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">jump</span><span class="p">()</span>
+</code></pre></div>
+
+<h3 id="isgrounded">.isGrounded()</h3>
+<p>Is it standing on something? Check this before jumping, or a player can jump
+in mid-air for ever.</p>
+<div class="hl"><pre><span></span><code><span class="n">setGravity</span><span class="p">(</span><span class="mi">2400</span><span class="p">)</span>
+<span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">()])</span>
+
+<span class="nd">@onKeyPress</span><span class="p">(</span><span class="s2">"space"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">jump</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">player</span><span class="o">.</span><span class="n">isGrounded</span><span class="p">():</span>
+        <span class="n">player</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="mi">900</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="ongroundfn">.onGround(fn)</h3>
+<p>Fires when it lands.</p>
+<div class="hl"><pre><span></span><code><span class="n">setGravity</span><span class="p">(</span><span class="mi">2400</span><span class="p">)</span>
+<span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">()])</span>
+
+<span class="nd">@player</span><span class="o">.</span><span class="n">onGround</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">landed</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"thud"</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="oncollidetag-fn">.onCollide(tag, fn)</h3>
+<p>Every time this object touches something with that tag. The other object is
+passed in.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">area</span><span class="p">()])</span>
+<span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">105</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="s2">"coin"</span><span class="p">])</span>
+
+<span class="nd">@player</span><span class="o">.</span><span class="n">onCollide</span><span class="p">(</span><span class="s2">"coin"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">collect</span><span class="p">(</span><span class="n">coin</span><span class="p">):</span>
+    <span class="n">coin</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+</code></pre></div>
+
+<h3 id="oncollideupdatetag-fn">.onCollideUpdate(tag, fn)</h3>
+<p>Every frame the two are overlapping, rather than once when they meet.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">area</span><span class="p">()])</span>
+
+<span class="nd">@player</span><span class="o">.</span><span class="n">onCollideUpdate</span><span class="p">(</span><span class="s2">"lava"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">burning</span><span class="p">(</span><span class="n">lava</span><span class="p">):</span>
+    <span class="k">pass</span>
+</code></pre></div>
+
+<h3 id="oncollideendtag-fn">.onCollideEnd(tag, fn)</h3>
+<p>Once, when they stop touching.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">area</span><span class="p">()])</span>
+
+<span class="nd">@player</span><span class="o">.</span><span class="n">onCollideEnd</span><span class="p">(</span><span class="s2">"water"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">out</span><span class="p">(</span><span class="n">water</span><span class="p">):</span>
+    <span class="k">pass</span>
+</code></pre></div>
+
+<h3 id="onupdatefn">.onUpdate(fn)</h3>
+<p>Every frame, for this object only.</p>
+<div class="hl"><pre><span></span><code><span class="n">cloud</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+
+<span class="nd">@cloud</span><span class="o">.</span><span class="n">onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">drift</span><span class="p">():</span>
+    <span class="n">cloud</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="mf">0.5</span>
+</code></pre></div>
+
+<h3 id="onclickfn_1">.onClick(fn)</h3>
+<p>A click on this object. Needs <code>area()</code>.</p>
+<div class="hl"><pre><span></span><code><span class="n">button</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span> <span class="n">area</span><span class="p">()])</span>
+
+<span class="nd">@button</span><span class="o">.</span><span class="n">onClick</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">pressed</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"clicked"</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="ishovering">.isHovering()</h3>
+<p>Is the mouse over it? Needs <code>area()</code>.</p>
+<div class="hl"><pre><span></span><code><span class="n">button</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span> <span class="n">area</span><span class="p">()])</span>
+
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">highlight</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">button</span><span class="o">.</span><span class="n">isHovering</span><span class="p">():</span>
+        <span class="n">button</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="playname">.play(name)</h3>
+<p>Start a named animation, on an object with an animated <code>sprite()</code>.</p>
+<div class="hl"><pre><span></span><code><span class="n">loadSprite</span><span class="p">(</span><span class="s2">"angel"</span><span class="p">,</span> <span class="s2">"dungeon/angel.png"</span><span class="p">,</span> <span class="n">sliceX</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">anims</span><span class="o">=</span><span class="p">{</span>
+    <span class="s2">"idle"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"from"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"to"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">"speed"</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="s2">"loop"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="s2">"run"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"from"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"to"</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span> <span class="s2">"speed"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">"loop"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+<span class="p">})</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"angel"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+<span class="n">a</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="s2">"run"</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="curanim">.curAnim()</h3>
+<p>Which animation is playing, by name.</p>
+<div class="hl"><pre><span></span><code><span class="n">loadSprite</span><span class="p">(</span><span class="s2">"angel"</span><span class="p">,</span> <span class="s2">"dungeon/angel.png"</span><span class="p">,</span> <span class="n">sliceX</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">anims</span><span class="o">=</span><span class="p">{</span>
+    <span class="s2">"idle"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"from"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"to"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">"speed"</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="s2">"loop"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+<span class="p">})</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"angel"</span><span class="p">,</span> <span class="n">anim</span><span class="o">=</span><span class="s2">"idle"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+<span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">curAnim</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"idle"</span><span class="p">:</span>
+    <span class="k">pass</span>
+</code></pre></div>
+
+<h3 id="size">.size()</h3>
+<p>How big it is on screen, as a <code>vec2</code>. Works for a sprite, a rect, a circle and
+text.</p>
+<div class="hl"><pre><span></span><code><span class="n">label</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">text</span><span class="p">(</span><span class="s2">"Score"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">24</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)])</span>
+<span class="n">w</span> <span class="o">=</span> <span class="n">label</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+</code></pre></div>
+
+<h3 id="hurtamount">.hurt(amount)</h3>
+<p>Take damage, on an object with <code>health()</code>.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">health</span><span class="p">(</span><span class="mi">3</span><span class="p">)])</span>
+<span class="n">player</span><span class="o">.</span><span class="n">hurt</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="healamount">.heal(amount)</h3>
+<p>The other way. Never goes above <code>maxHP</code>.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">health</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">maxHP</span><span class="o">=</span><span class="mi">5</span><span class="p">)])</span>
+<span class="n">player</span><span class="o">.</span><span class="n">hurt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">player</span><span class="o">.</span><span class="n">heal</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="isalive">.isAlive()</h3>
+<p>Are its hit points above zero?</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">health</span><span class="p">(</span><span class="mi">1</span><span class="p">)])</span>
+<span class="n">player</span><span class="o">.</span><span class="n">hurt</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">alive</span> <span class="o">=</span> <span class="n">player</span><span class="o">.</span><span class="n">isAlive</span><span class="p">()</span>
+</code></pre></div>
+
+<h3 id="sethpvalue">.setHP(value)</h3>
+<p>Set hit points outright, without counting as damage or healing.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">health</span><span class="p">(</span><span class="mi">3</span><span class="p">)])</span>
+<span class="n">player</span><span class="o">.</span><span class="n">setHP</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="onhurtfn-onhealfn-ondeathfn">.onHurt(fn) / .onHeal(fn) / .onDeath(fn)</h3>
+<p>Handlers for the three. <code>onDeath</code> fires <strong>exactly once</strong>, however many things
+land in the same frame, and it does not destroy the object — so it can play an
+animation first.</p>
+<div class="hl"><pre><span></span><code><span class="n">enemy</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">health</span><span class="p">(</span><span class="mi">2</span><span class="p">)])</span>
+
+<span class="nd">@enemy</span><span class="o">.</span><span class="n">onHurt</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">flinch</span><span class="p">(</span><span class="n">amount</span><span class="p">):</span>
+    <span class="n">shake</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="nd">@enemy</span><span class="o">.</span><span class="n">onDeath</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">die</span><span class="p">():</span>
+    <span class="n">addKaboom</span><span class="p">(</span><span class="n">enemy</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
+    <span class="n">enemy</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+
+<span class="n">enemy</span><span class="o">.</span><span class="n">hurt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="enterstatename">.enterState(name)</h3>
+<p>Switch a <code>state()</code> object to another state.</p>
+<div class="hl"><pre><span></span><code><span class="n">enemy</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">state</span><span class="p">(</span><span class="s2">"idle"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"idle"</span><span class="p">,</span> <span class="s2">"chase"</span><span class="p">])])</span>
+<span class="n">enemy</span><span class="o">.</span><span class="n">enterState</span><span class="p">(</span><span class="s2">"chase"</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="onstateentername-fn">.onStateEnter(name, fn)</h3>
+<p>Runs once, when it arrives in that state.</p>
+<div class="hl"><pre><span></span><code><span class="n">enemy</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">state</span><span class="p">(</span><span class="s2">"idle"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"idle"</span><span class="p">,</span> <span class="s2">"chase"</span><span class="p">])])</span>
+
+<span class="nd">@enemy</span><span class="o">.</span><span class="n">onStateEnter</span><span class="p">(</span><span class="s2">"chase"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">begin</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"after them"</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="onstateupdatename-fn">.onStateUpdate(name, fn)</h3>
+<p>Runs every frame while it is in that state.</p>
+<div class="hl"><pre><span></span><code><span class="n">enemy</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">state</span><span class="p">(</span><span class="s2">"idle"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"idle"</span><span class="p">,</span> <span class="s2">"chase"</span><span class="p">])])</span>
+
+<span class="nd">@enemy</span><span class="o">.</span><span class="n">onStateUpdate</span><span class="p">(</span><span class="s2">"chase"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">chasing</span><span class="p">():</span>
+    <span class="n">enemy</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span> <span class="o">-=</span> <span class="mi">1</span>
+</code></pre></div>
+
+<h3 id="rotatebydegrees-rotatetodegrees">.rotateBy(degrees) / .rotateTo(degrees)</h3>
+<p>Turn by an amount, or to an angle. Needs <code>rotate()</code>.</p>
+<div class="hl"><pre><span></span><code><span class="n">arrow</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">anchor</span><span class="p">(</span><span class="s2">"center"</span><span class="p">),</span> <span class="n">rotate</span><span class="p">(</span><span class="mi">0</span><span class="p">)])</span>
+<span class="n">arrow</span><span class="o">.</span><span class="n">rotateBy</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">arrow</span><span class="o">.</span><span class="n">rotateTo</span><span class="p">(</span><span class="mi">90</span><span class="p">)</span>
+</code></pre></div>
+  </article>
+</main>
+
+<footer class="foot">
+  <p class="dim">
+    MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+    Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+    Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+    and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+  </p>
+  <p class="dim">
+    KayPy is an independent project, not affiliated with or endorsed by the
+    KAPLAY team.
+  </p>
+</footer>
+
+</body>
+</html>

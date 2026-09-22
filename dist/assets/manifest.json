@@ -1,0 +1,1717 @@
+{
+ "images": [
+  {
+   "name": "apple",
+   "w": 58,
+   "h": 68
+  },
+  {
+   "name": "bag",
+   "w": 85,
+   "h": 75
+  },
+  {
+   "name": "bean",
+   "w": 64,
+   "h": 54
+  },
+  {
+   "name": "bobo",
+   "w": 105,
+   "h": 44
+  },
+  {
+   "name": "bomb",
+   "w": 82,
+   "h": 92
+  },
+  {
+   "name": "boom",
+   "w": 137,
+   "h": 109
+  },
+  {
+   "name": "brock",
+   "w": 128,
+   "h": 102
+  },
+  {
+   "name": "butterfly",
+   "w": 64,
+   "h": 49
+  },
+  {
+   "name": "circle",
+   "w": 48,
+   "h": 48
+  },
+  {
+   "name": "cloud",
+   "w": 222,
+   "h": 104
+  },
+  {
+   "name": "coin",
+   "w": 36,
+   "h": 44
+  },
+  {
+   "name": "cut",
+   "w": 82,
+   "h": 190
+  },
+  {
+   "name": "dino",
+   "w": 16,
+   "h": 26
+  },
+  {
+   "name": "dino_0",
+   "w": 16,
+   "h": 26
+  },
+  {
+   "name": "dino_1",
+   "w": 16,
+   "h": 26
+  },
+  {
+   "name": "dino_2",
+   "w": 16,
+   "h": 26
+  },
+  {
+   "name": "dino_3",
+   "w": 16,
+   "h": 26
+  },
+  {
+   "name": "dino_4",
+   "w": 16,
+   "h": 26
+  },
+  {
+   "name": "dino_5",
+   "w": 16,
+   "h": 26
+  },
+  {
+   "name": "dino_6",
+   "w": 16,
+   "h": 26
+  },
+  {
+   "name": "dino_7",
+   "w": 16,
+   "h": 26
+  },
+  {
+   "name": "dino_8",
+   "w": 16,
+   "h": 26
+  },
+  {
+   "name": "door",
+   "w": 64,
+   "h": 64
+  },
+  {
+   "name": "egg",
+   "w": 52,
+   "h": 64
+  },
+  {
+   "name": "egg_crack",
+   "w": 52,
+   "h": 64
+  },
+  {
+   "name": "ellipse",
+   "w": 54,
+   "h": 42
+  },
+  {
+   "name": "gazer",
+   "w": 153,
+   "h": 85
+  },
+  {
+   "name": "ghosty",
+   "w": 68,
+   "h": 84
+  },
+  {
+   "name": "gigagantrum",
+   "w": 186,
+   "h": 204
+  },
+  {
+   "name": "goldfly",
+   "w": 244,
+   "h": 89
+  },
+  {
+   "name": "grape",
+   "w": 59,
+   "h": 86
+  },
+  {
+   "name": "grass",
+   "w": 64,
+   "h": 64
+  },
+  {
+   "name": "heart",
+   "w": 59,
+   "h": 52
+  },
+  {
+   "name": "jacob",
+   "w": 147,
+   "h": 113
+  },
+  {
+   "name": "jumpy",
+   "w": 64,
+   "h": 64
+  },
+  {
+   "name": "ka",
+   "w": 157,
+   "h": 56
+  },
+  {
+   "name": "kaboom",
+   "w": 160,
+   "h": 130
+  },
+  {
+   "name": "key",
+   "w": 65,
+   "h": 38
+  },
+  {
+   "name": "lamp",
+   "w": 86,
+   "h": 258
+  },
+  {
+   "name": "lemon",
+   "w": 48,
+   "h": 66
+  },
+  {
+   "name": "lightening",
+   "w": 51,
+   "h": 75
+  },
+  {
+   "name": "mark",
+   "w": 32,
+   "h": 32
+  },
+  {
+   "name": "meat",
+   "w": 66,
+   "h": 66
+  },
+  {
+   "name": "moon",
+   "w": 48,
+   "h": 52
+  },
+  {
+   "name": "mushroom",
+   "w": 52,
+   "h": 44
+  },
+  {
+   "name": "note",
+   "w": 64,
+   "h": 64
+  },
+  {
+   "name": "onion",
+   "w": 77,
+   "h": 101
+  },
+  {
+   "name": "pineapple",
+   "w": 64,
+   "h": 80
+  },
+  {
+   "name": "pizza",
+   "w": 54,
+   "h": 64
+  },
+  {
+   "name": "polygon",
+   "w": 48,
+   "h": 44
+  },
+  {
+   "name": "portal",
+   "w": 64,
+   "h": 80
+  },
+  {
+   "name": "rect",
+   "w": 48,
+   "h": 40
+  },
+  {
+   "name": "sand",
+   "w": 64,
+   "h": 64
+  },
+  {
+   "name": "snow",
+   "w": 64,
+   "h": 64
+  },
+  {
+   "name": "spike",
+   "w": 58,
+   "h": 28
+  },
+  {
+   "name": "steel",
+   "w": 64,
+   "h": 64
+  },
+  {
+   "name": "sun",
+   "w": 60,
+   "h": 60
+  },
+  {
+   "name": "text",
+   "w": 64,
+   "h": 44
+  },
+  {
+   "name": "triangle",
+   "w": 48,
+   "h": 39
+  },
+  {
+   "name": "watermelon",
+   "w": 84,
+   "h": 52
+  }
+ ],
+ "sounds": [
+  "background.wav",
+  "beep.wav",
+  "burp.wav",
+  "chirp.wav",
+  "ding.wav",
+  "electric.wav",
+  "electric_chime.wav",
+  "electric_deep_pulse.wav",
+  "electric_portal_open.wav",
+  "electric_pulse.wav",
+  "electric_pulse_short.wav",
+  "electric_ringing.wav",
+  "fading_ding.wav",
+  "lazer2.wav",
+  "lazer_punch.wav",
+  "rising_beep.wav",
+  "scary_fading.wav",
+  "screech.wav",
+  "small_beep.wav",
+  "small_boom.wav",
+  "swing.wav",
+  "swoosh.wav",
+  "thump.wav"
+ ],
+ "dungeon": [
+  {
+   "name": "angel",
+   "w": 16,
+   "h": 16,
+   "frames": 8,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "big_demon",
+   "w": 32,
+   "h": 36,
+   "frames": 8,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "big_zombie",
+   "w": 32,
+   "h": 36,
+   "frames": 8,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "button_blue_down",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "button_blue_up",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "button_red_down",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "button_red_up",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "chest_empty_open",
+   "w": 16,
+   "h": 16,
+   "frames": 3,
+   "anims": {
+    "open": {
+     "from": 0,
+     "to": 2,
+     "speed": 12,
+     "loop": false
+    }
+   }
+  },
+  {
+   "name": "chest_full_open",
+   "w": 16,
+   "h": 16,
+   "frames": 3,
+   "anims": {
+    "open": {
+     "from": 0,
+     "to": 2,
+     "speed": 12,
+     "loop": false
+    }
+   }
+  },
+  {
+   "name": "chest_mimic_open",
+   "w": 16,
+   "h": 16,
+   "frames": 3,
+   "anims": {
+    "open": {
+     "from": 0,
+     "to": 2,
+     "speed": 12,
+     "loop": false
+    }
+   }
+  },
+  {
+   "name": "chort",
+   "w": 16,
+   "h": 23,
+   "frames": 8,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "column",
+   "w": 16,
+   "h": 48
+  },
+  {
+   "name": "column_wall",
+   "w": 16,
+   "h": 48
+  },
+  {
+   "name": "crate",
+   "w": 16,
+   "h": 24
+  },
+  {
+   "name": "doc",
+   "w": 16,
+   "h": 23,
+   "frames": 8,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "doors_frame_left",
+   "w": 16,
+   "h": 32
+  },
+  {
+   "name": "doors_frame_right",
+   "w": 16,
+   "h": 32
+  },
+  {
+   "name": "doors_frame_top",
+   "w": 32,
+   "h": 16
+  },
+  {
+   "name": "doors_leaf_closed",
+   "w": 32,
+   "h": 32
+  },
+  {
+   "name": "doors_leaf_open",
+   "w": 32,
+   "h": 32
+  },
+  {
+   "name": "dungeon_bomb",
+   "w": 16,
+   "h": 16,
+   "frames": 3,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 2,
+     "speed": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "dungeon_coin",
+   "w": 6,
+   "h": 7,
+   "frames": 4,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "dungeon_ogre",
+   "w": 32,
+   "h": 36,
+   "frames": 8,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "dwarf_f",
+   "w": 16,
+   "h": 28,
+   "frames": 9,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    },
+    "hit": {
+     "from": 8,
+     "to": 8,
+     "speed": 1,
+     "loop": false
+    }
+   }
+  },
+  {
+   "name": "dwarf_m",
+   "w": 16,
+   "h": 28,
+   "frames": 9,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    },
+    "hit": {
+     "from": 8,
+     "to": 8,
+     "speed": 1,
+     "loop": false
+    }
+   }
+  },
+  {
+   "name": "edge_down",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "elf_f",
+   "w": 16,
+   "h": 28,
+   "frames": 9,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    },
+    "hit": {
+     "from": 8,
+     "to": 8,
+     "speed": 1,
+     "loop": false
+    }
+   }
+  },
+  {
+   "name": "elf_m",
+   "w": 16,
+   "h": 28,
+   "frames": 9,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    },
+    "hit": {
+     "from": 8,
+     "to": 8,
+     "speed": 1,
+     "loop": false
+    }
+   }
+  },
+  {
+   "name": "flask_big_blue",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "flask_big_green",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "flask_big_red",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "flask_big_yellow",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "flask_blue",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "flask_green",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "flask_red",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "flask_yellow",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "floor_1",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "floor_2",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "floor_3",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "floor_4",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "floor_5",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "floor_6",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "floor_7",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "floor_8",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "floor_ladder",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "floor_spikes",
+   "w": 16,
+   "h": 16,
+   "frames": 4,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "floor_stairs",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "goblin",
+   "w": 16,
+   "h": 16,
+   "frames": 8,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "hole",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "ice_zombie",
+   "w": 16,
+   "h": 16,
+   "frames": 4,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "imp",
+   "w": 16,
+   "h": 16,
+   "frames": 8,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "knight_f",
+   "w": 16,
+   "h": 28,
+   "frames": 9,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    },
+    "hit": {
+     "from": 8,
+     "to": 8,
+     "speed": 1,
+     "loop": false
+    }
+   }
+  },
+  {
+   "name": "knight_m",
+   "w": 16,
+   "h": 28,
+   "frames": 9,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    },
+    "hit": {
+     "from": 8,
+     "to": 8,
+     "speed": 1,
+     "loop": false
+    }
+   }
+  },
+  {
+   "name": "lever_left",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "lever_right",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "lizard_f",
+   "w": 16,
+   "h": 28,
+   "frames": 9,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    },
+    "hit": {
+     "from": 8,
+     "to": 8,
+     "speed": 1,
+     "loop": false
+    }
+   }
+  },
+  {
+   "name": "lizard_m",
+   "w": 16,
+   "h": 28,
+   "frames": 9,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    },
+    "hit": {
+     "from": 8,
+     "to": 8,
+     "speed": 1,
+     "loop": false
+    }
+   }
+  },
+  {
+   "name": "masked_orc",
+   "w": 16,
+   "h": 23,
+   "frames": 8,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "muddy",
+   "w": 16,
+   "h": 16,
+   "frames": 4,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "necromancer",
+   "w": 16,
+   "h": 23,
+   "frames": 4,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "orc_shaman",
+   "w": 16,
+   "h": 23,
+   "frames": 8,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "orc_warrior",
+   "w": 16,
+   "h": 23,
+   "frames": 8,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "pumpkin_dude",
+   "w": 16,
+   "h": 23,
+   "frames": 8,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "skelet",
+   "w": 16,
+   "h": 16,
+   "frames": 8,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "skull",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "slug",
+   "w": 16,
+   "h": 23,
+   "frames": 4,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "swampy",
+   "w": 16,
+   "h": 16,
+   "frames": 4,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "tiny_slug",
+   "w": 16,
+   "h": 16,
+   "frames": 4,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "tiny_zombie",
+   "w": 16,
+   "h": 16,
+   "frames": 8,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "ui_heart_empty",
+   "w": 13,
+   "h": 12
+  },
+  {
+   "name": "ui_heart_full",
+   "w": 13,
+   "h": 12
+  },
+  {
+   "name": "ui_heart_half",
+   "w": 13,
+   "h": 12
+  },
+  {
+   "name": "wall_banner_blue",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_banner_green",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_banner_red",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_banner_yellow",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_edge_bottom_left",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_edge_bottom_right",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_edge_left",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_edge_mid_left",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_edge_mid_right",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_edge_right",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_edge_top_left",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_edge_top_right",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_edge_tshape_bottom_left",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_edge_tshape_bottom_right",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_edge_tshape_left",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_edge_tshape_right",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_fountain_basin_blue",
+   "w": 16,
+   "h": 16,
+   "frames": 3,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 2,
+     "speed": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "wall_fountain_basin_red",
+   "w": 16,
+   "h": 16,
+   "frames": 3,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 2,
+     "speed": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "wall_fountain_mid_blue",
+   "w": 16,
+   "h": 16,
+   "frames": 3,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 2,
+     "speed": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "wall_fountain_mid_red",
+   "w": 16,
+   "h": 16,
+   "frames": 3,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 2,
+     "speed": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "wall_fountain_top_1",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_fountain_top_2",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_fountain_top_3",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_goo",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_goo_base",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_hole_1",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_hole_2",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_left",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_mid",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_outer_front_left",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_outer_front_right",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_outer_mid_left",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_outer_mid_right",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_outer_top_left",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_outer_top_right",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_right",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_top_left",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_top_mid",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "wall_top_right",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "weapon_anime_sword",
+   "w": 12,
+   "h": 30
+  },
+  {
+   "name": "weapon_arrow",
+   "w": 7,
+   "h": 21
+  },
+  {
+   "name": "weapon_axe",
+   "w": 9,
+   "h": 21
+  },
+  {
+   "name": "weapon_baton_with_spikes",
+   "w": 10,
+   "h": 22
+  },
+  {
+   "name": "weapon_big_hammer",
+   "w": 10,
+   "h": 37
+  },
+  {
+   "name": "weapon_bow",
+   "w": 14,
+   "h": 26
+  },
+  {
+   "name": "weapon_bow_2",
+   "w": 14,
+   "h": 26
+  },
+  {
+   "name": "weapon_cleaver",
+   "w": 9,
+   "h": 19
+  },
+  {
+   "name": "weapon_double_axe",
+   "w": 16,
+   "h": 24
+  },
+  {
+   "name": "weapon_duel_sword",
+   "w": 9,
+   "h": 30
+  },
+  {
+   "name": "weapon_golden_sword",
+   "w": 10,
+   "h": 22
+  },
+  {
+   "name": "weapon_green_magic_staff",
+   "w": 8,
+   "h": 30
+  },
+  {
+   "name": "weapon_hammer",
+   "w": 10,
+   "h": 24
+  },
+  {
+   "name": "weapon_katana",
+   "w": 6,
+   "h": 29
+  },
+  {
+   "name": "weapon_knife",
+   "w": 6,
+   "h": 13
+  },
+  {
+   "name": "weapon_knight_sword",
+   "w": 10,
+   "h": 29
+  },
+  {
+   "name": "weapon_lavish_sword",
+   "w": 10,
+   "h": 30
+  },
+  {
+   "name": "weapon_mace",
+   "w": 10,
+   "h": 24
+  },
+  {
+   "name": "weapon_machete",
+   "w": 5,
+   "h": 22
+  },
+  {
+   "name": "weapon_red_gem_sword",
+   "w": 10,
+   "h": 21
+  },
+  {
+   "name": "weapon_red_magic_staff",
+   "w": 8,
+   "h": 30
+  },
+  {
+   "name": "weapon_regular_sword",
+   "w": 10,
+   "h": 21
+  },
+  {
+   "name": "weapon_rusty_sword",
+   "w": 10,
+   "h": 21
+  },
+  {
+   "name": "weapon_saw_sword",
+   "w": 10,
+   "h": 25
+  },
+  {
+   "name": "weapon_spear",
+   "w": 6,
+   "h": 30
+  },
+  {
+   "name": "weapon_throwing_axe",
+   "w": 10,
+   "h": 14
+  },
+  {
+   "name": "weapon_waraxe",
+   "w": 12,
+   "h": 23
+  },
+  {
+   "name": "wizzard_f",
+   "w": 16,
+   "h": 28,
+   "frames": 9,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    },
+    "hit": {
+     "from": 8,
+     "to": 8,
+     "speed": 1,
+     "loop": false
+    }
+   }
+  },
+  {
+   "name": "wizzard_m",
+   "w": 16,
+   "h": 28,
+   "frames": 9,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    },
+    "hit": {
+     "from": 8,
+     "to": 8,
+     "speed": 1,
+     "loop": false
+    }
+   }
+  },
+  {
+   "name": "wogol",
+   "w": 16,
+   "h": 23,
+   "frames": 8,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    },
+    "run": {
+     "from": 4,
+     "to": 7,
+     "speed": 10,
+     "loop": true
+    }
+   }
+  },
+  {
+   "name": "zombie",
+   "w": 16,
+   "h": 16,
+   "frames": 4,
+   "anims": {
+    "idle": {
+     "from": 0,
+     "to": 3,
+     "speed": 8,
+     "loop": true
+    }
+   }
+  }
+ ],
+ "atlases": [
+  {
+   "name": "dungeon",
+   "file": "dungeon.png",
+   "w": 512,
+   "h": 512,
+   "regions": {
+    "wall": {
+     "x": 16,
+     "y": 16,
+     "width": 16,
+     "height": 16
+    },
+    "floor": {
+     "x": 16,
+     "y": 64,
+     "width": 48,
+     "height": 48,
+     "sliceX": 3,
+     "sliceY": 3
+    },
+    "hero": {
+     "x": 128,
+     "y": 196,
+     "width": 144,
+     "height": 28,
+     "sliceX": 9,
+     "anims": {
+      "idle": {
+       "from": 0,
+       "to": 3,
+       "speed": 3,
+       "loop": true
+      },
+      "run": {
+       "from": 4,
+       "to": 7,
+       "speed": 10,
+       "loop": true
+      },
+      "hit": 8
+     }
+    },
+    "ogre": {
+     "x": 16,
+     "y": 336,
+     "width": 256,
+     "height": 32,
+     "sliceX": 8,
+     "anims": {
+      "idle": {
+       "from": 0,
+       "to": 3,
+       "speed": 3,
+       "loop": true
+      },
+      "run": {
+       "from": 4,
+       "to": 7,
+       "speed": 10,
+       "loop": true
+      }
+     }
+    },
+    "chest": {
+     "x": 304,
+     "y": 400,
+     "width": 48,
+     "height": 16,
+     "sliceX": 3,
+     "anims": {
+      "open": {
+       "from": 0,
+       "to": 2,
+       "speed": 20,
+       "loop": false
+      },
+      "close": {
+       "from": 2,
+       "to": 0,
+       "speed": 20,
+       "loop": false
+      }
+     }
+    }
+   }
+  }
+ ]
+}

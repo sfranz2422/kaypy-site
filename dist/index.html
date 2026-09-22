@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KayPy</title>
+<meta name="description" content="A game engine for learning Python — build a game out of components, run it in the browser, share it as one file.">
+<meta property="og:title" content="KayPy">
+<meta property="og:description" content="A game engine for learning Python — build a game out of components, run it in the browser, share it as one file.">
+<meta property="og:image" content="./static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="./static/favicon.png">
+<link rel="apple-touch-icon" href="./static/icon-180.png">
+<link rel="stylesheet" href="./static/site.css">
+</head>
+<body>
+
+<a class="skip" href="#content">Skip to content</a>
+
+<header class="top">
+  <a class="brand" href="./">
+    <img src="./static/creature.png" alt="" width="38" height="40">
+    <span class="brand-name">KayPy</span>
+  </a>
+  <nav class="top-nav" aria-label="Main"><a href="./" class="current">Home</a><a href="start/">Get started</a><a href="guide/">Guide</a><a href="api/">API</a><a href="tutorials/">Tutorials</a><a href="play/">Playground</a></nav>
+  <a class="gh" href="https://github.com/sfranz2422/kaypy"
+     aria-label="KayPy on GitHub">GitHub</a>
+</header>
+
+<main id="content" class="plain">
+  
+  <article class="prose">
+<div class="hero">
+  <img src="./static/creature.png" alt="" width="300" height="317">
+  <p class="wordmark">KayPy</p>
+  <h1>Write a game in Python.</h1>
+  <p class="cta">
+    <a class="primary" href="./play/">Open the playground</a>
+    <a class="secondary" href="./start/">Get started</a>
+  </p>
+</div>
+
+<pre class="hl"><code>from kaypy import *
+
+kaypy(width=800, height=600, background=[141, 183, 255])
+
+loadSprite("bean", "images/bean.png")
+setGravity(1600)
+
+player = add([sprite("bean"), pos(120, 80), area(), body()])
+
+@onKeyPress("space")
+def jump():
+    if player.isGrounded():
+        player.jump(800)
+</code></pre>
+
+<p>
+  That is a whole game — a character that falls, lands and jumps. There is no
+  <code>run()</code> call and no main loop to write. The loop starts on its own
+  once your file has been read, so the first thing a beginner writes is the
+  part they came for.
+</p>
+
+<div class="cards">
+  <div class="card">
+    <h3>Nothing to install, to start</h3>
+    <p>The playground runs Python in your browser. No account, no setup, no
+    download — write a game and press Run. <a href="./play/">Try it →</a></p>
+  </div>
+  <div class="card">
+    <h3>Games are built from parts</h3>
+    <p>A player is a sprite, plus a position, plus a body. Add one component,
+    get one behaviour. <a href="#components">How that works →</a></p>
+  </div>
+  <div class="card">
+    <h3>One file, one web page</h3>
+    <p><code>kaypy web game.py</code> builds a single HTML file. Double-click it
+    to play; upload the same file to itch.io. <a href="./start/">How →</a></p>
+  </div>
+  <div class="card">
+    <h3>Written for a classroom</h3>
+    <p>Thirteen lessons from an empty file to enemy AI, and error messages
+    aimed at somebody three weeks into programming.
+    <a href="./guide/">The guide →</a></p>
+  </div>
+</div>
+
+<h2 id="components">Games are built from parts</h2>
+
+<p>
+  KayPy is <a href="https://pyga.me">pygame-ce</a> underneath, all the way
+  down. What it adds is a shape for a game. Instead of one <code>while
+  True</code> loop where the whole game happens at once, you describe an object
+  by listing what it <em>has</em>:
+</p>
+
+<pre class="hl"><code>player = add([
+    sprite("bean"),  # it looks like this
+    pos(100, 200),   # it is here
+    area(),          # it has a collision box
+    body(),          # gravity, jumping, isGrounded()
+    "player",        # a tag, for finding it later
+])
+</code></pre>
+
+<p>
+  Each line does one thing, so a student can add one line and watch one thing
+  change. Delete <code>body()</code> and the player floats. Add
+  <code>health(3)</code> and it can be hurt. Nothing else in the file has to be
+  rewritten to make room, which is the part that usually ends a beginner's
+  first game.
+</p>
+
+<p>
+  Collisions read the same way — say what two tags do when they touch, and the
+  engine watches for it:
+</p>
+
+<pre class="hl"><code>@player.onCollide("coin")
+def collect(coin):
+    coin.destroy()
+    play("score")
+</code></pre>
+
+<h2>Errors in words, not stack traces</h2>
+
+<p>
+  When a game crashes, KayPy trims the traceback down to the line in
+  <em>your</em> file and says what went wrong in a sentence. A beginner who
+  misspells a sprite name gets told they misspelled a sprite name — not forty
+  lines of engine internals with their own mistake buried in the middle.
+</p>
+
+<h2>Take it home</h2>
+
+<p>
+  A game written in the playground runs unchanged on your own computer:
+</p>
+
+<pre class="hl"><code>pip install kaypy
+python game.py
+</code></pre>
+
+<p>
+  and <code>kaypy new mygame</code> sets up a folder with the sprites already
+  in it. Nothing you write here is stuck here — not in this browser, not on
+  this site, not in a format only we can open.
+</p>
+
+<h2>Where the API comes from</h2>
+
+<p>
+  The function names follow <a href="https://kaplayjs.com">KAPLAY</a>, a
+  JavaScript game engine with unusually good documentation. You do not need to
+  know it or ever touch JavaScript. It means only that when you search for how
+  to do something, there are examples to find — and they translate almost line
+  for line into Python.
+</p>
+
+  </article>
+</main>
+
+<footer class="foot">
+  <p class="dim">
+    MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+    Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+    Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+    and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+  </p>
+  <p class="dim">
+    KayPy is an independent project, not affiliated with or endorsed by the
+    KAPLAY team.
+  </p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+# dist/ is NOT here on purpose. Render serves it with an empty build command,
+# so it has to be committed — see README.md under "Deploying".
+
+.DS_Store
+__pycache__/
+*.pyc
+
+# The proof sheet make_logo.py writes with --proof. Something to look at once,
+# not something to keep.
+logo-proof.png

@@ -1,0 +1,238 @@
+#!/usr/bin/env python3
+"""The playground page is wired up, and its starter program actually runs.
+
+    python3 test_playground.py [--kaypy ~/kaypy]
+
+A visitor's whole impression of kaypy is the first press of Run. If the
+starter program throws, the engine looks broken — and nothing about a
+playground fails loudly on the way out: the page builds, the files copy, the
+site deploys, and the error appears in somebody else's browser.
+
+So the starter is not eyeballed. It is lifted out of play.js, parsed, and RUN
+on real kaypy with SDL on its dummy driver, which is the same way kaypy's own
+lessons are tested. Every sprite it names must exist in the vendored assets,
+and every handler it registers must be reachable.
+
+WHAT THIS CANNOT TELL YOU
+
+Whether it looks right. Pyodide, CodeMirror and the canvas are a browser's
+job, and SDL's dummy driver draws nothing. Only opening the page does that:
+
+    python3 build.py --serve
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import pathlib
+import re
+import sys
+
+HERE = pathlib.Path(__file__).resolve().parent
+DIST = HERE / "dist"
+PLAY = HERE / "play"
+
+results = []
+
+
+def check(label, ok, detail=""):
+    results.append(bool(ok))
+    print("  %-4s %-54s %s" % ("ok" if ok else "FAIL", label, detail))
+
+
+def done():
+    bad = results.count(False)
+    print("\n%s (%d checks, %d failed)"
+          % ("SOME FAILED" if bad else "ALL PASSED", len(results), bad))
+    sys.exit(1 if bad else 0)
+
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--kaypy", type=pathlib.Path,
+                default=pathlib.Path(os.path.expanduser("~/kaypy")))
+args = ap.parse_args()
+
+page = (PLAY / "play.html").read_text()
+script = (PLAY / "play.js").read_text()
+
+# Comments stripped, for the same reason play.js's are below: this page
+# explains in a comment which stylesheet it deliberately does NOT load, and a
+# substring search read that explanation as the thing it was warning about.
+# That is twice now. A scan for "is X absent?" has to look at code only.
+page_code = re.sub(r"<!--.*?-->", " ", page, flags=re.S)
+
+# ------------------------------------------------ the page loads what it needs
+for name in ("runtime.js", "export.js", "game.js", "sprites.js", "complete.js",
+             "style.css", "play.js", "play.css"):
+    check("play.html loads %s" % name, './%s"' % name in page)
+
+check("and every vendored one is in dist/",
+      all((DIST / "play" / n).is_file()
+          for n in ("runtime.js", "export.js", "game.js", "sprites.js",
+                    "complete.js", "style.css")))
+
+# site.css must NOT be here. Both stylesheets define --bg, --line and --green
+# from different palettes, and whichever loaded second would win — which is
+# not a crash, it is a page with one theme's background and another's text.
+check("and does NOT also load site.css", "site.css" not in page_code,
+      "both define --bg; the second to load would win")
+
+# Every element play.js reaches for has to exist. getElementById returns null
+# for a typo, and the failure is a TypeError deep in an event handler that
+# nobody sees until they click the thing.
+wanted = set(re.findall(r'\$\("([a-z-]+)"\)', script))
+absent = sorted(w for w in wanted if ('id="%s"' % w) not in page)
+check("every id play.js looks up exists in play.html", not absent,
+      ", ".join(absent) if absent else "%d ids" % len(wanted))
+
+# The sprite grid is styled by PyIDE's stylesheet, which names these classes.
+# An invented name is not an error — it is an unstyled column of buttons.
+style = (DIST / "play" / "style.css").read_text() if (DIST / "play" / "style.css").is_file() else ""
+if style:
+    used = set(re.findall(r'className = "([a-z-]+)"', script))
+    unknown = sorted(c for c in used if ("." + c) not in style)
+    check("every class play.js sets is one style.css styles", not unknown,
+          ", ".join(unknown) if unknown else " ".join(sorted(used)))
+
+# export.js has to come before game.js: an export carries runtime.js's Python
+# bootstrap inside it, and the order is PyIDE's for that reason.
+check("export.js is loaded before game.js",
+      page.index('./export.js"') < page.index('./game.js"'))
+
+# ------------------------------------------------------- the paths it overrides
+paths = re.search(r"window\.PyIDEPaths\s*=\s*\{(.*?)\}", page, re.S)
+check("the page sets window.PyIDEPaths", bool(paths))
+if paths:
+    body = paths.group(1)
+    bundle = re.search(r'bundle:\s*"([^"]+)"', body)
+    assets = re.search(r'assets:\s*"([^"]+)"', body)
+    check("  it points at the vendored bundle",
+          bundle and (DIST / "play" / bundle.group(1)).resolve().is_file(),
+          bundle.group(1) if bundle else "not set")
+    check("  and at the vendored assets",
+          assets and (DIST / "play" / assets.group(1)).resolve().is_dir(),
+          assets.group(1) if assets else "not set")
+    # Relative, so the site works from a subdirectory and from a local build.
+    check("  both are relative, not rooted at /",
+          bundle and assets and not bundle.group(1).startswith("/")
+          and not assets.group(1).startswith("/"))
+
+# ------------------------------------------- the same Pyodide PyIDE was tested on
+site_py = re.search(r"pyodide/v([\d.]+)/full/pyodide\.js", page)
+pyide_index = args.kaypy.parent / "pyide" / "templates" / "index.html"
+if pyide_index.is_file():
+    theirs = re.search(r"pyodide/v([\d.]+)/full/pyodide\.js",
+                       pyide_index.read_text())
+    check("the same Pyodide version PyIDE runs",
+          site_py and theirs and site_py.group(1) == theirs.group(1),
+          "site %s | pyide %s" % (site_py.group(1) if site_py else "?",
+                                  theirs.group(1) if theirs else "?"))
+else:
+    print("  skip  no PyIDE checkout to compare the Pyodide version against")
+
+# --------------------------------------------------------- no school in here
+#
+# The point of this page is that a visitor is never asked to sign in. These
+# are the names PyIDE's account, assignment and autosave code uses; none of
+# them should have followed the modules across.
+#
+# Comments are stripped first. play.js opens by explaining that it does NOT do
+# assignments or autosave, and a substring search cannot tell an explanation
+# from an implementation — the first version of this check failed on its own
+# documentation, which is a false alarm, and a test that cries wolf gets
+# muted.
+code_only = re.sub(r"/\*.*?\*/", " ", script, flags=re.S)
+code_only = re.sub(r"^\s*//.*$", " ", code_only, flags=re.M)
+
+for gone in ("/login", "signed_in", "assignment", "autosave", "/api/",
+             "csrf", "fetch(\"/", "XMLHttpRequest"):
+    check("the playground has no %r in its code" % gone,
+          gone.lower() not in code_only.lower(),
+          "found in play.js" if gone.lower() in code_only.lower() else "")
+
+# The only network calls it may make are to the vendored assets, the CDNs the
+# page names, and Pyodide's own. Nothing may be posted anywhere: there is no
+# server, and a visitor's code must not leave their machine.
+check("and posts nothing anywhere",
+      not re.search(r'method:\s*["\']POST', code_only, re.I))
+
+# ----------------------------------------------------------- the starter
+#
+# Read from play/starter.py, which IS the file that ships: build.py inlines it
+# into play.js with json.dumps. There is no parsing step here to get wrong.
+#
+# An earlier version kept the starter as a list of JavaScript string literals
+# and pulled it back out with a regex. The regex matched only double-quoted
+# lines, so every line written with single quotes vanished — the test ran a
+# shorter program than the page shipped, and reported ok. Hence starter.py.
+starter_file = PLAY / "starter.py"
+check("there is a starter program", starter_file.is_file())
+if not starter_file.is_file():
+    done()
+starter = starter_file.read_text()
+check("  it is a real program", len(starter.splitlines()) > 20,
+      "%d lines" % len(starter.splitlines()))
+check("  that imports kaypy", "from kaypy import *" in starter)
+check("  and starts the engine",
+      re.search(r"^kaypy\(", starter, re.M) is not None)
+
+# The same text has to reach the page. This is the join that used to be lossy.
+built = DIST / "play" / "play.js"
+if built.is_file():
+    inlined = re.search(r"var STARTER = (\".*?\");\n", built.read_text(), re.S)
+    check("  and the built page carries it, character for character",
+          inlined and json.loads(inlined.group(1)) == starter,
+          "dist/play/play.js")
+    check("  with no unfilled slot left behind",
+          "{{STARTER}}" not in built.read_text())
+
+# ------------------------------------------- every sprite and sound it names
+named = re.findall(r'load(?:Sprite|Sound)\("[^"]+",\s*"([^"]+)"\)', starter)
+missing = [p for p in named if not (DIST / "assets" / p).is_file()]
+check("every asset the starter names is vendored", not missing,
+      ", ".join(missing) if missing else " ".join(named))
+
+# ------------------------------------------------------------- run it for real
+if not (args.kaypy / "kaypy" / "__init__.py").is_file():
+    print("  skip  no kaypy checkout at %s — pass --kaypy to run the starter"
+          % args.kaypy)
+    done()
+
+os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+os.environ["KAYPY_TEST_MAX_FRAMES"] = "0"
+sys.path.insert(0, str(args.kaypy))
+
+os.chdir(DIST / "assets")      # so loadSprite("images/bean.png") resolves
+
+import kaypy                                                    # noqa: E402
+import kaypy.engine as ke                                       # noqa: E402
+
+namespace = {"__name__": "__main__"}
+try:
+    exec(compile(starter, "starter.py", "exec"), namespace)
+    engine = ke._engine
+    ran = engine is not None
+except Exception as exc:                                        # noqa: BLE001
+    engine, ran = None, False
+    check("the starter runs on real kaypy", False,
+          "%s: %s" % (type(exc).__name__, exc))
+
+if ran:
+    check("the starter runs on real kaypy", True,
+          "%d objects" % len(engine._objs))
+    # A starter that builds objects but wires nothing is a starter where
+    # pressing an arrow key does nothing, which reads as a broken engine to
+    # somebody who has never seen a working one.
+    handlers = (len(engine.events.key_down_handlers)
+                + len(engine.events.key_press_handlers))
+    check("  its keys are wired up", handlers >= 3, "%d handlers" % handlers)
+    check("  and it puts something on the screen", len(engine._objs) >= 4)
+
+    engine._started = True
+    engine._running = False
+    ke._engine = None
+
+os.chdir(HERE)
+done()
