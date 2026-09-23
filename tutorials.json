@@ -1,9 +1,10 @@
 {
  "from": "/sessions/clever-practical-dijkstra/mnt/kaypy/examples",
- "built_at": "2026-09-23T14:24:39Z",
+ "built_at": "2026-09-23T16:25:30Z",
  "featured": [
   "quiz_door.py",
+  "pet_and_healthbar.py",
   "asteroids.py"
  ],
- "page_sha256": "281410f8d3e0f4e8"
+ "page_sha256": "497750fb3565f6fe"
 }

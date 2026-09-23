@@ -384,6 +384,20 @@ drops two coins and scores twice.</p>
 <span class="n">player</span><span class="o">.</span><span class="n">isAlive</span><span class="p">()</span>
 </code></pre></div>
 
+<h3 id="followobj-offset-speed">follow(obj, offset, speed)</h3>
+<p>Be where another object is. Without <code>speed</code> it locks on exactly, every frame,
+which is what a health bar or a name label wants. With <code>speed</code> it chases at
+that many pixels per second instead, which is what a pet or a hunting enemy
+wants. If the target is destroyed, the follower stops where it stands.</p>
+<div class="hl"><pre><span></span><code><span class="n">enemy</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">200</span><span class="p">)])</span>
+<span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">220</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span>
+     <span class="n">follow</span><span class="p">(</span><span class="n">enemy</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">vec2</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">30</span><span class="p">))])</span>
+
+<span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">)])</span>
+<span class="n">add</span><span class="p">([</span><span class="n">circle</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">follow</span><span class="p">(</span><span class="n">player</span><span class="p">,</span> <span class="n">speed</span><span class="o">=</span><span class="mi">180</span><span class="p">)])</span>
+</code></pre></div>
+
+<hr />
 <h3 id="lifespanseconds-fade">lifespan(seconds, fade)</h3>
 <p>Destroy the object after a while, fading out first if you ask. Belongs to the
 bullet, rather than to a timer somewhere else holding it alive.</p>
@@ -398,7 +412,7 @@ and the object is passed in.</p>
 <div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
 
 <span class="nd">@onUpdate</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">follow</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">creep</span><span class="p">():</span>
     <span class="n">player</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="mi">1</span>
 
 <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="s2">"enemy"</span><span class="p">])</span>

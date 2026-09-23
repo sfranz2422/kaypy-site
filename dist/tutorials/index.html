@@ -126,6 +126,95 @@ when there is one, and the game is paused in between.</p>
 
 <p><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/quiz_door.py"><code>examples/quiz_door.py</code></a> · 71 lines</p>
 <hr />
+<h3 id="a-pet-that-trails-you-and-a-health-bar-that-never-does-what-follow-is-for">A pet that trails you and a health bar that never does — what follow() is for</h3>
+<p>python3 pet_and_healthbar.py</p>
+<p>Arrows to move, space to jump, F to hurt the enemy. The ghost chases you and
+falls behind when you run; the red bar over the enemy is welded to it and
+never falls behind at all.</p>
+<p>Both of those are one component. The difference between them is the word
+<code>speed</code>:</p>
+<div class="hl"><pre><span></span><code>follow(target)              be exactly where it is
+follow(target, speed=180)   move toward it at 180 pixels a second
+</code></pre></div>
+
+<p>The bar is the interesting half. It is pinned to an object that gravity
+moves, that collision shoves out of the floor, and that a keypress teleports
+— and it stays put through all three, because follow() runs after the engine
+has finished deciding where everything actually ended up, rather than before
+like every other component. Without that it would sit correctly while the
+enemy stands still and slide off it the moment the enemy moved, which looks
+like a drawing bug and is not one.</p>
+<div class="hl"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">kaypy</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">kaypy</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="p">[</span><span class="mi">141</span><span class="p">,</span> <span class="mi">183</span><span class="p">,</span> <span class="mi">255</span><span class="p">])</span>
+
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">,</span> <span class="s2">"images/bean.png"</span><span class="p">)</span>
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"ghosty"</span><span class="p">,</span> <span class="s2">"images/ghosty.png"</span><span class="p">)</span>
+<span class="n">setGravity</span><span class="p">(</span><span class="mi">1600</span><span class="p">)</span>
+
+<span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="n">width</span><span class="p">(),</span> <span class="mi">48</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">()</span> <span class="o">-</span> <span class="mi">48</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span>
+     <span class="n">body</span><span class="p">(</span><span class="n">isStatic</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">70</span><span class="p">)])</span>
+
+<span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">()])</span>
+
+<span class="c1"># Locked on: no speed, so it is simply where the player is, plus an offset.</span>
+<span class="n">add</span><span class="p">([</span><span class="n">text</span><span class="p">(</span><span class="s2">"you"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">18</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span>
+     <span class="n">follow</span><span class="p">(</span><span class="n">player</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">vec2</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">28</span><span class="p">))])</span>
+
+<span class="c1"># Chasing: with a speed, it heads for the player and arrives when it arrives.</span>
+<span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"ghosty"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span> <span class="n">follow</span><span class="p">(</span><span class="n">player</span><span class="p">,</span> <span class="n">speed</span><span class="o">=</span><span class="mi">180</span><span class="p">)])</span>
+
+<span class="n">enemy</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"ghosty"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">560</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">(),</span> <span class="n">health</span><span class="p">(</span><span class="mi">5</span><span class="p">)])</span>
+
+<span class="c1"># A health bar over something gravity is pulling down and the floor is</span>
+<span class="c1"># pushing back up. This is the case that shows whether follow() runs early</span>
+<span class="c1"># or late.</span>
+<span class="n">BAR</span> <span class="o">=</span> <span class="mi">48</span>
+<span class="n">backing</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="n">BAR</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span>
+               <span class="n">follow</span><span class="p">(</span><span class="n">enemy</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">vec2</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">14</span><span class="p">))])</span>
+<span class="n">bar</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="n">BAR</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">220</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span>
+           <span class="n">follow</span><span class="p">(</span><span class="n">enemy</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">vec2</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">14</span><span class="p">))])</span>
+
+
+<span class="nd">@onKeyDown</span><span class="p">(</span><span class="s2">"left"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">go_left</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="o">-</span><span class="mi">320</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+
+<span class="nd">@onKeyDown</span><span class="p">(</span><span class="s2">"right"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">go_right</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="mi">320</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+
+<span class="nd">@onKeyPress</span><span class="p">(</span><span class="s2">"space"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">jump</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">player</span><span class="o">.</span><span class="n">isGrounded</span><span class="p">():</span>
+        <span class="n">player</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="mi">760</span><span class="p">)</span>
+
+
+<span class="nd">@onKeyPress</span><span class="p">(</span><span class="s2">"f"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">hurt</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">enemy</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">enemy</span><span class="o">.</span><span class="n">hurt</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">bar</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">BAR</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">enemy</span><span class="o">.</span><span class="n">hp</span><span class="p">)</span> <span class="o">/</span> <span class="mi">5</span>
+
+
+<span class="nd">@enemy</span><span class="o">.</span><span class="n">onDeath</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">gone</span><span class="p">():</span>
+    <span class="c1"># A follower whose target is destroyed stops where it stands and goes on</span>
+    <span class="c1"># existing — which is right for a pet and wrong for a health bar, so the</span>
+    <span class="c1"># bars are destroyed here, next to the thing they belonged to.</span>
+    <span class="n">enemy</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+    <span class="n">backing</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+    <span class="n">bar</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+
+
+<span class="n">add</span><span class="p">([</span><span class="n">text</span><span class="p">(</span><span class="s2">"arrows move · space jumps · F hurts the ghost"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">20</span><span class="p">),</span>
+     <span class="n">pos</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="n">fixed</span><span class="p">()])</span>
+</code></pre></div>
+
+<p><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/pet_and_healthbar.py"><code>examples/pet_and_healthbar.py</code></a> · 89 lines</p>
+<hr />
 <h3 id="asteroids-what-rotate-is-for">Asteroids — what rotate() is for</h3>
 <p>python3 asteroids.py</p>
 <p>Left and right turn the ship, up thrusts in the direction it is facing,

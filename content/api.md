@@ -481,6 +481,24 @@ player.heal(1)
 player.isAlive()
 ```
 
+### follow(obj, offset, speed)
+
+Be where another object is. Without `speed` it locks on exactly, every frame,
+which is what a health bar or a name label wants. With `speed` it chases at
+that many pixels per second instead, which is what a pet or a hunting enemy
+wants. If the target is destroyed, the follower stops where it stands.
+
+```python
+enemy = add([sprite("bean"), pos(400, 200)])
+add([rect(40, 6), pos(0, 0), color(220, 60, 60),
+     follow(enemy, offset=vec2(-4, -30))])
+
+player = add([sprite("bean"), pos(100, 300)])
+add([circle(10), pos(0, 0), follow(player, speed=180)])
+```
+
+---
+
 ### lifespan(seconds, fade)
 
 Destroy the object after a while, fading out first if you ask. Belongs to the
@@ -503,7 +521,7 @@ and the object is passed in.
 player = add([sprite("bean"), pos(100, 100)])
 
 @onUpdate
-def follow():
+def creep():
     player.pos.x += 1
 
 add([sprite("bean"), pos(300, 100), "enemy"])
