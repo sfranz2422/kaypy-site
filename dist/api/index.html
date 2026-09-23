@@ -29,7 +29,7 @@
 </header>
 
 <main id="content" class="with-toc">
-  <nav class="toc" aria-label="On this page"><p class="toc-head">On this page</p><a href="#api-reference" class="d1">API reference</a><a href="#starting-a-game" class="d2">Starting a game</a><a href="#loading-pictures-and-sounds" class="d2">Loading pictures and sounds</a><a href="#making-things" class="d2">Making things</a><a href="#components" class="d2">Components</a><a href="#every-frame" class="d2">Every frame</a><a href="#keyboard" class="d2">Keyboard</a><a href="#mouse" class="d2">Mouse</a><a href="#drawing-straight-to-the-screen" class="d2">Drawing straight to the screen</a><a href="#collisions" class="d2">Collisions</a><a href="#camera" class="d2">Camera</a><a href="#sound" class="d2">Sound</a><a href="#time_1" class="d2">Time</a><a href="#scenes" class="d2">Scenes</a><a href="#saving" class="d2">Saving</a><a href="#maths-and-helpers" class="d2">Maths and helpers</a><a href="#debugging" class="d2">Debugging</a><a href="#what-you-can-call-on-an-object" class="d2">What you can call on an object</a></nav>
+  <nav class="toc" aria-label="On this page"><p class="toc-head">On this page</p><a href="#api-reference" class="d1">API reference</a><a href="#starting-a-game" class="d2">Starting a game</a><a href="#loading-pictures-and-sounds" class="d2">Loading pictures and sounds</a><a href="#making-things" class="d2">Making things</a><a href="#components" class="d2">Components</a><a href="#every-frame" class="d2">Every frame</a><a href="#keyboard" class="d2">Keyboard</a><a href="#mouse" class="d2">Mouse</a><a href="#drawing-straight-to-the-screen" class="d2">Drawing straight to the screen</a><a href="#pausing-and-asking-a-question" class="d2">Pausing, and asking a question</a><a href="#collisions" class="d2">Collisions</a><a href="#camera" class="d2">Camera</a><a href="#sound" class="d2">Sound</a><a href="#time_1" class="d2">Time</a><a href="#scenes" class="d2">Scenes</a><a href="#saving" class="d2">Saving</a><a href="#maths-and-helpers" class="d2">Maths and helpers</a><a href="#debugging" class="d2">Debugging</a><a href="#what-you-can-call-on-an-object" class="d2">What you can call on an object</a></nav>
   <article class="prose">
 <h1 id="api-reference">API reference</h1>
 <p>Every function KayPy gives you, with a working example for each one.</p>
@@ -600,6 +600,87 @@ a row of lives.</p>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
         <span class="n">drawSprite</span><span class="p">(</span><span class="n">sprite</span><span class="o">=</span><span class="s2">"bean"</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">vec2</span><span class="p">(</span><span class="mi">12</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">70</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
                    <span class="n">fixed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<h2 id="pausing-and-asking-a-question">Pausing, and asking a question</h2>
+<p>A panel freezes the game, puts a question or a message over it, and starts
+the game again when it is answered. The same lines work in a browser and on
+your own computer: in a browser the panel is real HTML, so the text can be
+selected and a link is a real link; on a desktop KayPy draws it.</p>
+<p><strong>These call you back rather than returning an answer.</strong> In a browser,
+waiting for a click would stop the page — including the click being waited
+for — so the tab would hang instead of pausing. Your function gets the answer
+when there is one.</p>
+<h3 id="pause">pause()</h3>
+<p>Freeze the game, leaving the picture up. Timers, gravity, collisions and
+every <code>onUpdate</code> stop; the frame is still drawn.</p>
+<p>Key handlers keep running, which is what lets a pause menu un-pause itself.
+Nothing moves while paused, because everything that moves is scaled by
+<code>dt()</code> and <code>dt()</code> is zero.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@onKeyPress</span><span class="p">(</span><span class="s2">"escape"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">toggle</span><span class="p">():</span>
+    <span class="n">resume</span><span class="p">()</span> <span class="k">if</span> <span class="n">isPaused</span><span class="p">()</span> <span class="k">else</span> <span class="n">pause</span><span class="p">()</span>
+</code></pre></div>
+
+<h3 id="resume">resume()</h3>
+<p>Start the game moving again.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+<span class="n">pause</span><span class="p">()</span>
+<span class="n">resume</span><span class="p">()</span>
+</code></pre></div>
+
+<h3 id="ispaused">isPaused()</h3>
+<p>Is the game frozen right now?</p>
+<div class="hl"><pre><span></span><code><span class="n">label</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">text</span><span class="p">(</span><span class="s2">""</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span> <span class="n">fixed</span><span class="p">()])</span>
+
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">show</span><span class="p">():</span>
+    <span class="n">label</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s2">"PAUSED"</span> <span class="k">if</span> <span class="n">isPaused</span><span class="p">()</span> <span class="k">else</span> <span class="s2">""</span>
+</code></pre></div>
+
+<h3 id="saytext-link-button">say(text, link, button)</h3>
+<p>Pause and show a message. <code>link</code> is a <code>(label, url)</code> pair — a real link in a
+browser, and on a desktop it opens your browser.</p>
+<div class="hl"><pre><span></span><code><span class="n">say</span><span class="p">(</span><span class="s2">"You found the key!"</span><span class="p">)</span>
+
+<span class="nd">@say</span><span class="p">(</span><span class="s2">"I built this in 2023."</span><span class="p">,</span> <span class="n">link</span><span class="o">=</span><span class="p">(</span><span class="s2">"See the repo"</span><span class="p">,</span> <span class="s2">"https://github.com"</span><span class="p">))</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">after</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"they closed it"</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="askquestion-choices-answer-placeholder">ask(question, choices, answer, placeholder)</h3>
+<p>Pause and ask something. With <code>choices</code> it is multiple choice, and can be
+answered by clicking or by pressing the number beside it. Without <code>choices</code>
+it is a box to type in.</p>
+<p>With <code>answer=</code>, your function is told <strong>True or False</strong>. Without it, your
+function is given <strong>what was picked or typed</strong>.</p>
+<div class="hl"><pre><span></span><code><span class="nd">@ask</span><span class="p">(</span><span class="s2">"Which keyword starts a loop?"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"if"</span><span class="p">,</span> <span class="s2">"for"</span><span class="p">,</span> <span class="s2">"def"</span><span class="p">],</span> <span class="n">answer</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">checked</span><span class="p">(</span><span class="n">correct</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">correct</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"open sesame"</span><span class="p">)</span>
+
+<span class="nd">@ask</span><span class="p">(</span><span class="s2">"What is your name?"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">greeted</span><span class="p">(</span><span class="n">reply</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Hello, "</span> <span class="o">+</span> <span class="n">reply</span><span class="p">)</span>
+</code></pre></div>
+
+<p><code>answer</code> may be the position of the right choice (<code>answer=1</code>) or its text
+(<code>answer="for"</code>). For a typed answer it can be one string or a list of
+acceptable ones, and marking ignores capitals and stray spaces — <code>"  PARIS "</code>
+matches <code>answer="paris"</code>.</p>
+<h3 id="isshowing">isShowing()</h3>
+<p>Is a panel up right now?</p>
+<div class="hl"><pre><span></span><code><span class="n">say</span><span class="p">(</span><span class="s2">"Mind the gap."</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">isShowing</span><span class="p">():</span>
+    <span class="k">pass</span>
+</code></pre></div>
+
+<h3 id="close">close()</h3>
+<p>Take the panel away and start the game again. Answering does this for you;
+it is here for a game that needs to close one itself.</p>
+<div class="hl"><pre><span></span><code><span class="n">say</span><span class="p">(</span><span class="s2">"This closes itself in a moment."</span><span class="p">)</span>
+<span class="n">close</span><span class="p">()</span>
 </code></pre></div>
 
 <hr />

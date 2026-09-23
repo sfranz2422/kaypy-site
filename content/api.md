@@ -787,6 +787,115 @@ def lives():
 
 ---
 
+## Pausing, and asking a question
+
+A panel freezes the game, puts a question or a message over it, and starts
+the game again when it is answered. The same lines work in a browser and on
+your own computer: in a browser the panel is real HTML, so the text can be
+selected and a link is a real link; on a desktop KayPy draws it.
+
+**These call you back rather than returning an answer.** In a browser,
+waiting for a click would stop the page — including the click being waited
+for — so the tab would hang instead of pausing. Your function gets the answer
+when there is one.
+
+### pause()
+
+Freeze the game, leaving the picture up. Timers, gravity, collisions and
+every `onUpdate` stop; the frame is still drawn.
+
+Key handlers keep running, which is what lets a pause menu un-pause itself.
+Nothing moves while paused, because everything that moves is scaled by
+`dt()` and `dt()` is zero.
+
+```python
+@onKeyPress("escape")
+def toggle():
+    resume() if isPaused() else pause()
+```
+
+### resume()
+
+Start the game moving again.
+
+```python
+player = add([sprite("bean"), pos(100, 100)])
+pause()
+resume()
+```
+
+### isPaused()
+
+Is the game frozen right now?
+
+```python
+label = add([text(""), pos(12, 12), fixed()])
+
+@onUpdate
+def show():
+    label.text = "PAUSED" if isPaused() else ""
+```
+
+### say(text, link, button)
+
+Pause and show a message. `link` is a `(label, url)` pair — a real link in a
+browser, and on a desktop it opens your browser.
+
+```python
+say("You found the key!")
+
+@say("I built this in 2023.", link=("See the repo", "https://github.com"))
+def after():
+    print("they closed it")
+```
+
+### ask(question, choices, answer, placeholder)
+
+Pause and ask something. With `choices` it is multiple choice, and can be
+answered by clicking or by pressing the number beside it. Without `choices`
+it is a box to type in.
+
+With `answer=`, your function is told **True or False**. Without it, your
+function is given **what was picked or typed**.
+
+```python
+@ask("Which keyword starts a loop?", ["if", "for", "def"], answer=1)
+def checked(correct):
+    if correct:
+        print("open sesame")
+
+@ask("What is your name?")
+def greeted(reply):
+    print("Hello, " + reply)
+```
+
+`answer` may be the position of the right choice (`answer=1`) or its text
+(`answer="for"`). For a typed answer it can be one string or a list of
+acceptable ones, and marking ignores capitals and stray spaces — `"  PARIS "`
+matches `answer="paris"`.
+
+### isShowing()
+
+Is a panel up right now?
+
+```python
+say("Mind the gap.")
+if isShowing():
+    pass
+```
+
+### close()
+
+Take the panel away and start the game again. Answering does this for you;
+it is here for a game that needs to close one itself.
+
+```python
+say("This closes itself in a moment.")
+close()
+```
+
+---
+
 ## Collisions
 
 ### onCollide(tag_a, tag_b, fn)
