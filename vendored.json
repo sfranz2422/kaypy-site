@@ -2,7 +2,7 @@
  "kaypy": "0.9.0",
  "kaypy_commit": "95e441d",
  "from": "/sessions/clever-practical-dijkstra/mnt/pyide",
- "vendored_at": "2026-09-23T12:12:26Z",
+ "vendored_at": "2026-09-23T12:44:42Z",
  "files": {
   "engine/kaypy_bundle.json": "b771bc99bc80c771",
   "engine/kaypy.json": "2057c60e7170f368",
@@ -11,7 +11,8 @@
   "play/export.js": "3c3dece34f0719ce",
   "play/sprites.js": "d9bbf38423969a5f",
   "play/complete.js": "e49d326e7a577984",
-  "play/style.css": "c6ad12fa9fea9fdf",
+  "play/zip.js": "750829bd7054c7fa",
+  "play/style.css": "22fe30bdb0b3c06b",
   "assets/.DS_Store": "6f337b51d04ccfbe",
   "assets/CREDITS.md": "5bc83d614aa7f7ec",
   "assets/dungeon/angel.png": "8fdfba73b6bed13d",

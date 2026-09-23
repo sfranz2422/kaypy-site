@@ -70,6 +70,7 @@ MODULES = {
     "export.js": "building the one-file download from kaypy's own template",
     "sprites.js": "the sprite picker's insert helpers",
     "complete.js": "name completion for the editor",
+    "zip.js": "a zip writer with no dependencies, for the download",
 }
 
 # PyIDE's stylesheet, vendored for the same reason as the modules: the

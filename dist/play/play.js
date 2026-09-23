@@ -305,10 +305,21 @@
         source, "My kaypy game", function (msg) {
           exportBtn.textContent = msg.length > 14 ? "Packing…" : msg;
         });
-      window.PyIDEExport.downloadGamePage("game.html", html);
-      write("\nSaved game.html — double-click it to play, or upload that one " +
-            "file to itch.io. It needs the internet the first time it runs.\n",
-            "dim");
+      /* A zip of both, not just the page.
+       *
+       * The .html is the game and cannot be edited — the program is in there,
+       * but so is the whole engine, base64'd. Without the .py beside it, a
+       * visitor who closes this tab has a game they can play and can never
+       * change again, and there is nowhere here to save it: no accounts, no
+       * server, on purpose. The zip IS the save button. */
+      window.PyIDEZip.download("my-kaypy-game.zip", [
+        { name: "game.html", data: html },
+        { name: "game.py", data: source }
+      ]);
+      write("\nSaved my-kaypy-game.zip.\n" +
+            "  game.html  — double-click to play, or upload to itch.io\n" +
+            "  game.py    — your code, to keep working on\n" +
+            "The game needs the internet the first time it runs.\n", "dim");
     } catch (e) {
       write("\nCould not pack the game: " + (e.message || e) + "\n", "err");
     } finally {

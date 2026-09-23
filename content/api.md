@@ -94,7 +94,7 @@ setGravity(2400)
 
 ### setBackground(r, g, b)
 
-Change the background colour after the game has started.
+Change the background color after the game has started.
 
 ```python
 setBackground(40, 10, 60)
@@ -228,7 +228,7 @@ addKaboom(vec2(400, 300), scale=2.0)
 
 ## Components
 
-A component is one thing an object *has*. Add one, get one behaviour; delete
+A component is one thing an object *has*. Add one, get one behavior; delete
 one, lose exactly that. Most give the object some attributes and methods of
 its own, which are listed with each.
 
@@ -1167,7 +1167,7 @@ def bob():
 
 ### rgb(r, g, b)
 
-A colour as a plain tuple. One argument means grey.
+A color as a plain tuple. One argument means gray.
 
 ```python
 add([rect(80, 80), pos(40, 40), color(*rgb(255, 120, 60))])
