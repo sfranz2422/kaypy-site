@@ -55,8 +55,8 @@ REPO = "https://github.com/sfranz2422/kaypy/blob/main/examples"
 
 #: The complete games, in the order they should be read. Each needs a
 #: docstring in the file; the first line of it becomes the heading.
-FEATURED = ["quiz_door.py", "pet_and_healthbar.py", "stealth_guard.py",
-            "asteroids.py"]
+FEATURED = ["quiz_door.py", "pet_and_healthbar.py", "knight_and_camera.py",
+            "stealth_guard.py", "asteroids.py"]
 
 #: Files in examples/ that are neither a featured game nor a lesson, and are
 #: deliberately not on this page. Named so that a new example added to the

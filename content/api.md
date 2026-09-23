@@ -203,9 +203,20 @@ player = add([
     pos(120, 80),
     area(),
     body(),
-    "player",        # a plain string is a tag
+    "player",                    # a plain string is a tag
+    {"hits": 0, "dir": 1},       # a dict is your own values
 ])
+
+player.hits += 1
 ```
+
+A **tag** says what something is: `get("enemy")` finds every object carrying
+one, and `onCollide("enemy")` works off it. A **dict** is that object's own
+state — `hits`, `dir`, `cooldown` — set as ordinary attributes you can read and
+change.
+
+A key that a component already owns is refused rather than quietly shadowing
+it, and so is a key that is not a valid Python name.
 
 ### get(tag)
 
@@ -1012,10 +1023,12 @@ setCamPos(vec2(600, 200))
 
 ### setCamScale(n)
 
-Zoom. Above 1 is closer in.
+Zoom. Above 1 is closer in. A `vec2` zooms each axis by a different amount,
+for a letterboxed cutscene or a squash as something lands.
 
 ```python
-setCamScale(1.5)
+setCamScale(1.5)                # closer in, both ways
+setCamScale(vec2(2, 0.4))       # twice as wide, squashed flat
 ```
 
 ### shake(n)
@@ -1295,6 +1308,23 @@ debug.inspect = True
 `add()` hands back an object, and what that object can do depends on which
 components it has. These are written `obj.name()` because you call them on the
 thing, not on their own.
+
+### .add([components])
+
+Build a game object **inside** this one. A child's `pos()` is measured from its
+parent rather than from the screen, and it moves when the parent moves.
+Destroying the parent destroys its children too.
+
+Use it for the things that belong to something: a sword in a hand, a health bar
+over a head, a turret on a tank.
+
+```python
+player = add([sprite("bean"), pos(100, 200), area()])
+
+sword = player.add([rect(6, 30), pos(28, 6), color(200, 200, 220), area()])
+
+player.pos = vec2(400, 350)     # the sword goes too, still at +28, +6
+```
 
 ### .destroy()
 

@@ -215,6 +215,110 @@ like a drawing bug and is not one.</p>
 
 <p><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/pet_and_healthbar.py"><code>examples/pet_and_healthbar.py</code></a> · 89 lines</p>
 <hr />
+<h3 id="a-sword-that-goes-where-the-knight-goes-what-child-objects-are-for">A sword that goes where the knight goes — what child objects are for</h3>
+<p>python3 knight_and_camera.py</p>
+<p>Arrows to move, space to swing, 1/2/3 to change the camera. The sword, the
+shield and the name tag are all children of the knight: nothing in the
+movement code mentions any of them, and they follow anyway.</p>
+<div class="hl"><pre><span></span><code>knight = add([sprite("bean"), pos(200, 300), area()])
+sword  = knight.add([rect(8, 34), pos(26, -4), color(220, 220, 235)])
+</code></pre></div>
+
+<p>A child's <code>pos()</code> is measured from its parent, not from the screen. The
+sword sits at +26, -4 <em>from the knight</em> and stays there through walking,
+turning and being teleported, because there is nothing to keep in step —
+it is one position, expressed once. Destroy the knight and the sword goes
+with it.</p>
+<p>That is the difference between this and follow(): a follower is a separate
+object being kept in agreement every frame, which is what you want when the
+two things meet later in the game. A child is part of the thing.</p>
+<p>THE CAMERA KEYS</p>
+<div class="hl"><pre><span></span><code>1   setCamScale(1)              normal
+2   setCamScale(2)              zoomed in, both ways
+3   setCamScale(vec2(2, 0.6))   wide and squashed
+</code></pre></div>
+
+<p>The third is the one worth pressing. The scale is a vec2, so the two axes
+can differ — a letterboxed cutscene, a squash as something lands, or a
+deliberately wrong aspect ratio for a dream sequence. Everything obeys it
+together: sprites, the children, the drawn cone of the swing, and the debug
+boxes under F1.</p>
+<div class="hl"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">kaypy</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">kaypy</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="p">[</span><span class="mi">26</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">42</span><span class="p">])</span>
+
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">,</span> <span class="s2">"images/bean.png"</span><span class="p">)</span>
+
+<span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="o">-</span><span class="mi">600</span><span class="p">,</span> <span class="mi">470</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">(</span><span class="n">isStatic</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+     <span class="n">color</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">90</span><span class="p">)])</span>
+<span class="n">setGravity</span><span class="p">(</span><span class="mi">1800</span><span class="p">)</span>
+
+<span class="n">knight</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">(),</span> <span class="s2">"knight"</span><span class="p">])</span>
+
+<span class="c1"># Everything below hangs off the knight. None of it is mentioned again in</span>
+<span class="c1"># the movement code.</span>
+<span class="n">sword</span> <span class="o">=</span> <span class="n">knight</span><span class="o">.</span><span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">34</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">26</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">220</span><span class="p">,</span> <span class="mi">220</span><span class="p">,</span> <span class="mi">235</span><span class="p">),</span>
+                    <span class="n">anchor</span><span class="p">(</span><span class="s2">"bot"</span><span class="p">),</span> <span class="n">rotate</span><span class="p">(</span><span class="mi">0</span><span class="p">)])</span>
+<span class="n">knight</span><span class="o">.</span><span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">24</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">110</span><span class="p">,</span> <span class="mi">60</span><span class="p">)])</span>          <span class="c1"># shield</span>
+<span class="n">knight</span><span class="o">.</span><span class="n">add</span><span class="p">([</span><span class="n">text</span><span class="p">(</span><span class="s2">"Sir Bean"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">22</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">210</span><span class="p">,</span> <span class="mi">230</span><span class="p">)])</span>
+
+<span class="n">add</span><span class="p">([</span><span class="n">text</span><span class="p">(</span><span class="s2">"arrows move · space swings · 1 2 3 camera"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">18</span><span class="p">),</span>
+     <span class="n">pos</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">140</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">170</span><span class="p">),</span> <span class="n">fixed</span><span class="p">()])</span>
+
+<span class="n">swing</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span>
+
+
+<span class="nd">@onKeyDown</span><span class="p">(</span><span class="s2">"left"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">go_left</span><span class="p">():</span>
+    <span class="n">knight</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="o">-</span><span class="mi">240</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+
+<span class="nd">@onKeyDown</span><span class="p">(</span><span class="s2">"right"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">go_right</span><span class="p">():</span>
+    <span class="n">knight</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="mi">240</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+
+<span class="nd">@onKeyPress</span><span class="p">(</span><span class="s2">"space"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">jump_or_swing</span><span class="p">():</span>
+    <span class="n">swing</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.35</span>
+    <span class="k">if</span> <span class="n">knight</span><span class="o">.</span><span class="n">isGrounded</span><span class="p">():</span>
+        <span class="n">knight</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="mi">700</span><span class="p">)</span>
+
+
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">animate_sword</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">swing</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">swing</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">swing</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">dt</span><span class="p">())</span>
+        <span class="c1"># A swing is just the child's own angle. The knight knows nothing.</span>
+        <span class="n">sword</span><span class="o">.</span><span class="n">angle</span> <span class="o">=</span> <span class="o">-</span><span class="mi">110</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">((</span><span class="mf">0.35</span> <span class="o">-</span> <span class="n">swing</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mf">0.35</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sword</span><span class="o">.</span><span class="n">angle</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">chase</span><span class="p">():</span>
+    <span class="n">setCamPos</span><span class="p">(</span><span class="n">vec2</span><span class="p">(</span><span class="n">knight</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="mi">300</span><span class="p">))</span>
+
+
+<span class="nd">@onKeyPress</span><span class="p">(</span><span class="s2">"1"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">normal</span><span class="p">():</span>
+    <span class="n">setCamScale</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="nd">@onKeyPress</span><span class="p">(</span><span class="s2">"2"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">():</span>
+    <span class="n">setCamScale</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="nd">@onKeyPress</span><span class="p">(</span><span class="s2">"3"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">letterbox</span><span class="p">():</span>
+    <span class="n">setCamScale</span><span class="p">(</span><span class="n">vec2</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">))</span>
+</code></pre></div>
+
+<p><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/knight_and_camera.py"><code>examples/knight_and_camera.py</code></a> · 105 lines</p>
+<hr />
 <h3 id="sneak-past-a-guard-who-cannot-see-through-walls-what-sentry-is-for">Sneak past a guard who cannot see through walls — what sentry() is for</h3>
 <p>python3 stealth_guard.py</p>
 <p>Arrows to move. The guard sweeps a torch left and right; get into the cone

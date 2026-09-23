@@ -180,10 +180,19 @@ Returns the object, so you can keep it in a variable.</p>
     <span class="n">pos</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span>
     <span class="n">area</span><span class="p">(),</span>
     <span class="n">body</span><span class="p">(),</span>
-    <span class="s2">"player"</span><span class="p">,</span>        <span class="c1"># a plain string is a tag</span>
+    <span class="s2">"player"</span><span class="p">,</span>                    <span class="c1"># a plain string is a tag</span>
+    <span class="p">{</span><span class="s2">"hits"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"dir"</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>       <span class="c1"># a dict is your own values</span>
 <span class="p">])</span>
+
+<span class="n">player</span><span class="o">.</span><span class="n">hits</span> <span class="o">+=</span> <span class="mi">1</span>
 </code></pre></div>
 
+<p>A <strong>tag</strong> says what something is: <code>get("enemy")</code> finds every object carrying
+one, and <code>onCollide("enemy")</code> works off it. A <strong>dict</strong> is that object's own
+state — <code>hits</code>, <code>dir</code>, <code>cooldown</code> — set as ordinary attributes you can read and
+change.</p>
+<p>A key that a component already owns is refused rather than quietly shadowing
+it, and so is a key that is not a valid Python name.</p>
 <h3 id="gettag">get(tag)</h3>
 <p>Every object carrying a tag, as a list.</p>
 <div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="s2">"enemy"</span><span class="p">])</span>
@@ -774,8 +783,10 @@ particular object, use <code>obj.onCollide(tag)</code> instead.</p>
 </code></pre></div>
 
 <h3 id="setcamscalen">setCamScale(n)</h3>
-<p>Zoom. Above 1 is closer in.</p>
-<div class="hl"><pre><span></span><code><span class="n">setCamScale</span><span class="p">(</span><span class="mf">1.5</span><span class="p">)</span>
+<p>Zoom. Above 1 is closer in. A <code>vec2</code> zooms each axis by a different amount,
+for a letterboxed cutscene or a squash as something lands.</p>
+<div class="hl"><pre><span></span><code><span class="n">setCamScale</span><span class="p">(</span><span class="mf">1.5</span><span class="p">)</span>                <span class="c1"># closer in, both ways</span>
+<span class="n">setCamScale</span><span class="p">(</span><span class="n">vec2</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">))</span>       <span class="c1"># twice as wide, squashed flat</span>
 </code></pre></div>
 
 <h3 id="shaken">shake(n)</h3>
@@ -971,6 +982,19 @@ things are not touching. <strong>F1</strong> toggles it while the game runs.</p>
 <p><code>add()</code> hands back an object, and what that object can do depends on which
 components it has. These are written <code>obj.name()</code> because you call them on the
 thing, not on their own.</p>
+<h3 id="addcomponents_1">.add([components])</h3>
+<p>Build a game object <strong>inside</strong> this one. A child's <code>pos()</code> is measured from its
+parent rather than from the screen, and it moves when the parent moves.
+Destroying the parent destroys its children too.</p>
+<p>Use it for the things that belong to something: a sword in a hand, a health bar
+over a head, a turret on a tank.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span> <span class="n">area</span><span class="p">()])</span>
+
+<span class="n">sword</span> <span class="o">=</span> <span class="n">player</span><span class="o">.</span><span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">220</span><span class="p">),</span> <span class="n">area</span><span class="p">()])</span>
+
+<span class="n">player</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">vec2</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">350</span><span class="p">)</span>     <span class="c1"># the sword goes too, still at +28, +6</span>
+</code></pre></div>
+
 <h3 id="destroy">.destroy()</h3>
 <p>Remove it from the world. Same as <code>destroy(obj)</code>.</p>
 <div class="hl"><pre><span></span><code><span class="n">coin</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">area</span><span class="p">()])</span>
