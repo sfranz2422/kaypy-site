@@ -102,8 +102,15 @@ body {
 .top-nav a:hover { color: var(--fg); background: var(--bg-soft); }
 .top-nav a.current { color: var(--green); background: var(--bg-soft); font-weight: 600; }
 
-.gh { color: var(--fg-dim); text-decoration: none; font-size: .9rem; }
+.gh { color: var(--fg-dim); text-decoration: none; font-size: .9rem; white-space: nowrap; }
 .gh:hover { color: var(--fg); }
+
+/* On a phone the header is already carrying a wrapping six-item nav, and
+   two more links at the end push the whole thing onto a third row. Both are
+   in the footer of every page, so the header can let them go. */
+@media (max-width: 40rem) {
+  .top .gh { display: none; }
+}
 
 /* -------------------------------------------------------------- main -- */
 

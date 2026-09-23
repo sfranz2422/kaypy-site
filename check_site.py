@@ -56,26 +56,48 @@ def resolve(page, target):
     return (page.parent / target).resolve()
 
 
+def ids_in(path):
+    """Every id= on a page, for checking the #fragment half of a link."""
+    try:
+        return set(re.findall(r'\bid="([^"]+)"', path.read_text()))
+    except OSError:
+        return set()
+
+
 broken, checked = [], 0
+dangling, fragments = [], 0
 for page in pages:
     text = page.read_text()
     for attr in ("href", "src"):
         for raw in re.findall(r'%s="([^"]+)"' % attr, text):
             url = unquote(raw)
-            if urlparse(url).scheme or url.startswith(("//", "#", "mailto:", "data:")):
+            if urlparse(url).scheme or url.startswith(("//", "mailto:", "data:")):
                 continue
-            url = url.split("#")[0].split("?")[0]
-            if not url:
-                continue
-            checked += 1
-            where = resolve(page, url)
-            if where.is_dir():
-                where = where / "index.html"
-            if not where.exists():
-                broken.append("%s -> %s" % (page.relative_to(DIST), raw))
+            path, _, fragment = url.partition("#")
+            path = path.split("?")[0]
+
+            where = page if not path else resolve(page, path)
+            if path:
+                checked += 1
+                if where.is_dir():
+                    where = where / "index.html"
+                if not where.exists():
+                    broken.append("%s -> %s" % (page.relative_to(DIST), raw))
+                    continue
+
+            # The half of a link that a plain existence check throws away.
+            # A heading that gets reworded does not break the page it is on,
+            # it breaks every link that pointed at it — silently, landing the
+            # reader at the top of a long page wondering what they missed.
+            if fragment:
+                fragments += 1
+                if fragment not in ids_in(where):
+                    dangling.append("%s -> %s" % (page.relative_to(DIST), raw))
 
 check("every local link and asset resolves", not broken,
       "%d checked" % checked if not broken else "; ".join(broken[:3]))
+check("every #anchor points at something", not dangling,
+      "%d checked" % fragments if not dangling else "; ".join(dangling[:3]))
 
 # --------------------------------------------------------- the nav is whole
 home = (DIST / "index.html")

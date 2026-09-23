@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tutorials · KayPy</title>
+<meta name="description" content="A game engine for learning Python — build a game out of components, run it in the browser, share it as one file.">
+<meta property="og:title" content="Tutorials · KayPy">
+<meta property="og:description" content="A game engine for learning Python — build a game out of components, run it in the browser, share it as one file.">
+<meta property="og:image" content="../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../static/favicon.png">
+<link rel="apple-touch-icon" href="../static/icon-180.png">
+<link rel="stylesheet" href="../static/site.css">
+</head>
+<body>
+
+<a class="skip" href="#content">Skip to content</a>
+
+<header class="top">
+  <a class="brand" href="../">
+    <img src="../static/creature.png" alt="" width="38" height="40">
+    <span class="brand-name">KayPy</span>
+  </a>
+  <nav class="top-nav" aria-label="Main"><a href="../">Home</a><a href="../start/">Get started</a><a href="../guide/">Guide</a><a href="../api/">API</a><a href="../tutorials/" class="current">Tutorials</a><a href="../play/">Playground</a></nav>
+  <a class="gh" href="https://discord.gg/sVXnsDZNm"
+     aria-label="KayPy on Discord">Discord</a>
+  <a class="gh" href="https://github.com/sfranz2422/kaypy"
+     aria-label="KayPy on GitHub">GitHub</a>
+</header>
+
+<main id="content" class="with-toc">
+  <nav class="toc" aria-label="On this page"><p class="toc-head">On this page</p><a href="#tutorials" class="d1">Tutorials</a><a href="#whole-games" class="d2">Whole games</a><a href="#the-lesson-programs" class="d2">The lesson programs</a><a href="#coming-next" class="d2">Coming next</a></nav>
+  <article class="prose">
+<!-- Built by tutorials.py. Do not edit.
+
+  The listings are read out of examples/ in the kaypy repository, so the code
+  here is the code that repository tests. The part above them is
+  content/tutorials.intro.md, which IS edited by hand.
+
+      python3 tutorials.py --from ~/kaypy      rebuild
+      python3 tutorials.py --check             has anything moved on?
+-->
+
+<h1 id="tutorials">Tutorials</h1>
+<p>Whole games, short enough to read in one sitting.</p>
+<p>The <a href="../guide/">guide</a> teaches one idea at a time and builds up. This page is
+the other half of that: finished programs you can copy into the
+<a href="../play/">playground</a>, press Run, and then take apart. Nothing here is a
+fragment — every listing is a complete file that runs as it stands.</p>
+<blockquote>
+<p><strong>How to use one.</strong> Copy it, run it, then break something on purpose. Change
+a number and see what moves. That tells you more about what a line does than
+reading it does.</p>
+</blockquote>
+<h2 id="whole-games">Whole games</h2>
+<h3 id="a-door-that-asks-a-question-what-ask-say-and-pause-are-for">A door that asks a question — what ask(), say() and pause() are for</h3>
+<p>python3 quiz_door.py</p>
+<p>Arrows to move, space to jump, escape to pause. Walk into the door and the
+game stops and asks you something; get it right and the door opens.</p>
+<p>Not one of the thirteen lessons: it is the smallest complete example of the
+one thing a teacher asks for that a game engine usually cannot do. Three
+names here appear nowhere in the lessons:</p>
+<div class="hl"><pre><span></span><code>ask(question, choices, answer=n)   stop and ask, then run a callback
+say(text)                          stop and show a line of text
+pause() / resume() / isPaused()    freeze the game where it stands
+</code></pre></div>
+
+<p>The question is a callback rather than a return value because a browser
+cannot block: nothing can wait for an answer without stopping the frame that
+would draw the question. So <code>ask</code> puts the panel up and hands you the answer
+when there is one, and the game is paused in between.</p>
+<div class="hl"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">kaypy</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">kaypy</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="p">[</span><span class="mi">141</span><span class="p">,</span> <span class="mi">183</span><span class="p">,</span> <span class="mi">255</span><span class="p">])</span>
+
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">,</span> <span class="s2">"images/bean.png"</span><span class="p">)</span>
+<span class="n">setGravity</span><span class="p">(</span><span class="mi">2400</span><span class="p">)</span>
+
+<span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="n">width</span><span class="p">(),</span> <span class="mi">48</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">()</span> <span class="o">-</span> <span class="mi">48</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">(</span><span class="n">isStatic</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+     <span class="n">color</span><span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">70</span><span class="p">)])</span>
+
+<span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">(),</span> <span class="n">anchor</span><span class="p">(</span><span class="s2">"bot"</span><span class="p">)])</span>
+<span class="n">door</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">650</span><span class="p">,</span> <span class="n">height</span><span class="p">()</span> <span class="o">-</span> <span class="mi">138</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">color</span><span class="p">(</span><span class="mi">140</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span>
+            <span class="s2">"door"</span><span class="p">])</span>
+
+<span class="n">score</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">label</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">text</span><span class="p">(</span><span class="s2">"Score: 0"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">26</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span> <span class="n">fixed</span><span class="p">()])</span>
+
+
+<span class="nd">@onKeyDown</span><span class="p">(</span><span class="s2">"left"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">left</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="o">-</span><span class="mi">320</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+
+<span class="nd">@onKeyDown</span><span class="p">(</span><span class="s2">"right"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">right</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="mi">320</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+
+<span class="nd">@onKeyPress</span><span class="p">(</span><span class="s2">"space"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">jump</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">player</span><span class="o">.</span><span class="n">isGrounded</span><span class="p">():</span>
+        <span class="n">player</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+
+
+<span class="nd">@player</span><span class="o">.</span><span class="n">onCollide</span><span class="p">(</span><span class="s2">"door"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">at_the_door</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="nd">@ask</span><span class="p">(</span><span class="s2">"Which keyword starts a loop in Python?"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"if"</span><span class="p">,</span> <span class="s2">"for"</span><span class="p">,</span> <span class="s2">"def"</span><span class="p">],</span> <span class="n">answer</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">checked</span><span class="p">(</span><span class="n">correct</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">score</span>
+        <span class="k">if</span> <span class="n">correct</span><span class="p">:</span>
+            <span class="n">score</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">label</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s2">"Score: </span><span class="si">%d</span><span class="s2">"</span> <span class="o">%</span> <span class="n">score</span>
+            <span class="n">d</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+            <span class="n">say</span><span class="p">(</span><span class="s2">"The door swings open."</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">say</span><span class="p">(</span><span class="s2">"Not that one. Have another go."</span><span class="p">)</span>
+
+
+<span class="nd">@onKeyPress</span><span class="p">(</span><span class="s2">"escape"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">toggle_pause</span><span class="p">():</span>
+    <span class="n">resume</span><span class="p">()</span> <span class="k">if</span> <span class="n">isPaused</span><span class="p">()</span> <span class="k">else</span> <span class="n">pause</span><span class="p">()</span>
+</code></pre></div>
+
+<p><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/quiz_door.py"><code>examples/quiz_door.py</code></a> · 71 lines</p>
+<hr />
+<h3 id="asteroids-what-rotate-is-for">Asteroids — what rotate() is for</h3>
+<p>python3 asteroids.py</p>
+<p>Left and right turn the ship, up thrusts in the direction it is facing,
+space fires. Rocks drift, split when hit, and wrap around the screen.</p>
+<p>Not one of the thirteen lessons: it is the game the lessons build towards,
+and the one that cannot be written at all without a ship that turns. Three
+things here appear nowhere in the lessons and are the whole point of it:</p>
+<div class="hl"><pre><span></span><code>rotate(angle)            the ship turns
+Vec2.fromAngle(angle)    which way "forward" is, once it has turned
+a velocity of its own     momentum, so letting go of thrust coasts
+</code></pre></div>
+
+<div class="hl"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">kaypy</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">kaypy</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
+
+<span class="n">TURN</span> <span class="o">=</span> <span class="mi">200</span>          <span class="c1"># degrees per second</span>
+<span class="n">THRUST</span> <span class="o">=</span> <span class="mi">320</span>        <span class="c1"># pixels per second per second</span>
+<span class="n">MAX_SPEED</span> <span class="o">=</span> <span class="mi">420</span>
+<span class="n">BULLET_SPEED</span> <span class="o">=</span> <span class="mi">560</span>
+
+<span class="n">score</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="n">ship</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span>
+    <span class="n">rect</span><span class="p">(</span><span class="mi">26</span><span class="p">,</span> <span class="mi">18</span><span class="p">),</span>
+    <span class="n">pos</span><span class="p">(</span><span class="n">center</span><span class="p">()),</span>
+    <span class="n">anchor</span><span class="p">(</span><span class="s2">"center"</span><span class="p">),</span>
+    <span class="n">color</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">230</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+    <span class="n">rotate</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+    <span class="n">area</span><span class="p">(),</span>
+    <span class="s2">"ship"</span><span class="p">,</span>
+<span class="p">])</span>
+<span class="n">ship</span><span class="o">.</span><span class="n">vel</span> <span class="o">=</span> <span class="n">vec2</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+<span class="n">label</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">text</span><span class="p">(</span><span class="s2">"0"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">22</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">fixed</span><span class="p">()])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">wrap</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Off one edge, on at the other — the rule that makes it Asteroids."""</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">pos</span>
+    <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">vec2</span><span class="p">(</span><span class="n">width</span><span class="p">(),</span> <span class="n">p</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">p</span><span class="o">.</span><span class="n">x</span> <span class="o">&gt;</span> <span class="n">width</span><span class="p">():</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">vec2</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">pos</span>
+    <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">y</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">vec2</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">height</span><span class="p">())</span>
+    <span class="k">elif</span> <span class="n">p</span><span class="o">.</span><span class="n">y</span> <span class="o">&gt;</span> <span class="n">height</span><span class="p">():</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">vec2</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">spawn_rock</span><span class="p">(</span><span class="n">at</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span>
+        <span class="n">circle</span><span class="p">(</span><span class="n">chunks</span> <span class="o">*</span> <span class="mi">11</span><span class="p">),</span>
+        <span class="n">pos</span><span class="p">(</span><span class="n">at</span> <span class="ow">or</span> <span class="n">vec2</span><span class="p">(</span><span class="n">rand</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="p">()),</span> <span class="n">rand</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">))),</span>
+        <span class="n">anchor</span><span class="p">(</span><span class="s2">"center"</span><span class="p">),</span>
+        <span class="n">color</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">140</span><span class="p">,</span> <span class="mi">130</span><span class="p">),</span>
+        <span class="n">outline</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="mi">85</span><span class="p">,</span> <span class="mi">80</span><span class="p">)),</span>
+        <span class="n">area</span><span class="p">(),</span>
+        <span class="n">rotate</span><span class="p">(</span><span class="n">rand</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">360</span><span class="p">)),</span>
+        <span class="s2">"rock"</span><span class="p">,</span>
+    <span class="p">])</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">vel</span> <span class="o">=</span> <span class="n">Vec2</span><span class="o">.</span><span class="n">fromAngle</span><span class="p">(</span><span class="n">rand</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">360</span><span class="p">))</span> <span class="o">*</span> <span class="n">rand</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">110</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">spin</span> <span class="o">=</span> <span class="n">rand</span><span class="p">(</span><span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">90</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">chunks</span> <span class="o">=</span> <span class="n">chunks</span>   <span class="c1"># 3, 2, 1 — splits down to nothing</span>
+    <span class="k">return</span> <span class="n">r</span>
+
+
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+    <span class="n">spawn_rock</span><span class="p">()</span>
+
+
+<span class="nd">@onKeyDown</span><span class="p">(</span><span class="s2">"left"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">turn_left</span><span class="p">():</span>
+    <span class="n">ship</span><span class="o">.</span><span class="n">rotateBy</span><span class="p">(</span><span class="o">-</span><span class="n">TURN</span> <span class="o">*</span> <span class="n">dt</span><span class="p">())</span>
+
+
+<span class="nd">@onKeyDown</span><span class="p">(</span><span class="s2">"right"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">turn_right</span><span class="p">():</span>
+    <span class="n">ship</span><span class="o">.</span><span class="n">rotateBy</span><span class="p">(</span><span class="n">TURN</span> <span class="o">*</span> <span class="n">dt</span><span class="p">())</span>
+
+
+<span class="nd">@onKeyDown</span><span class="p">(</span><span class="s2">"up"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">thrust</span><span class="p">():</span>
+    <span class="n">ship</span><span class="o">.</span><span class="n">vel</span> <span class="o">=</span> <span class="n">ship</span><span class="o">.</span><span class="n">vel</span> <span class="o">+</span> <span class="n">Vec2</span><span class="o">.</span><span class="n">fromAngle</span><span class="p">(</span><span class="n">ship</span><span class="o">.</span><span class="n">angle</span><span class="p">)</span> <span class="o">*</span> <span class="n">THRUST</span> <span class="o">*</span> <span class="n">dt</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">ship</span><span class="o">.</span><span class="n">vel</span><span class="o">.</span><span class="n">len</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">MAX_SPEED</span><span class="p">:</span>
+        <span class="n">ship</span><span class="o">.</span><span class="n">vel</span> <span class="o">=</span> <span class="n">ship</span><span class="o">.</span><span class="n">vel</span><span class="o">.</span><span class="n">unit</span><span class="p">()</span> <span class="o">*</span> <span class="n">MAX_SPEED</span>
+
+
+<span class="nd">@onKeyPress</span><span class="p">(</span><span class="s2">"space"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">fire</span><span class="p">():</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span>
+        <span class="n">circle</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span>
+        <span class="n">pos</span><span class="p">(</span><span class="n">ship</span><span class="o">.</span><span class="n">pos</span><span class="p">),</span>
+        <span class="n">anchor</span><span class="p">(</span><span class="s2">"center"</span><span class="p">),</span>
+        <span class="n">color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">240</span><span class="p">,</span> <span class="mi">160</span><span class="p">),</span>
+        <span class="n">area</span><span class="p">(),</span>
+        <span class="s2">"bullet"</span><span class="p">,</span>
+    <span class="p">])</span>
+    <span class="n">b</span><span class="o">.</span><span class="n">vel</span> <span class="o">=</span> <span class="n">Vec2</span><span class="o">.</span><span class="n">fromAngle</span><span class="p">(</span><span class="n">ship</span><span class="o">.</span><span class="n">angle</span><span class="p">)</span> <span class="o">*</span> <span class="n">BULLET_SPEED</span>
+    <span class="n">wait</span><span class="p">(</span><span class="mf">1.2</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span> <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+
+
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">fly</span><span class="p">():</span>
+    <span class="n">ship</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">ship</span><span class="o">.</span><span class="n">pos</span> <span class="o">+</span> <span class="n">ship</span><span class="o">.</span><span class="n">vel</span> <span class="o">*</span> <span class="n">dt</span><span class="p">()</span>
+    <span class="n">wrap</span><span class="p">(</span><span class="n">ship</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">get</span><span class="p">(</span><span class="s2">"rock"</span><span class="p">):</span>
+        <span class="n">r</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">pos</span> <span class="o">+</span> <span class="n">r</span><span class="o">.</span><span class="n">vel</span> <span class="o">*</span> <span class="n">dt</span><span class="p">()</span>
+        <span class="n">r</span><span class="o">.</span><span class="n">rotateBy</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">spin</span> <span class="o">*</span> <span class="n">dt</span><span class="p">())</span>
+        <span class="n">wrap</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">get</span><span class="p">(</span><span class="s2">"bullet"</span><span class="p">):</span>
+        <span class="n">b</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">pos</span> <span class="o">+</span> <span class="n">b</span><span class="o">.</span><span class="n">vel</span> <span class="o">*</span> <span class="n">dt</span><span class="p">()</span>
+        <span class="n">wrap</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">shooting</span><span class="p">():</span>
+    <span class="k">global</span> <span class="n">score</span>
+    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">get</span><span class="p">(</span><span class="s2">"bullet"</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">get</span><span class="p">(</span><span class="s2">"rock"</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">exists</span><span class="p">()):</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">r</span><span class="o">.</span><span class="n">chunks</span> <span class="o">*</span> <span class="mi">11</span><span class="p">:</span>
+                <span class="n">b</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+                <span class="n">r</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+                <span class="n">score</span> <span class="o">+=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">r</span><span class="o">.</span><span class="n">chunks</span>
+                <span class="n">label</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">score</span><span class="p">)</span>
+                <span class="n">shake</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">chunks</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+                        <span class="n">spawn_rock</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">chunks</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">break</span>
+</code></pre></div>
+
+<p><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/asteroids.py"><code>examples/asteroids.py</code></a> · 136 lines</p>
+<hr />
+<h2 id="the-lesson-programs">The lesson programs</h2>
+<p>Each of these is the finished program from one lesson of the
+<a href="../guide/">guide</a>, which explains it a piece at a time. Read the
+lesson; keep the file to run.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>What it shows</th>
+<th style="text-align: right;">Lines</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1</strong></td>
+<td><a href="../guide/#1-adding-a-game-object">Adding a game object</a></td>
+<td style="text-align: right;">12</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson1_adding_object.py">source</a></td>
+</tr>
+<tr>
+<td><strong>2</strong></td>
+<td><a href="../guide/#2-player-movement">Player movement</a></td>
+<td style="text-align: right;">25</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson2_player_movement.py">source</a></td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td><a href="../guide/#3-collision-handling">Collision handling</a></td>
+<td style="text-align: right;">48</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson3_collision.py">source</a></td>
+</tr>
+<tr>
+<td><strong>5</strong></td>
+<td><a href="../guide/#5-gravity">Gravity</a></td>
+<td style="text-align: right;">39</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson5_gravity.py">source</a></td>
+</tr>
+<tr>
+<td><strong>6</strong></td>
+<td><a href="../guide/#6-sprite-animation">Sprite animation</a></td>
+<td style="text-align: right;">67</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson6_sprite_animation.py">source</a></td>
+</tr>
+<tr>
+<td><strong>7</strong></td>
+<td><a href="../guide/#7-scenes">Scenes</a></td>
+<td style="text-align: right;">91</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson7_scenes.py">source</a></td>
+</tr>
+<tr>
+<td><strong>8</strong></td>
+<td><a href="../guide/#8-audio-and-buttons">Audio and buttons</a></td>
+<td style="text-align: right;">38</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson8_audio_buttons.py">source</a></td>
+</tr>
+<tr>
+<td><strong>9</strong></td>
+<td><a href="../guide/#9-timer-and-loop">Timer and loop</a></td>
+<td style="text-align: right;">17</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson9_timer_loop.py">source</a></td>
+</tr>
+<tr>
+<td><strong>10</strong></td>
+<td><a href="../guide/#10-levels">Levels</a></td>
+<td style="text-align: right;">43</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson10_levels.py">source</a></td>
+</tr>
+<tr>
+<td><strong>11</strong></td>
+<td><a href="../guide/#11-camera">Camera</a></td>
+<td style="text-align: right;">58</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson11_camera.py">source</a></td>
+</tr>
+<tr>
+<td><strong>12</strong></td>
+<td><a href="../guide/#12-sprite-atlas">Sprite atlas</a></td>
+<td style="text-align: right;">100</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson12_sprite_atlas.py">source</a></td>
+</tr>
+<tr>
+<td><strong>13</strong></td>
+<td><a href="../guide/#13-using-state-to-handle-ai">Using state to handle AI</a></td>
+<td style="text-align: right;">61</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson13_state_ai.py">source</a></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="coming-next">Coming next</h2>
+<p><strong>Coin Collector</strong>, a thirteen-step platform game built from nothing — the
+one to work through once the guide's lessons make sense. It exists as a
+classroom walkthrough written for a different engine, and is being rewritten
+for KayPy rather than translated, because the two think about a game in
+genuinely different ways and a line-by-line translation would teach the seams
+instead of the game.</p>
+<p>If you are teaching with this and want it sooner, or want something else
+first, say so on the <a href="https://discord.gg/sVXnsDZNm">Discord</a>.</p>
+  </article>
+</main>
+
+<footer class="foot">
+  <p>
+    <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+    <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+    <a href="https://pypi.org/project/kaypy/">PyPI</a>
+  </p>
+  <p class="dim">
+    MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+    Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+    Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+    and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+  </p>
+  <p class="dim">
+    KayPy is an independent project, not affiliated with or endorsed by the
+    KAPLAY team.
+  </p>
+</footer>
+
+</body>
+</html>

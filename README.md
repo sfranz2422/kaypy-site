@@ -53,19 +53,41 @@ and forgets the output.
 
 ## Where things come from
 
-Most of this repo is written here. Two things are not, and are vendored
+Most of this repo is written here. Some things are not, and are vendored
 instead, because they already exist and having two copies drift apart is the
 failure that costs a lesson:
 
 ```bash
-python3 vendor.py         # from ~/pyide
+python3 vendor.py         # the engine and sprites, from ~/pyide
+python3 guide.py          # the thirteen lessons, from ~/kaypy
+python3 tutorials.py      # the example listings, from ~/kaypy
 ```
+
+Each takes `--check`, which compares and changes nothing — run all three
+before a deploy to find out whether anything upstream has moved on.
 
 | vendored | from | why |
 |---|---|---|
 | `dist/engine/kaypy_bundle.json` | `pyide/static/py/` | the engine the playground runs |
 | `dist/assets/` | `pyide/static/assets/` | the sprite packs and sounds |
 | `dist/play/game.js`, `export.js`, `sprites.js` | `pyide/static/` | the parts of the editor that are not UI |
+| `content/guide.md` (lessons) | `kaypy/GUIDE.md` | the lessons are the same wherever you read them |
+| `content/tutorials.md` (listings) | `kaypy/examples/` | so the code on the page is the code that repo tests |
+
+The guide and tutorials pages are **half** vendored. Their front matter is
+written for this site and lives in `content/guide.intro.md` and
+`content/tutorials.intro.md` — edit those. Everything below is pasted in and
+`content/guide.md` and `content/tutorials.md` are outputs, not sources.
+
+Two rules are enforced rather than trusted, because both fail silently:
+
+* the handful of sentences that say "PyIDE" in the repository and "the
+  playground" here are written out in full in `guide.py`, and every one must
+  be found. A reworded sentence stops the build instead of shipping a page
+  that names a button the reader does not have.
+* an edit may change what the guide **says** and never what it **runs**.
+  `guide.py` compares every fenced code block before and after, so the
+  programs on this site stay byte-identical to the ones kaypy tests.
 
 `vendor.py` writes `dist/engine/stamp.json` saying which kaypy version and
 which PyIDE commit it took them from, so a bug in a built game can be traced
@@ -80,10 +102,14 @@ and small.
 
 ```
 content/          the markdown: guide, api, tutorials
+  *.intro.md      the hand-written half of guide.md and tutorials.md
 templates/        the page shell and the nav
 play/             the playground's own shell (its JS and CSS)
 static/           css, the logo, favicons
 build.py          content -> dist
-vendor.py         pyide -> dist
+vendor.py         pyide -> dist       (engine, sprites, editor modules)
+guide.py          kaypy -> content    (GUIDE.md's thirteen lessons)
+tutorials.py      kaypy -> content    (the listings, read out of examples/)
+check_site.py     every link, anchor and template slot in dist/
 dist/             what Render publishes. Generated, and committed.
 ```
