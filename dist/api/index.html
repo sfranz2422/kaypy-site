@@ -48,13 +48,34 @@ examples describe these functions too. Where Python makes a difference, this
 page says so.</p>
 <hr />
 <h2 id="starting-a-game">Starting a game</h2>
-<h3 id="kaypywidth-height-background">kaypy(width, height, background)</h3>
+<h3 id="kaypywidth-height-background-joystick">kaypy(width, height, background, joystick)</h3>
 <p>Starts the engine. It must come first — before loading anything, before adding
 anything. There is no <code>run()</code> to call afterwards: the loop starts by itself
 once your file has been read.</p>
 <div class="hl"><pre><span></span><code><span class="n">kaypy</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">768</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">40</span><span class="p">])</span>
 </code></pre></div>
 
+<p><code>joystick=True</code> puts a d-pad and two buttons on the screen, for playing with
+a thumb. They hold the arrow keys and send <code>space</code> and <code>z</code>, so a game written
+for the keyboard works on a phone without changing a line:</p>
+<div class="hl"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">kaypy</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">kaypy</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">joystick</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">,</span> <span class="s2">"images/bean.png"</span><span class="p">)</span>
+
+<span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
+
+<span class="c1"># The d-pad drives this. Nothing here knows it is not a keyboard.</span>
+<span class="nd">@onKeyDown</span><span class="p">(</span><span class="s2">"left"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">go_left</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="o">-</span><span class="mi">320</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Pass a list to choose what the two buttons send:</p>
+<div class="hl"><pre><span></span><code><span class="n">kaypy</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">joystick</span><span class="o">=</span><span class="p">[</span><span class="s2">"space"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">])</span>
+</code></pre></div>
+
+<p>It works with a mouse too, so you can try it without picking up a phone.</p>
 <h3 id="width">width()</h3>
 <p>How wide the window is, in pixels. Use it instead of typing the number twice.</p>
 <div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="n">width</span><span class="p">(),</span> <span class="mi">20</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">70</span><span class="p">)])</span>

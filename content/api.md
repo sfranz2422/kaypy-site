@@ -23,7 +23,7 @@ page says so.
 
 ## Starting a game
 
-### kaypy(width, height, background)
+### kaypy(width, height, background, joystick)
 
 Starts the engine. It must come first — before loading anything, before adding
 anything. There is no `run()` to call afterwards: the loop starts by itself
@@ -32,6 +32,32 @@ once your file has been read.
 ```python
 kaypy(width=1024, height=768, background=[20, 20, 40])
 ```
+
+`joystick=True` puts a d-pad and two buttons on the screen, for playing with
+a thumb. They hold the arrow keys and send `space` and `z`, so a game written
+for the keyboard works on a phone without changing a line:
+
+```python
+from kaypy import *
+
+kaypy(width=800, height=600, joystick=True)
+loadSprite("bean", "images/bean.png")
+
+player = add([sprite("bean"), pos(100, 100)])
+
+# The d-pad drives this. Nothing here knows it is not a keyboard.
+@onKeyDown("left")
+def go_left():
+    player.move(-320, 0)
+```
+
+Pass a list to choose what the two buttons send:
+
+```python
+kaypy(width=800, height=600, joystick=["space", "x"])
+```
+
+It works with a mouse too, so you can try it without picking up a phone.
 
 ### width()
 
