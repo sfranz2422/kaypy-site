@@ -324,3 +324,17 @@ main.with-toc .toc  { grid-row: 1; grid-column: 2; }
 }
 .prose details[open] summary::before { transform: rotate(90deg); }
 .prose summary:hover { color: var(--fg); }
+
+/* The demo on the home page.
+ *
+ * Its width is set by the code inside it: sixteen lines of Python at a size
+ * somebody can read is 980px, and shrinking the picture to fit the 46rem
+ * prose column renders that code at about ten pixels, which is a blur of
+ * syntax colouring rather than a program. The home page's column leaves
+ * plenty of room to its right, so on a wide screen the demo uses it. */
+.demo { margin: 2rem 0; }
+@media (min-width: 70rem) { .demo { width: 980px; } }
+.demo img {
+  width: 100%; height: auto; display: block;
+  border-radius: var(--radius); border: 1px solid var(--line);
+}

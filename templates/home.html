@@ -8,20 +8,11 @@
   </p>
 </div>
 
-<pre class="hl"><code>from kaypy import *
-
-kaypy(width=800, height=600, background=[141, 183, 255])
-
-loadSprite("bean", "images/bean.png")
-setGravity(1600)
-
-player = add([sprite("bean"), pos(120, 80), area(), body()])
-
-@onKeyPress("space")
-def jump():
-    if player.isGrounded():
-        player.jump(800)
-</code></pre>
+<p class="demo">
+  <img src="./static/demo.gif" width="980" height="420" loading="lazy"
+       alt="Sixteen lines of Python on the left; on the right a character
+            falls, lands on the ground and jumps.">
+</p>
 
 <p>
   That is a whole game — a character that falls, lands and jumps. There is no
