@@ -101,7 +101,8 @@ and small.
 ## Layout
 
 ```
-content/          the markdown: guide, api, tutorials
+content/          the markdown: learn, guide, api, tutorials
+  learn.md        the Learn Python lessons — written here, by hand
   *.intro.md      the hand-written half of guide.md and tutorials.md
 templates/        the page shell and the nav
 play/             the playground's own shell (its JS and CSS)
@@ -111,5 +112,7 @@ vendor.py         pyide -> dist       (engine, sprites, editor modules)
 guide.py          kaypy -> content    (GUIDE.md's thirteen lessons)
 tutorials.py      kaypy -> content    (the listings, read out of examples/)
 check_site.py     every link, anchor and template slot in dist/
+test_lesson.py    runs every program in learn.md and compares the printed
+                  output to what the page claims it prints
 dist/             what Render publishes. Generated, and committed.
 ```

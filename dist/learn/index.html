@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learn Python · KayPy</title>
+<meta name="description" content="A game engine for learning Python — build a game out of components, run it in the browser, share it as one file.">
+<meta property="og:title" content="Learn Python · KayPy">
+<meta property="og:description" content="A game engine for learning Python — build a game out of components, run it in the browser, share it as one file.">
+<meta property="og:image" content="../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../static/favicon.png">
+<link rel="apple-touch-icon" href="../static/icon-180.png">
+<link rel="stylesheet" href="../static/site.css">
+</head>
+<body>
+
+<a class="skip" href="#content">Skip to content</a>
+
+<header class="top">
+  <a class="brand" href="../">
+    <img src="../static/creature.png" alt="" width="38" height="40">
+    <span class="brand-name">KayPy</span>
+  </a>
+  <nav class="top-nav" aria-label="Main"><a href="../">Home</a><a href="../start/">Get started</a><a href="../learn/" class="current">Learn Python</a><a href="../guide/">Guide</a><a href="../api/">API</a><a href="../tutorials/">Tutorials</a><a href="../play/">Playground</a></nav>
+  <a class="gh" href="https://discord.gg/sVXnsDZNm"
+     aria-label="KayPy on Discord">Discord</a>
+  <a class="gh" href="https://github.com/sfranz2422/kaypy"
+     aria-label="KayPy on GitHub">GitHub</a>
+</header>
+
+<main id="content" class="with-toc">
+  <nav class="toc" aria-label="On this page"><p class="toc-head">On this page</p><a href="#learn-python" class="d1">Learn Python</a><a href="#lesson-1-loops" class="d2">Lesson 1 — Loops</a><a href="#watch-for" class="d2">Watch for</a><a href="#classwork-1-the-boss-fight" class="d2">Classwork 1 — The Boss Fight</a><a href="#classwork-2-the-level-builder" class="d2">Classwork 2 — The Level Builder</a><a href="#check-yourself" class="d2">Check yourself</a><a href="#coming-next" class="d2">Coming next</a></nav>
+  <article class="prose">
+<h1 id="learn-python">Learn Python</h1>
+<p>Python, taught with a game on the screen.</p>
+<p>Most Python lessons ask you to print things. Printing is fine, and you will do
+plenty of it here — but a loop that prints <code>Wave 3 incoming</code> is a loop you have
+to <em>imagine</em>. A loop that puts forty tiles on the screen is a loop you can
+point at.</p>
+<p>So every lesson here does both. The idea first, in plain Python, where you can
+see exactly what happened. Then the same idea building something you can play.</p>
+<p><strong>You need nothing installed.</strong> Open the <a href="../play/">playground</a>, type, press
+Run. If you would rather work on your own machine, <a href="../start/">Get started</a>
+takes four commands.</p>
+<blockquote>
+<p><strong>What this is not.</strong> This is not the <a href="../guide/">guide</a>. The guide teaches
+the engine — sprites, collision, scenes — and assumes you already know what a
+variable and a function are. These pages teach Python itself, and use the
+engine to make it visible.</p>
+</blockquote>
+<hr />
+<h2 id="lesson-1-loops">Lesson 1 — Loops</h2>
+<p><strong>By the end of this you can:</strong> repeat work without repeating yourself, count
+with <code>range()</code>, keep a running total, and build a whole level out of six lines.</p>
+<h3 id="the-problem-loops-solve">The problem loops solve</h3>
+<p>Say three waves of enemies are coming. You could write it out:</p>
+<div class="hl"><pre><span></span><code><span class="nb">print</span><span class="p">(</span><span class="s2">"Wave 1 incoming"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Wave 2 incoming"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Wave 3 incoming"</span><span class="p">)</span>
+</code></pre></div>
+
+<div class="hl"><pre><span></span><code>Wave 1 incoming
+Wave 2 incoming
+Wave 3 incoming
+</code></pre></div>
+
+<p>That works. Now make it thirty waves. Or three hundred. Or let the number
+change while the game is running.</p>
+<p>The moment you find yourself copying a line and changing one small thing in it,
+you want a loop:</p>
+<div class="hl"><pre><span></span><code><span class="k">for</span> <span class="n">wave</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Wave"</span><span class="p">,</span> <span class="n">wave</span><span class="p">,</span> <span class="s2">"incoming"</span><span class="p">)</span>
+</code></pre></div>
+
+<div class="hl"><pre><span></span><code>Wave 1 incoming
+Wave 2 incoming
+Wave 3 incoming
+</code></pre></div>
+
+<p>Same output, one copy of the line. <code>wave</code> is a variable Python creates for you
+and fills in with a different value each time round.</p>
+<h3 id="range-counts-for-you"><code>range()</code> counts for you</h3>
+<p><code>range()</code> is where the numbers come from, and it has three forms:</p>
+<div class="hl"><pre><span></span><code><span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">101</span><span class="p">,</span> <span class="mi">25</span><span class="p">)))</span>
+</code></pre></div>
+
+<div class="hl"><pre><span></span><code>[0, 1, 2, 3, 4]
+[1, 2, 3, 4, 5]
+[0, 25, 50, 75, 100]
+</code></pre></div>
+
+<ul>
+<li><code>range(5)</code> — five numbers, <strong>starting at 0</strong>, so it stops at 4.</li>
+<li><code>range(1, 6)</code> — start at 1, <strong>stop before 6</strong>.</li>
+<li><code>range(0, 101, 25)</code> — start, stop, and how big a step.</li>
+</ul>
+<p><strong>The stop number is not included.</strong> This catches everybody once:</p>
+<div class="hl"><pre><span></span><code><span class="k">for</span> <span class="n">wave</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">wave</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">" "</span><span class="p">)</span>
+</code></pre></div>
+
+<div class="hl"><pre><span></span><code>1 2 3 4 5 6 7 8 9 
+</code></pre></div>
+
+<p>Nine waves, not ten. If you want 1 to 10, you write <code>range(1, 11)</code> — the stop
+number is where it <em>stops</em>, not the last number it uses. Say it out loud as
+"up to but not including" and it stops being a surprise.</p>
+<h3 id="now-put-it-on-the-screen">Now put it on the screen</h3>
+<p>Here is the same <code>for</code> loop, building something:</p>
+<div class="hl"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">kaypy</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">kaypy</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">36</span><span class="p">])</span>
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"coin"</span><span class="p">,</span> <span class="s2">"images/coin.png"</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+    <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"coin"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">80</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="s2">"coin"</span><span class="p">])</span>
+</code></pre></div>
+
+<p>Eight coins in a row. Press Run and count them.</p>
+<p>The whole trick is <code>80 + i * 80</code>. On the first pass <code>i</code> is 0, so the coin goes
+at x = 80. Next time <code>i</code> is 1, so x = 160. Then 240. The loop variable is doing
+the arithmetic that spaces them out, which is why you get a row rather than
+eight coins stacked in one place.</p>
+<blockquote>
+<p><strong>Change one number.</strong> Make it <code>range(20)</code> and watch them run off the edge of
+the screen. Change <code>i * 80</code> to <code>i * 30</code> and they overlap. Change the <code>300</code> to
+<code>300 + i * 20</code> and the row becomes a staircase. Do all three before you read
+on — this is the part where loops stop being abstract.</p>
+</blockquote>
+<h3 id="a-loop-inside-a-loop">A loop inside a loop</h3>
+<p>One loop makes a row. A loop inside a loop makes a grid:</p>
+<div class="hl"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">kaypy</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">kaypy</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">36</span><span class="p">])</span>
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"steel"</span><span class="p">,</span> <span class="s2">"images/steel.png"</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+        <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"steel"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="n">col</span> <span class="o">*</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">300</span> <span class="o">+</span> <span class="n">row</span> <span class="o">*</span> <span class="mi">64</span><span class="p">),</span> <span class="n">area</span><span class="p">()])</span>
+</code></pre></div>
+
+<p>Forty tiles, from six lines.</p>
+<p>Read it in the right order and it is not hard: the <strong>outer</strong> loop picks a row
+and holds still; the <strong>inner</strong> loop runs all the way across that row before the
+outer one moves on. Row 0, ten tiles. Row 1, ten tiles. Four rows, ten each,
+forty in total.</p>
+<p>The indentation is doing real work here. <code>add(...)</code> is indented twice because
+it belongs to the inner loop. Pull it back one level and it runs once per row
+instead of once per column — four tiles instead of forty.</p>
+<h3 id="while-when-you-do-not-know-how-many"><code>while</code> — when you do not know how many</h3>
+<p><code>for</code> is for when you know the count. <code>while</code> is for when you know the
+<em>condition</em>:</p>
+<div class="hl"><pre><span></span><code><span class="n">shield</span> <span class="o">=</span> <span class="mi">100</span>
+
+<span class="k">while</span> <span class="n">shield</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="n">shield</span> <span class="o">=</span> <span class="n">shield</span> <span class="o">-</span> <span class="mi">30</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Hit! Shield:"</span><span class="p">,</span> <span class="n">shield</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Shield down"</span><span class="p">)</span>
+</code></pre></div>
+
+<div class="hl"><pre><span></span><code>Hit! Shield: 70
+Hit! Shield: 40
+Hit! Shield: 10
+Hit! Shield: -20
+Shield down
+</code></pre></div>
+
+<p>Look at that last number. The shield ends on <strong>−20</strong>, not 0.</p>
+<p>Nothing went wrong — <code>while</code> checks its condition <em>before</em> each pass, not
+during one. When the shield was 10, <code>10 &gt; 0</code> was true, so Python ran the body
+one more time and took another 30 off. The check does not interrupt a pass
+halfway through.</p>
+<p>That is worth sitting with, because it is the shape of a hundred real bugs: a
+character that takes one hit too many, a timer that goes one tick past zero.</p>
+<h3 id="keeping-a-running-total">Keeping a running total</h3>
+<p>The pattern is: start a variable at zero, and add to it inside the loop.</p>
+<div class="hl"><pre><span></span><code><span class="n">total_gold</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">for</span> <span class="n">chest</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span>
+    <span class="n">total_gold</span> <span class="o">=</span> <span class="n">total_gold</span> <span class="o">+</span> <span class="mi">25</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Opened chest"</span><span class="p">,</span> <span class="n">chest</span><span class="p">,</span> <span class="s2">"- gold is now"</span><span class="p">,</span> <span class="n">total_gold</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Run total:"</span><span class="p">,</span> <span class="n">total_gold</span><span class="p">)</span>
+</code></pre></div>
+
+<div class="hl"><pre><span></span><code>Opened chest 1 - gold is now 25
+Opened chest 2 - gold is now 50
+Opened chest 3 - gold is now 75
+Opened chest 4 - gold is now 100
+Run total: 100
+</code></pre></div>
+
+<p><code>total_gold = total_gold + 25</code> looks like nonsense in maths — nothing equals
+itself plus 25. It is not maths. Python works out the <strong>right side first</strong>,
+using the value the box currently holds, and then puts the answer back in the
+box. Old value in, new value out.</p>
+<p><code>total_gold</code> has to be created <strong>before</strong> the loop. Put it inside and it gets
+reset to zero on every pass, and you end up with 25 no matter how many chests
+you open.</p>
+<hr />
+<h2 id="watch-for">Watch for</h2>
+<p><strong>The stop number is not included.</strong> <code>range(1, 10)</code> gives you nine numbers.</p>
+<p><strong>Indentation decides what repeats.</strong> Everything indented under the <code>for</code> line
+runs every time round. The first line that goes back out to the left is the
+loop ending.</p>
+<p><strong>Build the total before the loop, not inside it.</strong></p>
+<p><strong>Never write your own <code>while True:</code> in a game.</strong></p>
+<div class="hl"><pre><span></span><code><span class="c1"># DO NOT do this in a kaypy program.</span>
+<span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+    <span class="n">coin</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">coin</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+</code></pre></div>
+
+<p>In console Python this is how you keep something going. In a kaypy program the
+loop is <strong>already running</strong> — it starts as soon as your file has been read.
+Writing your own means the engine never gets a turn: the picture never appears,
+the page stops responding, and you have to reload the tab. Nothing is printed
+and nothing crashes, which is what makes it confusing.</p>
+<p>When you want something to happen every frame, ask for it instead:</p>
+<div class="hl"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">kaypy</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">kaypy</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">36</span><span class="p">])</span>
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"coin"</span><span class="p">,</span> <span class="s2">"images/coin.png"</span><span class="p">)</span>
+
+<span class="n">coin</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"coin"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">)])</span>
+
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">drift</span><span class="p">():</span>
+    <span class="n">coin</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">coin</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="mi">2</span>
+</code></pre></div>
+
+<p>That is the same idea — do this over and over — handed to the engine, which
+runs it once per frame and still has time to draw.</p>
+<hr />
+<h2 id="classwork-1-the-boss-fight">Classwork 1 — The Boss Fight</h2>
+<p>A boss has 200 health. Your weapon does 35 damage a hit. You do not know how
+many hits that takes, so this is a <code>while</code> loop.</p>
+<ol>
+<li>Make a variable <code>hits</code>, starting at 0.</li>
+<li>Make a variable <code>total_damage</code>, starting at 0.</li>
+<li>Loop <code>while total_damage &lt; 200</code>.</li>
+<li>Inside the loop, add 1 to <code>hits</code> and 35 to <code>total_damage</code>, then print both.</li>
+<li>After the loop, print how many hits it took.</li>
+<li>Print the overkill — how far past 200 you went.</li>
+</ol>
+<details>
+<summary>Solution</summary>
+<div class="hl"><pre><span></span><code><span class="n">hits</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">total_damage</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">while</span> <span class="n">total_damage</span> <span class="o">&lt;</span> <span class="mi">200</span><span class="p">:</span>
+    <span class="n">hits</span> <span class="o">=</span> <span class="n">hits</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">total_damage</span> <span class="o">=</span> <span class="n">total_damage</span> <span class="o">+</span> <span class="mi">35</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Hit"</span><span class="p">,</span> <span class="n">hits</span><span class="p">,</span> <span class="s2">"- total damage"</span><span class="p">,</span> <span class="n">total_damage</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Boss down in"</span><span class="p">,</span> <span class="n">hits</span><span class="p">,</span> <span class="s2">"hits"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Overkill:"</span><span class="p">,</span> <span class="n">total_damage</span> <span class="o">-</span> <span class="mi">200</span><span class="p">)</span>
+</code></pre></div>
+
+<div class="hl"><pre><span></span><code>Hit 1 - total damage 35
+Hit 2 - total damage 70
+Hit 3 - total damage 105
+Hit 4 - total damage 140
+Hit 5 - total damage 175
+Hit 6 - total damage 210
+Boss down in 6 hits
+Overkill: 10
+</code></pre></div>
+
+<p>Six hits, and 10 damage wasted on a boss that was already dead. That overkill
+number is the same <code>while</code> overshoot as the shield — the condition is checked
+between passes, not during one.</p>
+</details>
+<hr />
+<h2 id="classwork-2-the-level-builder">Classwork 2 — The Level Builder</h2>
+<p>Build a whole level with loops, then print a report of what you built. Start
+from this:</p>
+<div class="hl"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">kaypy</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">kaypy</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="p">[</span><span class="mi">18</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">34</span><span class="p">])</span>
+
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"steel"</span><span class="p">,</span> <span class="s2">"images/steel.png"</span><span class="p">)</span>
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"coin"</span><span class="p">,</span> <span class="s2">"images/coin.png"</span><span class="p">)</span>
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"spike"</span><span class="p">,</span> <span class="s2">"images/spike.png"</span><span class="p">)</span>
+</code></pre></div>
+
+<ol>
+<li>Make three counters, all starting at 0: <code>floor_tiles</code>, <code>coins</code>, <code>spikes</code>.</li>
+<li>A <code>for</code> loop over <code>range(13)</code> that adds a steel tile at <code>pos(col * 64, 520)</code>.
+   Give each one <code>area()</code> and <code>body(isStatic=True)</code> so it is solid.</li>
+<li>Add 1 to <code>floor_tiles</code> inside that loop.</li>
+<li>A second loop, <code>range(4)</code>, stacking four more steel tiles at x = 704 going
+   <strong>up</strong> from the floor. Count those in <code>floor_tiles</code> too.</li>
+<li>A loop over <code>range(9)</code> putting coins at <code>pos(90 + i * 64, 430)</code>, counting
+   them in <code>coins</code>.</li>
+<li>Spikes every third tile: loop over <code>range(0, 13, 3)</code> and add a spike at
+   <code>pos(col * 64, 470)</code>. Count them.</li>
+<li>A <strong>nested</strong> loop making a coin pyramid: <code>for row in range(3)</code>, and inside
+   it <code>for col in range(row + 1)</code>. Three rows — one coin, then two, then three.
+   Count each one.</li>
+<li>Print a report: the three counters, each on its own line.</li>
+<li>Print the total of all three.</li>
+</ol>
+<p><em>Work out step 7 on paper before you type it. How many coins is a pyramid with
+rows of 1, 2 and 3? Your report should agree with you — and if it does not, the
+loop is not doing what you think.</em></p>
+<p><strong>Stretch:</strong> make the spikes step <code>range(0, 13, 2)</code> instead. How many spikes
+now, and why is it not double?</p>
+<details>
+<summary>Solution</summary>
+<div class="hl"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">kaypy</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">kaypy</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="p">[</span><span class="mi">18</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">34</span><span class="p">])</span>
+
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"steel"</span><span class="p">,</span> <span class="s2">"images/steel.png"</span><span class="p">)</span>
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"coin"</span><span class="p">,</span> <span class="s2">"images/coin.png"</span><span class="p">)</span>
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"spike"</span><span class="p">,</span> <span class="s2">"images/spike.png"</span><span class="p">)</span>
+
+<span class="n">floor_tiles</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">coins</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">spikes</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="c1"># 1. The floor: one row of steel all the way across.</span>
+<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">13</span><span class="p">):</span>
+    <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"steel"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="n">col</span> <span class="o">*</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">520</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">(</span><span class="n">isStatic</span><span class="o">=</span><span class="kc">True</span><span class="p">)])</span>
+    <span class="n">floor_tiles</span> <span class="o">=</span> <span class="n">floor_tiles</span> <span class="o">+</span> <span class="mi">1</span>
+
+<span class="c1"># 2. A wall of crates on the right, four high.</span>
+<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+    <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"steel"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">704</span><span class="p">,</span> <span class="mi">520</span> <span class="o">-</span> <span class="p">(</span><span class="n">row</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">64</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span>
+         <span class="n">body</span><span class="p">(</span><span class="n">isStatic</span><span class="o">=</span><span class="kc">True</span><span class="p">)])</span>
+    <span class="n">floor_tiles</span> <span class="o">=</span> <span class="n">floor_tiles</span> <span class="o">+</span> <span class="mi">1</span>
+
+<span class="c1"># 3. A line of coins to collect.</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+    <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"coin"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">90</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">430</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="s2">"coin"</span><span class="p">])</span>
+    <span class="n">coins</span> <span class="o">=</span> <span class="n">coins</span> <span class="o">+</span> <span class="mi">1</span>
+
+<span class="c1"># 4. Spikes every third floor tile.</span>
+<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+    <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"spike"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="n">col</span> <span class="o">*</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">470</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="s2">"spike"</span><span class="p">])</span>
+    <span class="n">spikes</span> <span class="o">=</span> <span class="n">spikes</span> <span class="o">+</span> <span class="mi">1</span>
+
+<span class="c1"># 5. A coin pyramid above the crates.</span>
+<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">row</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"coin"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">660</span> <span class="o">-</span> <span class="n">row</span> <span class="o">*</span> <span class="mi">20</span> <span class="o">+</span> <span class="n">col</span> <span class="o">*</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">120</span> <span class="o">+</span> <span class="n">row</span> <span class="o">*</span> <span class="mi">44</span><span class="p">)])</span>
+        <span class="n">coins</span> <span class="o">=</span> <span class="n">coins</span> <span class="o">+</span> <span class="mi">1</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"--- LEVEL REPORT ---"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Steel tiles :"</span><span class="p">,</span> <span class="n">floor_tiles</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Coins       :"</span><span class="p">,</span> <span class="n">coins</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Spikes      :"</span><span class="p">,</span> <span class="n">spikes</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Objects     :"</span><span class="p">,</span> <span class="n">floor_tiles</span> <span class="o">+</span> <span class="n">coins</span> <span class="o">+</span> <span class="n">spikes</span><span class="p">)</span>
+</code></pre></div>
+
+<div class="hl"><pre><span></span><code>--- LEVEL REPORT ---
+Steel tiles : 17
+Coins       : 15
+Spikes      : 5
+Objects     : 37
+</code></pre></div>
+
+<p>Seventeen tiles is 13 across plus 4 up. Fifteen coins is 9 in the line plus 6
+in the pyramid — 1 + 2 + 3. Five spikes, because <code>range(0, 13, 3)</code> gives
+0, 3, 6, 9, 12 and then stops before 13.</p>
+<p>The stretch answer: <code>range(0, 13, 2)</code> gives 0, 2, 4, 6, 8, 10, 12 — seven, not
+ten. Halving the step does not double the count, because the stop number has
+not moved.</p>
+</details>
+<hr />
+<h2 id="check-yourself">Check yourself</h2>
+<p>How many times does the body of this loop run?</p>
+<div class="hl"><pre><span></span><code><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+</code></pre></div>
+
+<details>
+<summary>Answer</summary>
+<p><strong>Three times</strong>, printing 2, 5 and 8. Start at 2, step 3 each time, stop
+before 9 — the next value would be 11, which is past the end, so it never
+happens.</p>
+</details>
+<hr />
+<h2 id="coming-next">Coming next</h2>
+<p><strong>Lesson 2 — Conditionals.</strong> <code>if</code>, <code>elif</code>, <code>else</code>, and making a game react:
+losing health, opening a door only when you have the key, a hazard that only
+hurts if you land on it.</p>
+<p>Then lists, functions, and putting all four together into a game you keep.</p>
+<p>Teaching with this, or stuck on something? There is a
+<a href="https://discord.gg/sVXnsDZNm">Discord</a>.</p>
+  </article>
+</main>
+
+<footer class="foot">
+  <p>
+    <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+    <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+    <a href="https://pypi.org/project/kaypy/">PyPI</a>
+  </p>
+  <p class="dim">
+    MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+    Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+    Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+    and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+  </p>
+  <p class="dim">
+    KayPy is an independent project, not affiliated with or endorsed by the
+    KAPLAY team.
+  </p>
+</footer>
+
+</body>
+</html>

@@ -58,6 +58,7 @@ TAGLINE = ("A game engine for learning Python — build a game out of "
 PAGES = [
     ("", "Home", None),
     ("start", "Get started", "start.md"),
+    ("learn", "Learn Python", "learn.md"),
     ("guide", "Guide", "guide.md"),
     ("api", "API", "api.md"),
     ("tutorials", "Tutorials", "tutorials.md"),
@@ -105,7 +106,8 @@ need("pygments", "to highlight the code samples")
 def render_markdown(text):
     """Markdown to HTML, with tables, fenced code and highlighting."""
     md = markdown.Markdown(
-        extensions=["fenced_code", "codehilite", "tables", "toc", "attr_list"],
+        extensions=["fenced_code", "codehilite", "tables", "toc", "attr_list",
+                    "md_in_html"],
         extension_configs={
             "codehilite": {"guess_lang": False, "css_class": "hl"},
             "toc": {"permalink": False},
