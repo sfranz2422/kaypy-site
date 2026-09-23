@@ -215,6 +215,121 @@ like a drawing bug and is not one.</p>
 
 <p><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/pet_and_healthbar.py"><code>examples/pet_and_healthbar.py</code></a> · 89 lines</p>
 <hr />
+<h3 id="sneak-past-a-guard-who-cannot-see-through-walls-what-sentry-is-for">Sneak past a guard who cannot see through walls — what sentry() is for</h3>
+<p>python3 stealth_guard.py</p>
+<p>Arrows to move. The guard sweeps a torch left and right; get into the cone
+and it spots you. Hide behind a crate and it does not, because the cone is
+light and the crate is solid.</p>
+<p>The whole of the seeing is one component:</p>
+<div class="hl"><pre><span></span><code>sentry("player", fieldOfView=70, range=300, lineOfSight=True)
+</code></pre></div>
+
+<p><code>fieldOfView</code> is the width of the cone in degrees. <code>range</code> is how far the
+torch reaches — not KAPLAY's, added because "how close can I get" is the
+question a stealth game is made of. <code>lineOfSight</code> casts a ray at you and
+lets the crates stop it.</p>
+<p>There is no <code>direction</code> here on purpose: without one, the sentry looks
+wherever <code>rotate()</code> has the guard turned, so sweeping the torch is a matter
+of changing <code>guard.angle</code> and the cone follows.</p>
+<p>The cone you can see is drawn by hand in onDraw, out of the same three
+numbers the component was given. Drawing it is worth the twenty lines: a
+vision cone you cannot see is a rule the player has to infer by dying.</p>
+<div class="hl"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">kaypy</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">kaypy</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="p">[</span><span class="mi">18</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">])</span>
+
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">,</span> <span class="s2">"images/bean.png"</span><span class="p">)</span>
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"ghosty"</span><span class="p">,</span> <span class="s2">"images/ghosty.png"</span><span class="p">)</span>
+
+<span class="n">FOV</span> <span class="o">=</span> <span class="mi">70</span>
+<span class="n">RANGE</span> <span class="o">=</span> <span class="mi">300</span>
+
+<span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="s2">"player"</span><span class="p">])</span>
+
+<span class="c1"># Crates. Solid, so they stop the guard's ray — and tagged, so the ray can</span>
+<span class="c1"># be told about them.</span>
+<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="p">[(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">180</span><span class="p">),</span> <span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">260</span><span class="p">),</span> <span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">340</span><span class="p">),</span> <span class="p">(</span><span class="mi">560</span><span class="p">,</span> <span class="mi">420</span><span class="p">),</span> <span class="p">(</span><span class="mi">560</span><span class="p">,</span> <span class="mi">500</span><span class="p">)]:</span>
+    <span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">56</span><span class="p">,</span> <span class="mi">56</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">color</span><span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="mi">74</span><span class="p">,</span> <span class="mi">58</span><span class="p">),</span> <span class="n">outline</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+         <span class="s2">"crate"</span><span class="p">])</span>
+
+<span class="n">guard</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span>
+    <span class="n">sprite</span><span class="p">(</span><span class="s2">"ghosty"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">120</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">rotate</span><span class="p">(</span><span class="mi">90</span><span class="p">),</span>
+    <span class="n">sentry</span><span class="p">(</span><span class="s2">"player"</span><span class="p">,</span> <span class="n">fieldOfView</span><span class="o">=</span><span class="n">FOV</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">RANGE</span><span class="p">,</span> <span class="n">lineOfSight</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="s2">"guard"</span><span class="p">,</span>
+<span class="p">])</span>
+
+<span class="n">caught</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">text</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">28</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">120</span><span class="p">),</span> <span class="n">fixed</span><span class="p">()])</span>
+<span class="n">add</span><span class="p">([</span><span class="n">text</span><span class="p">(</span><span class="s2">"arrows to move · hide behind the crates"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">18</span><span class="p">),</span>
+     <span class="n">pos</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">560</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">180</span><span class="p">),</span> <span class="n">fixed</span><span class="p">()])</span>
+
+
+<span class="nd">@onKeyDown</span><span class="p">(</span><span class="s2">"left"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">go_left</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="o">-</span><span class="mi">220</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+
+<span class="nd">@onKeyDown</span><span class="p">(</span><span class="s2">"right"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">go_right</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="mi">220</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+
+<span class="nd">@onKeyDown</span><span class="p">(</span><span class="s2">"up"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">go_up</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">220</span><span class="p">)</span>
+
+
+<span class="nd">@onKeyDown</span><span class="p">(</span><span class="s2">"down"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">go_down</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">220</span><span class="p">)</span>
+
+
+<span class="c1"># The torch sweeps between 50 and 130 degrees — down and to either side.</span>
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">sweep</span><span class="p">():</span>
+    <span class="n">guard</span><span class="o">.</span><span class="n">angle</span> <span class="o">=</span> <span class="mi">90</span> <span class="o">+</span> <span class="mi">40</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">time</span><span class="p">()</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">)</span>
+
+
+<span class="nd">@guard</span><span class="o">.</span><span class="n">onObjectsSpotted</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">spotted</span><span class="p">(</span><span class="n">objects</span><span class="p">):</span>
+    <span class="n">caught</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s2">"Spotted!"</span>
+    <span class="n">shake</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+
+
+<span class="nd">@onUpdate</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">forget</span><span class="p">():</span>
+    <span class="c1"># .spotted is the current answer, for the frames between edges.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">guard</span><span class="o">.</span><span class="n">spotted</span> <span class="ow">and</span> <span class="n">caught</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+        <span class="n">caught</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s2">""</span>
+
+
+<span class="nd">@onDraw</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">draw_cone</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""The cone, drawn from the same numbers the sentry was given.</span>
+
+<span class="sd">    Its far edge is cut short wherever a crate is in the way, which is the</span>
+<span class="sd">    same question the component asks — so what you see and what the guard</span>
+<span class="sd">    sees cannot disagree.</span>
+<span class="sd">    """</span>
+    <span class="n">seeing</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">guard</span><span class="o">.</span><span class="n">spotted</span><span class="p">)</span>
+    <span class="n">edge</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">210</span><span class="p">,</span> <span class="mi">120</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">seeing</span> <span class="k">else</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">120</span><span class="p">)</span>
+
+    <span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="n">guard</span><span class="o">.</span><span class="n">pos</span><span class="p">]</span>
+    <span class="n">steps</span> <span class="o">=</span> <span class="mi">24</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">angle</span> <span class="o">=</span> <span class="n">guard</span><span class="o">.</span><span class="n">angle</span> <span class="o">-</span> <span class="n">FOV</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">FOV</span> <span class="o">*</span> <span class="n">i</span> <span class="o">/</span> <span class="n">steps</span>
+        <span class="n">along</span> <span class="o">=</span> <span class="n">Vec2</span><span class="o">.</span><span class="n">fromAngle</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+        <span class="n">hit</span> <span class="o">=</span> <span class="n">raycast</span><span class="p">(</span><span class="n">guard</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span> <span class="n">along</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s2">"player"</span><span class="p">],</span> <span class="n">ignore</span><span class="o">=</span><span class="p">[</span><span class="n">guard</span><span class="p">],</span>
+                      <span class="n">max_distance</span><span class="o">=</span><span class="n">RANGE</span><span class="p">)</span>
+        <span class="n">reach</span> <span class="o">=</span> <span class="n">hit</span><span class="o">.</span><span class="n">distance</span> <span class="k">if</span> <span class="n">hit</span> <span class="k">else</span> <span class="n">RANGE</span>
+        <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">guard</span><span class="o">.</span><span class="n">pos</span> <span class="o">+</span> <span class="n">along</span> <span class="o">*</span> <span class="n">reach</span><span class="p">)</span>
+
+    <span class="n">drawLines</span><span class="p">(</span><span class="n">points</span><span class="o">=</span><span class="n">points</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">edge</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">0.55</span><span class="p">,</span> <span class="n">close</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+
+<p><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/stealth_guard.py"><code>examples/stealth_guard.py</code></a> · 117 lines</p>
+<hr />
 <h3 id="asteroids-what-rotate-is-for">Asteroids — what rotate() is for</h3>
 <p>python3 asteroids.py</p>
 <p>Left and right turn the ship, up thrusts in the direction it is facing,

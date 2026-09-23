@@ -104,6 +104,20 @@ speed on a fast computer and a slow one.</p>
     <span class="n">player</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="mi">60</span> <span class="o">*</span> <span class="n">dt</span><span class="p">()</span>      <span class="c1"># 60 pixels a second, not 60 a frame</span>
 </code></pre></div>
 
+<h3 id="raycastorigin-direction-exclude-max_distance-ignore">raycast(origin, direction, exclude, max_distance, ignore)</h3>
+<p>The first <code>area()</code> a straight line runs into, as a hit with <code>.obj</code>, <code>.point</code>,
+<code>.distance</code> and <code>.normal</code> — or <code>None</code>. <code>exclude</code> skips tags, <code>ignore</code> skips
+particular objects, which is what you want when casting from an object's own
+position, since the ray starts inside its own box.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">area</span><span class="p">()])</span>
+<span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="s2">"wall"</span><span class="p">])</span>
+
+<span class="n">hit</span> <span class="o">=</span> <span class="n">raycast</span><span class="p">(</span><span class="n">player</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span> <span class="n">vec2</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">ignore</span><span class="o">=</span><span class="p">[</span><span class="n">player</span><span class="p">])</span>
+<span class="k">if</span> <span class="n">hit</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"wall at"</span><span class="p">,</span> <span class="n">hit</span><span class="o">.</span><span class="n">distance</span><span class="p">,</span> <span class="s2">"px"</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
 <h3 id="time">time()</h3>
 <p>Seconds since <code>kaypy()</code> started.</p>
 <div class="hl"><pre><span></span><code><span class="n">label</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">text</span><span class="p">(</span><span class="s2">"0"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">fixed</span><span class="p">()])</span>
@@ -395,6 +409,25 @@ wants. If the target is destroyed, the follower stops where it stands.</p>
 
 <span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">)])</span>
 <span class="n">add</span><span class="p">([</span><span class="n">circle</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">follow</span><span class="p">(</span><span class="n">player</span><span class="p">,</span> <span class="n">speed</span><span class="o">=</span><span class="mi">180</span><span class="p">)])</span>
+</code></pre></div>
+
+<hr />
+<h3 id="sentrycandidates-direction-fieldofview-range-lineofsight-raycastexclude-checkfrequency">sentry(candidates, direction, fieldOfView, range, lineOfSight, raycastExclude, checkFrequency)</h3>
+<p>Notice when something comes into view. <code>fieldOfView</code> is the whole width of the
+cone in degrees; <code>range</code> is how far it can see; <code>lineOfSight=True</code> means walls
+stop it. Leave <code>direction</code> out and it looks wherever <code>rotate()</code> has the object
+turned. <code>onObjectsSpotted</code> fires when it goes from seeing nothing to seeing
+something, and <code>.spotted</code> is the current list.</p>
+<p><code>range</code> is not KAPLAY's — without it a guard sees to the end of the level, so
+leaving it out behaves exactly as KAPLAY does.</p>
+<div class="hl"><pre><span></span><code><span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="s2">"player"</span><span class="p">])</span>
+
+<span class="n">guard</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="n">area</span><span class="p">(),</span> <span class="n">rotate</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+             <span class="n">sentry</span><span class="p">(</span><span class="s2">"player"</span><span class="p">,</span> <span class="n">fieldOfView</span><span class="o">=</span><span class="mi">70</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">lineOfSight</span><span class="o">=</span><span class="kc">True</span><span class="p">)])</span>
+
+<span class="nd">@guard</span><span class="o">.</span><span class="n">onObjectsSpotted</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">seen</span><span class="p">(</span><span class="n">objects</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"spotted"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">objects</span><span class="p">))</span>
 </code></pre></div>
 
 <hr />

@@ -97,6 +97,24 @@ def drift():
     player.pos.x += 60 * dt()      # 60 pixels a second, not 60 a frame
 ```
 
+### raycast(origin, direction, exclude, max_distance, ignore)
+
+The first `area()` a straight line runs into, as a hit with `.obj`, `.point`,
+`.distance` and `.normal` — or `None`. `exclude` skips tags, `ignore` skips
+particular objects, which is what you want when casting from an object's own
+position, since the ray starts inside its own box.
+
+```python
+player = add([sprite("bean"), pos(100, 300), area()])
+add([rect(20, 200), pos(400, 200), area(), "wall"])
+
+hit = raycast(player.pos, vec2(1, 0), ignore=[player])
+if hit:
+    print("wall at", hit.distance, "px")
+```
+
+---
+
 ### time()
 
 Seconds since `kaypy()` started.
@@ -495,6 +513,30 @@ add([rect(40, 6), pos(0, 0), color(220, 60, 60),
 
 player = add([sprite("bean"), pos(100, 300)])
 add([circle(10), pos(0, 0), follow(player, speed=180)])
+```
+
+---
+
+### sentry(candidates, direction, fieldOfView, range, lineOfSight, raycastExclude, checkFrequency)
+
+Notice when something comes into view. `fieldOfView` is the whole width of the
+cone in degrees; `range` is how far it can see; `lineOfSight=True` means walls
+stop it. Leave `direction` out and it looks wherever `rotate()` has the object
+turned. `onObjectsSpotted` fires when it goes from seeing nothing to seeing
+something, and `.spotted` is the current list.
+
+`range` is not KAPLAY's — without it a guard sees to the end of the level, so
+leaving it out behaves exactly as KAPLAY does.
+
+```python
+player = add([sprite("bean"), pos(600, 300), area(), "player"])
+
+guard = add([sprite("bean"), pos(200, 300), area(), rotate(0),
+             sentry("player", fieldOfView=70, range=300, lineOfSight=True)])
+
+@guard.onObjectsSpotted
+def seen(objects):
+    print("spotted", len(objects))
 ```
 
 ---
