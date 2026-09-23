@@ -1,11 +1,11 @@
 {
- "kaypy": "0.10.0",
- "kaypy_commit": "19c9ac6",
+ "kaypy": "0.10.1",
+ "kaypy_commit": "15012d8",
  "from": "/sessions/clever-practical-dijkstra/mnt/pyide",
- "vendored_at": "2026-09-23T12:48:53Z",
+ "vendored_at": "2026-09-23T13:08:46Z",
  "files": {
-  "engine/kaypy_bundle.json": "15fce183a79ec537",
-  "engine/kaypy.json": "1ed7083b33a27f71",
+  "engine/kaypy_bundle.json": "433820c9b333c0b7",
+  "engine/kaypy.json": "93c1d5f4ea6be117",
   "play/runtime.js": "f1ee74e5238a95d4",
   "play/game.js": "a329002b0b960d86",
   "play/export.js": "3c3dece34f0719ce",

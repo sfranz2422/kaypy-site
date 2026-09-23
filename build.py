@@ -115,6 +115,35 @@ def render_markdown(text):
     return body, getattr(md, "toc_tokens", [])
 
 
+def highlight_html(text):
+    """Colour the code in a hand-written page, the same way markdown's is.
+
+    templates/home.html is HTML rather than markdown — it has cards and a
+    hero that markdown cannot express — so its code blocks never went
+    through the highlighter, and sat on the front page in flat grey beside
+    an API reference in full colour.
+
+    Rather than give the home page its own highlighter, this runs the same
+    one the markdown path uses on the same `<pre class="hl"><code>` shape
+    the markdown path produces. One highlighter, one set of CSS classes, and
+    no way for the two pages to drift apart.
+    """
+    from pygments import highlight
+    from pygments.lexers import PythonLexer
+    from pygments.formatters import HtmlFormatter
+
+    formatter = HtmlFormatter(nowrap=True)
+    lexer = PythonLexer()
+
+    def one(match):
+        code = html.unescape(match.group(1))
+        return ('<pre class="hl"><code>%s</code></pre>'
+                % highlight(code, lexer, formatter).rstrip("\n"))
+
+    return re.sub(r'<pre class="hl"><code>(.*?)</code></pre>', one, text,
+                  flags=re.S)
+
+
 def page_shell(slug, title, body, toc=(), subtitle=None):
     shell = (TEMPLATES / "page.html").read_text()
 
@@ -240,7 +269,7 @@ def build(into=DIST):
     # the home page, which is its own template rather than markdown
     home = TEMPLATES / "home.html"
     if home.is_file():
-        body = home.read_text()
+        body = highlight_html(home.read_text())
         (into / "index.html").write_text(
             page_shell("", None, body, subtitle=TAGLINE))
         written.append("index.html")
