@@ -971,6 +971,26 @@ def greeted(reply):
 acceptable ones, and marking ignores capitals and stray spaces — `"  PARIS "`
 matches `answer="paris"`.
 
+**Ask several and they queue up.** Only one panel is on screen at a time, so a
+second `say()` or `ask()` opened while one is up waits its turn and appears
+when that one is answered. Writing a quiz as a stack of decorators therefore
+does what it looks like:
+
+```python
+@ask("What is your name?")
+def greeted(reply):
+    print("Hello, " + reply)
+
+@ask("Which keyword starts a loop?", ["if", "for", "def"], answer=1)
+def checked(correct):
+    if correct:
+        print("open sesame")
+```
+
+They are asked top to bottom, and the game stays paused until the last one is
+answered. `close()` dismisses the panel on screen and moves on to the next;
+it does not cancel the ones behind it.
+
 ### isShowing()
 
 Is a panel up right now?

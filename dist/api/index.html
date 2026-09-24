@@ -748,6 +748,23 @@ function is given <strong>what was picked or typed</strong>.</p>
 (<code>answer="for"</code>). For a typed answer it can be one string or a list of
 acceptable ones, and marking ignores capitals and stray spaces — <code>"  PARIS "</code>
 matches <code>answer="paris"</code>.</p>
+<p><strong>Ask several and they queue up.</strong> Only one panel is on screen at a time, so a
+second <code>say()</code> or <code>ask()</code> opened while one is up waits its turn and appears
+when that one is answered. Writing a quiz as a stack of decorators therefore
+does what it looks like:</p>
+<div class="hl"><pre><span></span><code><span class="nd">@ask</span><span class="p">(</span><span class="s2">"What is your name?"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">greeted</span><span class="p">(</span><span class="n">reply</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Hello, "</span> <span class="o">+</span> <span class="n">reply</span><span class="p">)</span>
+
+<span class="nd">@ask</span><span class="p">(</span><span class="s2">"Which keyword starts a loop?"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"if"</span><span class="p">,</span> <span class="s2">"for"</span><span class="p">,</span> <span class="s2">"def"</span><span class="p">],</span> <span class="n">answer</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">checked</span><span class="p">(</span><span class="n">correct</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">correct</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"open sesame"</span><span class="p">)</span>
+</code></pre></div>
+
+<p>They are asked top to bottom, and the game stays paused until the last one is
+answered. <code>close()</code> dismisses the panel on screen and moves on to the next;
+it does not cancel the ones behind it.</p>
 <h3 id="isshowing">isShowing()</h3>
 <p>Is a panel up right now?</p>
 <div class="hl"><pre><span></span><code><span class="n">say</span><span class="p">(</span><span class="s2">"Mind the gap."</span><span class="p">)</span>
