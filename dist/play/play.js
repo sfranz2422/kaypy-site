@@ -67,6 +67,74 @@
 
   function cmTheme() { return isDark() ? "material-darker" : "default"; }
 
+  /* ------------------------------------------------------------ tab stops
+   *
+   * Indentation that moves in whole steps, the way a ruler does. Tab goes to
+   * the next multiple of the indent unit rather than always inserting four,
+   * and Backspace comes back to the previous one rather than eating a single
+   * space at a time.
+   *
+   * In Python that is not cosmetic: a line off by a space is an
+   * IndentationError, or — inside a nested block — a program that runs and
+   * quietly does the wrong thing. It is the most common way a beginner
+   * breaks a working file, and the one mistake the editor can simply decline
+   * to let them make.
+   *
+   * The same pair is in PyIDE and WebIDE. This is a third copy rather than a
+   * shared file because the playground has no backend and no build step
+   * worth the name: it is three static files served from a CDN, and the one
+   * thing it must never do is fail to open.
+   */
+  function spaces(n) {
+    return new Array(n + 1).join(" ");
+  }
+
+  function indentToTabStop(cm) {
+    if (cm.somethingSelected()) {
+      cm.indentSelection("add");
+      return;
+    }
+    var unit = cm.getOption("indentUnit");
+    // More than one caret: no single column to align to, so fall back to a
+    // whole unit at each. Rare enough not to be worth a wrong answer.
+    if (cm.listSelections().length > 1) {
+      cm.replaceSelection(spaces(unit), "end");
+      return;
+    }
+    var head = cm.getCursor();
+    var col = CodeMirror.countColumn(cm.getLine(head.line), head.ch,
+                                     cm.getOption("tabSize"));
+    // Never 0 and never more than a full unit: at a stop it moves a whole
+    // one, off a stop it moves just enough to land on the next.
+    cm.replaceSelection(spaces(unit - (col % unit)), "end");
+  }
+
+  function backspaceToTabStop(cm) {
+    if (cm.somethingSelected() || cm.listSelections().length > 1) {
+      return CodeMirror.Pass;
+    }
+    var head = cm.getCursor();
+    var before = cm.getLine(head.line).slice(0, head.ch);
+
+    /* ONLY IN THE INDENTATION, AND ONLY SPACES.
+     *
+     * With anything but spaces to the left, this is ordinary typing and one
+     * press must delete one character — a Backspace that swallowed four
+     * characters of a word would be unusable. A literal tab (from a paste)
+     * is excluded too: one tab is one character but four columns, so
+     * "delete back to the stop" has two different right answers and the
+     * wrong one eats code. Both fall through to CodeMirror. */
+    if (before.length === 0 || !/^ +$/.test(before)) {
+      return CodeMirror.Pass;
+    }
+
+    var unit = cm.getOption("indentUnit");
+    var col = before.length;
+    var target = (col % unit === 0) ? col - unit : col - (col % unit);
+    if (target < 0) target = 0;
+    cm.replaceRange("", { line: head.line, ch: target }, head, "+delete");
+  }
+
   var editor = CodeMirror.fromTextArea($("editor"), {
     mode: "python",
     theme: cmTheme(),
@@ -82,10 +150,9 @@
       "Cmd-/": "toggleComment",
       "Ctrl-Enter": function () { run(); },
       "Cmd-Enter": function () { run(); },
-      Tab: function (cm) {
-        if (cm.somethingSelected()) return cm.indentSelection("add");
-        cm.replaceSelection("    ");
-      }
+      Tab: indentToTabStop,
+      Backspace: backspaceToTabStop,
+      "Shift-Tab": function (cm) { cm.indentSelection("subtract"); }
     }
   });
 
