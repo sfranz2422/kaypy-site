@@ -80,15 +80,21 @@ text = LESSON.read_text()
 #
 # A `python` block, and the bare block under it if there is one, which is
 # what the page claims the program prints.
-BLOCK = re.compile(r"^```(python)?\n(.*?)^```", re.S | re.M)
-blocks = [(m.group(1), m.group(2), m.start()) for m in BLOCK.finditer(text)]
+# Any fence, not just ```python and a bare ```. The first version of this
+# could not match a tagged fence like ```text at all, so its CLOSING fence was
+# read as an opening one and every pair after it was wrong — on a page with
+# one ```text block it silently fell from fourteen programs to three and still
+# reported success, because "at least ten programs" was measured on the same
+# broken list. A parser that mis-parses quietly is worse than no parser.
+BLOCK = re.compile(r"^```([A-Za-z0-9_+-]*)\n(.*?)^```", re.S | re.M)
+blocks = [(m.group(1) or "", m.group(2), m.start()) for m in BLOCK.finditer(text)]
 
 programs = []
 for i, (lang, body, start) in enumerate(blocks):
     if lang != "python":
         continue
     claimed = None
-    if i + 1 < len(blocks) and blocks[i + 1][0] is None:
+    if i + 1 < len(blocks) and blocks[i + 1][0] == "":
         between = text[start + len(body):blocks[i + 1][2]]
         # Only if it sits directly underneath, not further down the page.
         if between.count("\n") <= 5:
