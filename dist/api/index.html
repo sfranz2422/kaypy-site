@@ -955,8 +955,44 @@ locked-down school account is not a reason to crash.</p>
 </code></pre></div>
 
 <h3 id="rgbr-g-b">rgb(r, g, b)</h3>
-<p>A color as a plain tuple. One argument means gray.</p>
-<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="o">*</span><span class="n">rgb</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">60</span><span class="p">))])</span>
+<p>A color as a plain tuple. One argument means gray, and a hex string works too.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="n">rgb</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">60</span><span class="p">))])</span>
+</code></pre></div>
+
+<h3 id="red">RED</h3>
+<p>The eight named colors are plain <code>(r, g, b)</code> tuples, so they go anywhere a
+color goes: <code>color()</code>, <code>outline()</code>, <code>setBackground()</code> and <code>background=</code>.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="n">RED</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="green">GREEN</h3>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">circle</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="n">GREEN</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="blue">BLUE</h3>
+<div class="hl"><pre><span></span><code><span class="n">setBackground</span><span class="p">(</span><span class="n">BLUE</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="yellow">YELLOW</h3>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">text</span><span class="p">(</span><span class="s2">"score: 0"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="n">YELLOW</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="magenta">MAGENTA</h3>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="n">MAGENTA</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="cyan">CYAN</h3>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span> <span class="n">outline</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">CYAN</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="white">WHITE</h3>
+<p><code>WHITE</code> is <code>(255, 255, 255)</code>, which is also what <code>color()</code> gives you if you
+pass it nothing at all.</p>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">text</span><span class="p">(</span><span class="s2">"ready"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">140</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="n">WHITE</span><span class="p">)])</span>
+</code></pre></div>
+
+<h3 id="black">BLACK</h3>
+<div class="hl"><pre><span></span><code><span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">150</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="n">BLACK</span><span class="p">)])</span>
 </code></pre></div>
 
 <h3 id="deg2raddegrees">deg2rad(degrees)</h3>

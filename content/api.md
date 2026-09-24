@@ -1266,10 +1266,64 @@ def bob():
 
 ### rgb(r, g, b)
 
-A color as a plain tuple. One argument means gray.
+A color as a plain tuple. One argument means gray, and a hex string works too.
 
 ```python
-add([rect(80, 80), pos(40, 40), color(*rgb(255, 120, 60))])
+add([rect(80, 80), pos(40, 40), color(rgb(255, 120, 60))])
+```
+
+### RED
+
+The eight named colors are plain `(r, g, b)` tuples, so they go anywhere a
+color goes: `color()`, `outline()`, `setBackground()` and `background=`.
+
+```python
+add([rect(80, 80), pos(40, 40), color(RED)])
+```
+
+### GREEN
+
+```python
+add([circle(30), pos(120, 60), color(GREEN)])
+```
+
+### BLUE
+
+```python
+setBackground(BLUE)
+```
+
+### YELLOW
+
+```python
+add([text("score: 0"), pos(20, 20), color(YELLOW)])
+```
+
+### MAGENTA
+
+```python
+add([rect(40, 40), pos(200, 80), color(MAGENTA)])
+```
+
+### CYAN
+
+```python
+add([rect(60, 20), pos(60, 200), outline(3, CYAN)])
+```
+
+### WHITE
+
+`WHITE` is `(255, 255, 255)`, which is also what `color()` gives you if you
+pass it nothing at all.
+
+```python
+add([text("ready"), pos(40, 140), color(WHITE)])
+```
+
+### BLACK
+
+```python
+add([rect(50, 50), pos(150, 150), color(BLACK)])
 ```
 
 ### deg2rad(degrees)
