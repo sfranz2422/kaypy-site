@@ -935,7 +935,8 @@ def show():
 
 ### say(text, link, button)
 
-Pause and show a message. `link` is a `(label, url)` pair — a real link in a
+Pause and show a message: the text, and one button to close it. Enter or
+space closes it too. `link` is a `(label, url)` pair — a real link in a
 browser, and on a desktop it opens your browser.
 
 ```python
@@ -945,6 +946,9 @@ say("You found the key!")
 def after():
     print("they closed it")
 ```
+
+A message has nothing to fill in, so your function is called with nothing.
+Give it `ask()` if you want an answer back.
 
 ### ask(question, choices, answer, placeholder)
 

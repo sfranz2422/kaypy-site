@@ -719,7 +719,8 @@ Nothing moves while paused, because everything that moves is scaled by
 </code></pre></div>
 
 <h3 id="saytext-link-button">say(text, link, button)</h3>
-<p>Pause and show a message. <code>link</code> is a <code>(label, url)</code> pair — a real link in a
+<p>Pause and show a message: the text, and one button to close it. Enter or
+space closes it too. <code>link</code> is a <code>(label, url)</code> pair — a real link in a
 browser, and on a desktop it opens your browser.</p>
 <div class="hl"><pre><span></span><code><span class="n">say</span><span class="p">(</span><span class="s2">"You found the key!"</span><span class="p">)</span>
 
@@ -728,6 +729,8 @@ browser, and on a desktop it opens your browser.</p>
     <span class="nb">print</span><span class="p">(</span><span class="s2">"they closed it"</span><span class="p">)</span>
 </code></pre></div>
 
+<p>A message has nothing to fill in, so your function is called with nothing.
+Give it <code>ask()</code> if you want an answer back.</p>
 <h3 id="askquestion-choices-answer-placeholder">ask(question, choices, answer, placeholder)</h3>
 <p>Pause and ask something. With <code>choices</code> it is multiple choice, and can be
 answered by clicking or by pressing the number beside it. Without <code>choices</code>
