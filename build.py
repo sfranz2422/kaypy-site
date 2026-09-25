@@ -78,7 +78,7 @@ PAGES = [
 #: it, and so the build can check it looks like a form address at all: a
 #: wrong link here is invisible on the page (an iframe that renders blank)
 #: and only discovered by somebody trying to send you a game.
-GAMES_FORM_URL = ""
+GAMES_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdnxgZx12SyoOS-EIdWVEUeF3smuZwsSUT4Lxref0jKdBTQvw/viewform?usp=publish-editor"
 
 
 def submit_block():
