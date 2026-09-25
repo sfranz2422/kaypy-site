@@ -138,6 +138,13 @@ main.with-toc .toc  { grid-row: 1; grid-column: 2; }
   color: var(--fg-dim); text-decoration: none;
 }
 .toc a:hover { color: var(--green); border-left-color: var(--green); }
+/* Depth. d1 is the page's own title, d2 its sections, d3 below that.
+   Only d3 had a rule, so the title and its sections were indistinguishable
+   in the sidebar — everything inherited from `.toc a` and sat at one
+   indent. Found by the check that every class the page applies has a rule,
+   which is exactly the kind of thing it is for. */
+.toc a.d1 { font-weight: 600; color: var(--fg); border-left-color: var(--fg-dim); }
+.toc a.d2 { padding-left: .75rem; }
 .toc a.d3 { padding-left: 1.5rem; font-size: .84rem; }
 
 @media (max-width: 62rem) {
@@ -338,3 +345,31 @@ main.with-toc .toc  { grid-row: 1; grid-column: 2; }
   width: 100%; height: auto; display: block;
   border-radius: var(--radius); border: 1px solid var(--line);
 }
+
+/* A short aside in the prose — used where something is not ready yet and
+   saying so is better than an empty box. */
+.prose .note,
+.note {
+  margin: 1.5rem 0;
+  padding: .9rem 1.1rem;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--blue);
+  border-radius: var(--radius);
+  color: var(--fg-dim);
+}
+
+/* An embedded form — Google Forms, in an iframe of its own.
+ *
+ * The height is set on the iframe by the build, because the form's own
+ * length is the only thing that decides it and the page has no way to
+ * measure across origins. The border and radius are here so a third party's
+ * white box does not sit on the page looking like a rendering mistake. */
+.form-embed {
+  margin: 1.5rem 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #fff;
+}
+.form-embed iframe { display: block; width: 100%; border: 0; }

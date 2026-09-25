@@ -62,8 +62,43 @@ PAGES = [
     ("guide", "Guide", "guide.md"),
     ("api", "API", "api.md"),
     ("tutorials", "Tutorials", "tutorials.md"),
+    ("games", "Games", "games.md"),
     ("play", "Playground", None),
 ]
+
+
+#: The Google Form that takes game submissions, as its EMBED address — the
+#: one Forms gives you under Send → <> , which ends in /viewform?embedded=true.
+#:
+#: Empty until Steve makes the form. The Games page then shows an email
+#: instead of an empty box, because a submission section with a hole where
+#: the form should be is worse than one that says "write to me".
+#:
+#: It lives here rather than in the markdown so there is one place to change
+#: it, and so the build can check it looks like a form address at all: a
+#: wrong link here is invisible on the page (an iframe that renders blank)
+#: and only discovered by somebody trying to send you a game.
+GAMES_FORM_URL = ""
+
+
+def submit_block():
+    """The form, or an honest substitute for it."""
+    if not GAMES_FORM_URL:
+        return (
+            '<p class="note">The submission form is not up yet. Until it is, '
+            'email a link to your game — the page, not the source — and it '
+            'will go up here once it has been played.</p>')
+    return (
+        '<div class="form-embed">'
+        f'<iframe src="{html.escape(GAMES_FORM_URL, quote=True)}" '
+        'width="100%" height="820" frameborder="0" marginheight="0" '
+        'marginwidth="0" loading="lazy" title="Submit a game">'
+        'Loading the form…</iframe></div>')
+
+
+def fill_slots(text):
+    """Replace the {{...}} markers a content page may use."""
+    return text.replace("{{SUBMIT_FORM}}", submit_block())
 
 
 def nav_pages():
@@ -262,7 +297,7 @@ def build(into=DIST):
         if not md_path.is_file():
             print(f"  note: no content/{source} yet — skipping {title}")
             continue
-        body, toc = render_markdown(md_path.read_text())
+        body, toc = render_markdown(fill_slots(md_path.read_text()))
         out_dir = into if slug == "" else into / slug
         out_dir.mkdir(parents=True, exist_ok=True)
         (out_dir / "index.html").write_text(page_shell(slug, title, body, toc))

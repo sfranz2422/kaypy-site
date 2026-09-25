@@ -23,7 +23,7 @@
     <img src="../static/creature.png" alt="" width="38" height="40">
     <span class="brand-name">KayPy</span>
   </a>
-  <nav class="top-nav" aria-label="Main"><a href="../">Home</a><a href="../start/" class="current">Get started</a><a href="../learn/">Learn Python</a><a href="../guide/">Guide</a><a href="../api/">API</a><a href="../tutorials/">Tutorials</a><a href="../play/">Playground</a></nav>
+  <nav class="top-nav" aria-label="Main"><a href="../">Home</a><a href="../start/" class="current">Get started</a><a href="../learn/">Learn Python</a><a href="../guide/">Guide</a><a href="../api/">API</a><a href="../tutorials/">Tutorials</a><a href="../games/">Games</a><a href="../play/">Playground</a></nav>
   <a class="gh" href="https://discord.gg/sVXnsDZNm"
      aria-label="KayPy on Discord">Discord</a>
   <a class="gh" href="https://github.com/sfranz2422/kaypy"
@@ -31,10 +31,105 @@
 </header>
 
 <main id="content" class="with-toc">
-  <nav class="toc" aria-label="On this page"><p class="toc-head">On this page</p><a href="#get-started" class="d1">Get started</a></nav>
+  <nav class="toc" aria-label="On this page"><p class="toc-head">On this page</p><a href="#get-started" class="d1">Get started</a><a href="#in-the-browser" class="d2">In the browser</a><a href="#on-your-computer" class="d2">On your computer</a><a href="#put-it-on-the-web" class="d2">Put it on the web</a><a href="#where-to-go-next" class="d2">Where to go next</a><a href="#if-something-goes-wrong" class="d2">If something goes wrong</a></nav>
   <article class="prose">
 <h1 id="get-started">Get started</h1>
-<p>Coming next.</p>
+<p>Two ways in. The browser needs nothing at all, so start there; move to your
+own computer when you want to keep files and share what you made.</p>
+<h2 id="in-the-browser">In the browser</h2>
+<p>Open the <a href="../play/">playground</a>. It runs real Python — the same engine, the
+same code — with nothing to install and no account.</p>
+<p>Paste this in and press <strong>Run</strong>:</p>
+<div class="hl"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">kaypy</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">kaypy</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="p">[</span><span class="mi">141</span><span class="p">,</span> <span class="mi">183</span><span class="p">,</span> <span class="mi">255</span><span class="p">])</span>
+
+<span class="n">loadSprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">,</span> <span class="s2">"images/bean.png"</span><span class="p">)</span>
+<span class="n">setGravity</span><span class="p">(</span><span class="mi">2400</span><span class="p">)</span>
+
+<span class="n">add</span><span class="p">([</span><span class="n">rect</span><span class="p">(</span><span class="n">width</span><span class="p">(),</span> <span class="mi">48</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">()</span> <span class="o">-</span> <span class="mi">48</span><span class="p">),</span>
+     <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">(</span><span class="n">isStatic</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">70</span><span class="p">)])</span>
+
+<span class="n">player</span> <span class="o">=</span> <span class="n">add</span><span class="p">([</span><span class="n">sprite</span><span class="p">(</span><span class="s2">"bean"</span><span class="p">),</span> <span class="n">pos</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span>
+              <span class="n">area</span><span class="p">(),</span> <span class="n">body</span><span class="p">(),</span> <span class="n">anchor</span><span class="p">(</span><span class="s2">"bot"</span><span class="p">)])</span>
+
+
+<span class="nd">@onKeyDown</span><span class="p">(</span><span class="s2">"left"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">move_left</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="o">-</span><span class="mi">320</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+
+<span class="nd">@onKeyDown</span><span class="p">(</span><span class="s2">"right"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">move_right</span><span class="p">():</span>
+    <span class="n">player</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="mi">320</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+
+<span class="nd">@onKeyPress</span><span class="p">(</span><span class="s2">"space"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">jump</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">player</span><span class="o">.</span><span class="n">isGrounded</span><span class="p">():</span>
+        <span class="n">player</span><span class="o">.</span><span class="n">jump</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Arrow keys to move, space to jump.</p>
+<p>There is no <code>run()</code> at the bottom and no loop to write. The frame loop starts
+by itself once your file has been read, which is why the first thing you write
+is the part you came for.</p>
+<p>The first Run downloads Python itself and takes a few seconds. After that the
+browser has it cached and Run is immediate.</p>
+<h2 id="on-your-computer">On your computer</h2>
+<p>kaypy needs <strong>Python 3.10 or newer</strong>. Installing it brings pygame-ce and
+nothing else:</p>
+<div class="hl"><pre><span></span><code>pip install kaypy
+</code></pre></div>
+
+<p>Then make a game folder. This is not an empty one — it comes with a working
+game and the sprites it uses, so there is something to change rather than
+something to start:</p>
+<div class="hl"><pre><span></span><code>kaypy new mygame
+cd mygame
+python game.py
+</code></pre></div>
+
+<p>A window opens with a character, some ground and a coin. Arrow keys to move,
+space to jump. Now open <code>game.py</code> and change a number.</p>
+<p><code>kaypy new</code> also fetches the lesson sound effects. If the network is blocked
+where you are it says so and carries on without them — the game still runs, it
+is just silent. When you want them:</p>
+<div class="hl"><pre><span></span><code>kaypy sounds mygame
+</code></pre></div>
+
+<h2 id="put-it-on-the-web">Put it on the web</h2>
+<p>One command turns a game into one HTML file:</p>
+<div class="hl"><pre><span></span><code>kaypy web game.py
+</code></pre></div>
+
+<p>That writes <code>web_build/game.html</code> — about 260 KB for the starter, with the
+sprites carried inside it. Double-click it to play, or upload that single file
+to itch.io as an HTML project. Nothing else has to go with it.</p>
+<p>The first time somebody opens the page it downloads Python, the same as the
+playground does. After that it is cached.</p>
+<h2 id="where-to-go-next">Where to go next</h2>
+<ul>
+<li><strong><a href="../learn/">Learn Python</a></strong> — conditionals, loops and lists, from the
+  beginning, for somebody who has not programmed before.</li>
+<li><strong><a href="../guide/">Guide</a></strong> — thirteen lessons that build on the starter game:
+  sprites, collision, gravity, scenes, sound, levels, camera, state.</li>
+<li><strong><a href="../api/">API</a></strong> — every name in kaypy, with a runnable example each.</li>
+<li><strong><a href="../games/">Games</a></strong> — things people have made, and how to send in yours.</li>
+</ul>
+<h2 id="if-something-goes-wrong">If something goes wrong</h2>
+<p><strong><code>kaypy: command not found</code></strong> — the install worked but the script is not on
+your PATH. The module does the same thing:</p>
+<div class="hl"><pre><span></span><code>python -m kaypy.cli new mygame
+</code></pre></div>
+
+<p><strong>The window opens and closes at once</strong> — that is usually an error printed and
+gone. Run it from a terminal rather than double-clicking, and the traceback
+stays on screen.</p>
+<p><strong><code>GameObj has no attribute ...</code></strong> — an object is missing the component that
+provides it. <code>player.jump()</code> needs <code>body()</code>; <code>player.onCollide()</code> needs
+<code>area()</code>. The <a href="../guide/">Guide</a> has a section on this, because it is the
+error everybody meets first.</p>
   </article>
 </main>
 
