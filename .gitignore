@@ -1,5 +1,6 @@
-# dist/ is NOT here on purpose. Render serves it with an empty build command,
-# so it has to be committed — see README.md under "Deploying".
+# site/ is NOT here on purpose, and must never be. It is not build output —
+# it IS the website, hand-written, and Render serves it with an empty build
+# command. Ignoring it would deploy an empty site. See README.md, "Deploying".
 
 .DS_Store
 __pycache__/
