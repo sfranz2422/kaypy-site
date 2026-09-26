@@ -194,45 +194,85 @@ check("every asset the starter names is vendored", not missing,
       ", ".join(missing) if missing else " ".join(named))
 
 # ------------------------------------------------------------- run it for real
+#
+# THIS USED TO CALL done() WHEN THERE WAS NO KAYPY TO RUN AGAINST.
+#
+# done() prints the tally and exits, so without --kaypy the suite stopped
+# here and every check written below it simply never ran — while still
+# reporting ALL PASSED, because the checks that did run all passed. A
+# skipped section and a passing one looked identical from the outside, and
+# three checks added underneath it sat there doing nothing until the total
+# failed to go up by three.
+#
+# So the skip is a branch now, not an exit.
 if not (args.kaypy / "kaypy" / "__init__.py").is_file():
     print("  skip  no kaypy checkout at %s — pass --kaypy to run the starter"
           % args.kaypy)
-    done()
+else:
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+    os.environ["KAYPY_TEST_MAX_FRAMES"] = "0"
+    sys.path.insert(0, str(args.kaypy))
 
-os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
-os.environ["KAYPY_TEST_MAX_FRAMES"] = "0"
-sys.path.insert(0, str(args.kaypy))
+    os.chdir(DIST / "assets")      # so loadSprite("images/bean.png") resolves
 
-os.chdir(DIST / "assets")      # so loadSprite("images/bean.png") resolves
+    import kaypy                                                    # noqa: E402
+    import kaypy.engine as ke                                       # noqa: E402
 
-import kaypy                                                    # noqa: E402
-import kaypy.engine as ke                                       # noqa: E402
+    namespace = {"__name__": "__main__"}
+    try:
+        exec(compile(starter, "starter.py", "exec"), namespace)
+        engine = ke._engine
+        ran = engine is not None
+    except Exception as exc:                                        # noqa: BLE001
+        engine, ran = None, False
+        check("the starter runs on real kaypy", False,
+              "%s: %s" % (type(exc).__name__, exc))
 
-namespace = {"__name__": "__main__"}
-try:
-    exec(compile(starter, "starter.py", "exec"), namespace)
-    engine = ke._engine
-    ran = engine is not None
-except Exception as exc:                                        # noqa: BLE001
-    engine, ran = None, False
-    check("the starter runs on real kaypy", False,
-          "%s: %s" % (type(exc).__name__, exc))
+    if ran:
+        check("the starter runs on real kaypy", True,
+              "%d objects" % len(engine._objs))
+        # A starter that builds objects but wires nothing is a starter where
+        # pressing an arrow key does nothing, which reads as a broken engine to
+        # somebody who has never seen a working one.
+        handlers = (len(engine.events.key_down_handlers)
+                    + len(engine.events.key_press_handlers))
+        check("  its keys are wired up", handlers >= 3, "%d handlers" % handlers)
+        check("  and it puts something on the screen", len(engine._objs) >= 4)
 
-if ran:
-    check("the starter runs on real kaypy", True,
-          "%d objects" % len(engine._objs))
-    # A starter that builds objects but wires nothing is a starter where
-    # pressing an arrow key does nothing, which reads as a broken engine to
-    # somebody who has never seen a working one.
-    handlers = (len(engine.events.key_down_handlers)
-                + len(engine.events.key_press_handlers))
-    check("  its keys are wired up", handlers >= 3, "%d handlers" % handlers)
-    check("  and it puts something on the screen", len(engine._objs) >= 4)
-
-    engine._started = True
-    engine._running = False
-    ke._engine = None
+        engine._started = True
+        engine._running = False
+        ke._engine = None
 
 os.chdir(HERE)
+# ------------------------------------------------- find and replace is wired
+#
+# Same four files as the three editors. The one that ships broken quietly is
+# dialog.min.css: without it find and replace WORK, and the bar asking for
+# the search term is an unstyled input floating over the code.
+play_html = (HERE / "play" / "play.html").read_text()
+for addon in ("addon/dialog/dialog.min.js",
+              "addon/search/searchcursor.min.js",
+              "addon/search/search.min.js",
+              "addon/dialog/dialog.min.css"):
+    check("the playground loads %s" % addon.split("/")[-1],
+          addon in play_html)
+check("  and searchcursor comes before search",
+      play_html.find("searchcursor.min.js")
+      < play_html.find("addon/search/search.min.js"))
+# The addons must load before play.js builds the editor: search.js sets the
+# `search` option through defineOption, which only reaches editors made
+# after it runs, and then reads cm.options.search.bottom unguarded.
+check("  and the addons load before play.js builds the editor",
+      play_html.find("addon/search/search.min.js") < play_html.find("play.js"))
+
+check("  and the search bar is given a usable width",
+      ".CodeMirror-dialog input" in (HERE / "play" / "play.css").read_text())
+
+# It has to reach dist/ too — the playground is copied file by file, and a
+# tag that is only in the source is a feature only the repo has.
+built = (HERE / "dist" / "play" / "index.html")
+check("  and the built playground has them as well",
+      built.is_file() and "addon/search/search.min.js" in built.read_text())
+
 done()
