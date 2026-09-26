@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tutorials · KayPy</title>
+<meta name="description" content="A game engine for learning Python — build a game out of components, run it in the browser, share it as one file.">
+<meta property="og:title" content="Tutorials · KayPy">
+<meta property="og:description" content="A game engine for learning Python — build a game out of components, run it in the browser, share it as one file.">
+<meta property="og:image" content="../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../static/favicon.png">
+<link rel="apple-touch-icon" href="../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../">
+      <img src="../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../learn/">All three lessons</a></li><li><a class="dropdown-item" href="../learn/conditionals/">1 — Conditionals</a></li><li><a class="dropdown-item" href="../learn/loops/">2 — Loops</a></li><li><a class="dropdown-item" href="../learn/lists/">3 — Lists</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../tutorials/" aria-current="page">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row gx-xl-5">
+    <div class="col-lg-8 col-xl-9">
+      <article class="prose">
+<!-- Built by tutorials.py. Do not edit.
+
+  The listings are read out of examples/ in the kaypy repository, so the code
+  here is the code that repository tests. The part above them is
+  content/tutorials.intro.md, which IS edited by hand.
+
+      python3 tutorials.py --from ~/kaypy      rebuild
+      python3 tutorials.py --check             has anything moved on?
+-->
+
+<h1 id="tutorials">Tutorials</h1>
+<p>Whole games, short enough to read in one sitting.</p>
+<p>The <a href="../guide/">guide</a> teaches one idea at a time and builds up. This page is
+the other half of that: finished programs you can copy into the
+<a href="../play/">playground</a>, press Run, and then take apart. Nothing here is a
+fragment — every listing is a complete file that runs as it stands.</p>
+<blockquote>
+<p><strong>How to use one.</strong> Copy it, run it, then break something on purpose. Change
+a number and see what moves. That tells you more about what a line does than
+reading it does.</p>
+</blockquote>
+<h2 id="whole-games">Whole games</h2>
+<h3 id="a-door-that-asks-a-question-what-ask-say-and-pause-are-for">A door that asks a question — what ask(), say() and pause() are for</h3>
+<p>python3 quiz_door.py</p>
+<p>Arrows to move, space to jump, escape to pause. Walk into the door and the
+game stops and asks you something; get it right and the door opens.</p>
+<p>Not one of the thirteen lessons: it is the smallest complete example of the
+one thing a teacher asks for that a game engine usually cannot do. Three
+names here appear nowhere in the lessons:</p>
+<pre><code>ask(question, choices, answer=n)   stop and ask, then run a callback
+say(text)                          stop and show a line of text
+pause() / resume() / isPaused()    freeze the game where it stands
+</code></pre>
+<p>The question is a callback rather than a return value because a browser
+cannot block: nothing can wait for an answer without stopping the frame that
+would draw the question. So <code>ask</code> puts the panel up and hands you the answer
+when there is one, and the game is paused in between.</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[141, 183, 255])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+setGravity(2400)
+
+add([rect(width(), 48), pos(0, height() - 48), area(), body(isStatic=True),
+     color(90, 150, 70)])
+
+player = add([sprite(&quot;bean&quot;), pos(80, 100), area(), body(), anchor(&quot;bot&quot;)])
+door = add([rect(40, 90), pos(650, height() - 138), area(), color(140, 90, 40),
+            &quot;door&quot;])
+
+score = 0
+label = add([text(&quot;Score: 0&quot;, size=26), pos(12, 12), fixed()])
+
+
+@onKeyDown(&quot;left&quot;)
+def left():
+    player.move(-320, 0)
+
+
+@onKeyDown(&quot;right&quot;)
+def right():
+    player.move(320, 0)
+
+
+@onKeyPress(&quot;space&quot;)
+def jump():
+    if player.isGrounded():
+        player.jump(1000)
+
+
+@player.onCollide(&quot;door&quot;)
+def at_the_door(d):
+    @ask(&quot;Which keyword starts a loop in Python?&quot;, [&quot;if&quot;, &quot;for&quot;, &quot;def&quot;], answer=1)
+    def checked(correct):
+        global score
+        if correct:
+            score += 1
+            label.text = &quot;Score: %d&quot; % score
+            d.destroy()
+            say(&quot;The door swings open.&quot;)
+        else:
+            say(&quot;Not that one. Have another go.&quot;)
+
+
+@onKeyPress(&quot;escape&quot;)
+def toggle_pause():
+    resume() if isPaused() else pause()
+</code></pre>
+<p><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/quiz_door.py"><code>examples/quiz_door.py</code></a> · 71 lines</p>
+<hr />
+<h3 id="a-pet-that-trails-you-and-a-health-bar-that-never-does-what-follow-is-for">A pet that trails you and a health bar that never does — what follow() is for</h3>
+<p>python3 pet_and_healthbar.py</p>
+<p>Arrows to move, space to jump, F to hurt the enemy. The ghost chases you and
+falls behind when you run; the red bar over the enemy is welded to it and
+never falls behind at all.</p>
+<p>Both of those are one component. The difference between them is the word
+<code>speed</code>:</p>
+<pre><code>follow(target)              be exactly where it is
+follow(target, speed=180)   move toward it at 180 pixels a second
+</code></pre>
+<p>The bar is the interesting half. It is pinned to an object that gravity
+moves, that collision shoves out of the floor, and that a keypress teleports
+— and it stays put through all three, because follow() runs after the engine
+has finished deciding where everything actually ended up, rather than before
+like every other component. Without that it would sit correctly while the
+enemy stands still and slide off it the moment the enemy moved, which looks
+like a drawing bug and is not one.</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[141, 183, 255])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;ghosty&quot;, &quot;images/ghosty.png&quot;)
+setGravity(1600)
+
+add([rect(width(), 48), pos(0, height() - 48), area(),
+     body(isStatic=True), color(90, 150, 70)])
+
+player = add([sprite(&quot;bean&quot;), pos(120, 300), area(), body()])
+
+# Locked on: no speed, so it is simply where the player is, plus an offset.
+add([text(&quot;you&quot;, size=18), pos(0, 0), color(30, 40, 60),
+     follow(player, offset=vec2(4, -28))])
+
+# Chasing: with a speed, it heads for the player and arrives when it arrives.
+add([sprite(&quot;ghosty&quot;), pos(600, 200), follow(player, speed=180)])
+
+enemy = add([sprite(&quot;ghosty&quot;), pos(560, 400), area(), body(), health(5)])
+
+# A health bar over something gravity is pulling down and the floor is
+# pushing back up. This is the case that shows whether follow() runs early
+# or late.
+BAR = 48
+backing = add([rect(BAR, 6), pos(0, 0), color(40, 20, 20),
+               follow(enemy, offset=vec2(0, -14))])
+bar = add([rect(BAR, 6), pos(0, 0), color(220, 60, 60),
+           follow(enemy, offset=vec2(0, -14))])
+
+
+@onKeyDown(&quot;left&quot;)
+def go_left():
+    player.move(-320, 0)
+
+
+@onKeyDown(&quot;right&quot;)
+def go_right():
+    player.move(320, 0)
+
+
+@onKeyPress(&quot;space&quot;)
+def jump():
+    if player.isGrounded():
+        player.jump(760)
+
+
+@onKeyPress(&quot;f&quot;)
+def hurt():
+    if enemy.exists():
+        enemy.hurt(1)
+        bar.width = BAR * max(0, enemy.hp) / 5
+
+
+@enemy.onDeath
+def gone():
+    # A follower whose target is destroyed stops where it stands and goes on
+    # existing — which is right for a pet and wrong for a health bar, so the
+    # bars are destroyed here, next to the thing they belonged to.
+    enemy.destroy()
+    backing.destroy()
+    bar.destroy()
+
+
+add([text(&quot;arrows move · space jumps · F hurts the ghost&quot;, size=20),
+     pos(12, 12), color(20, 30, 50), fixed()])
+</code></pre>
+<p><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/pet_and_healthbar.py"><code>examples/pet_and_healthbar.py</code></a> · 89 lines</p>
+<hr />
+<h3 id="a-sword-that-goes-where-the-knight-goes-what-child-objects-are-for">A sword that goes where the knight goes — what child objects are for</h3>
+<p>python3 knight_and_camera.py</p>
+<p>Arrows to move, space to swing, 1/2/3 to change the camera. The sword, the
+shield and the name tag are all children of the knight: nothing in the
+movement code mentions any of them, and they follow anyway.</p>
+<pre><code>knight = add([sprite("bean"), pos(200, 300), area()])
+sword  = knight.add([rect(8, 34), pos(26, -4), color(220, 220, 235)])
+</code></pre>
+<p>A child's <code>pos()</code> is measured from its parent, not from the screen. The
+sword sits at +26, -4 <em>from the knight</em> and stays there through walking,
+turning and being teleported, because there is nothing to keep in step —
+it is one position, expressed once. Destroy the knight and the sword goes
+with it.</p>
+<p>That is the difference between this and follow(): a follower is a separate
+object being kept in agreement every frame, which is what you want when the
+two things meet later in the game. A child is part of the thing.</p>
+<p>THE CAMERA KEYS</p>
+<pre><code>1   setCamScale(1)              normal
+2   setCamScale(2)              zoomed in, both ways
+3   setCamScale(vec2(2, 0.6))   wide and squashed
+</code></pre>
+<p>The third is the one worth pressing. The scale is a vec2, so the two axes
+can differ — a letterboxed cutscene, a squash as something lands, or a
+deliberately wrong aspect ratio for a dream sequence. Everything obeys it
+together: sprites, the children, the drawn cone of the swing, and the debug
+boxes under F1.</p>
+<pre><code class="language-python">import math
+
+from kaypy import *
+
+kaypy(width=800, height=600, background=[26, 30, 42])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+add([rect(2000, 40), pos(-600, 470), area(), body(isStatic=True),
+     color(60, 70, 90)])
+setGravity(1800)
+
+knight = add([sprite(&quot;bean&quot;), pos(200, 300), area(), body(), &quot;knight&quot;])
+
+# Everything below hangs off the knight. None of it is mentioned again in
+# the movement code.
+sword = knight.add([rect(8, 34), pos(26, -4), color(220, 220, 235),
+                    anchor(&quot;bot&quot;), rotate(0)])
+knight.add([rect(6, 24), pos(-10, 4), color(150, 110, 60)])          # shield
+knight.add([text(&quot;Sir Bean&quot;, size=14), pos(-4, -22), color(200, 210, 230)])
+
+add([text(&quot;arrows move · space swings · 1 2 3 camera&quot;, size=18),
+     pos(12, 12), color(140, 150, 170), fixed()])
+
+swing = [0.0]
+
+
+@onKeyDown(&quot;left&quot;)
+def go_left():
+    knight.move(-240, 0)
+
+
+@onKeyDown(&quot;right&quot;)
+def go_right():
+    knight.move(240, 0)
+
+
+@onKeyPress(&quot;space&quot;)
+def jump_or_swing():
+    swing[0] = 0.35
+    if knight.isGrounded():
+        knight.jump(700)
+
+
+@onUpdate
+def animate_sword():
+    if swing[0] &gt; 0:
+        swing[0] = max(0.0, swing[0] - dt())
+        # A swing is just the child's own angle. The knight knows nothing.
+        sword.angle = -110 * math.sin((0.35 - swing[0]) / 0.35 * math.pi)
+    else:
+        sword.angle = 0
+
+
+@onUpdate
+def chase():
+    setCamPos(vec2(knight.pos.x, 300))
+
+
+@onKeyPress(&quot;1&quot;)
+def normal():
+    setCamScale(1)
+
+
+@onKeyPress(&quot;2&quot;)
+def close():
+    setCamScale(2)
+
+
+@onKeyPress(&quot;3&quot;)
+def letterbox():
+    setCamScale(vec2(2, 0.6))
+</code></pre>
+<p><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/knight_and_camera.py"><code>examples/knight_and_camera.py</code></a> · 105 lines</p>
+<hr />
+<h3 id="sneak-past-a-guard-who-cannot-see-through-walls-what-sentry-is-for">Sneak past a guard who cannot see through walls — what sentry() is for</h3>
+<p>python3 stealth_guard.py</p>
+<p>Arrows to move. The guard sweeps a torch left and right; get into the cone
+and it spots you. Hide behind a crate and it does not, because the cone is
+light and the crate is solid.</p>
+<p>The whole of the seeing is one component:</p>
+<pre><code>sentry("player", fieldOfView=70, range=300, lineOfSight=True)
+</code></pre>
+<p><code>fieldOfView</code> is the width of the cone in degrees. <code>range</code> is how far the
+torch reaches — not KAPLAY's, added because "how close can I get" is the
+question a stealth game is made of. <code>lineOfSight</code> casts a ray at you and
+lets the crates stop it.</p>
+<p>There is no <code>direction</code> here on purpose: without one, the sentry looks
+wherever <code>rotate()</code> has the guard turned, so sweeping the torch is a matter
+of changing <code>guard.angle</code> and the cone follows.</p>
+<p>The cone you can see is drawn by hand in onDraw, out of the same three
+numbers the component was given. Drawing it is worth the twenty lines: a
+vision cone you cannot see is a rule the player has to infer by dying.</p>
+<pre><code class="language-python">import math
+
+from kaypy import *
+
+kaypy(width=800, height=600, background=[18, 20, 30])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;ghosty&quot;, &quot;images/ghosty.png&quot;)
+
+FOV = 70
+RANGE = 300
+
+player = add([sprite(&quot;bean&quot;), pos(80, 500), area(), &quot;player&quot;])
+
+# Crates. Solid, so they stop the guard's ray — and tagged, so the ray can
+# be told about them.
+for x, y in [(300, 180), (300, 260), (300, 340), (560, 420), (560, 500)]:
+    add([rect(56, 56), pos(x, y), area(), color(90, 74, 58), outline(2),
+         &quot;crate&quot;])
+
+guard = add([
+    sprite(&quot;ghosty&quot;), pos(400, 120), area(), rotate(90),
+    sentry(&quot;player&quot;, fieldOfView=FOV, range=RANGE, lineOfSight=True),
+    &quot;guard&quot;,
+])
+
+caught = add([text(&quot;&quot;, size=28), pos(12, 12), color(255, 120, 120), fixed()])
+add([text(&quot;arrows to move · hide behind the crates&quot;, size=18),
+     pos(12, 560), color(150, 160, 180), fixed()])
+
+
+@onKeyDown(&quot;left&quot;)
+def go_left():
+    player.move(-220, 0)
+
+
+@onKeyDown(&quot;right&quot;)
+def go_right():
+    player.move(220, 0)
+
+
+@onKeyDown(&quot;up&quot;)
+def go_up():
+    player.move(0, -220)
+
+
+@onKeyDown(&quot;down&quot;)
+def go_down():
+    player.move(0, 220)
+
+
+# The torch sweeps between 50 and 130 degrees — down and to either side.
+@onUpdate
+def sweep():
+    guard.angle = 90 + 40 * math.sin(time() * 0.8)
+
+
+@guard.onObjectsSpotted
+def spotted(objects):
+    caught.text = &quot;Spotted!&quot;
+    shake(8)
+
+
+@onUpdate
+def forget():
+    # .spotted is the current answer, for the frames between edges.
+    if not guard.spotted and caught.text:
+        caught.text = &quot;&quot;
+
+
+@onDraw
+def draw_cone():
+    &quot;&quot;&quot;The cone, drawn from the same numbers the sentry was given.
+
+    Its far edge is cut short wherever a crate is in the way, which is the
+    same question the component asks — so what you see and what the guard
+    sees cannot disagree.
+    &quot;&quot;&quot;
+    seeing = bool(guard.spotted)
+    edge = (255, 210, 120) if not seeing else (255, 120, 120)
+
+    points = [guard.pos]
+    steps = 24
+    for i in range(steps + 1):
+        angle = guard.angle - FOV / 2 + FOV * i / steps
+        along = Vec2.fromAngle(angle)
+        hit = raycast(guard.pos, along, exclude=[&quot;player&quot;], ignore=[guard],
+                      max_distance=RANGE)
+        reach = hit.distance if hit else RANGE
+        points.append(guard.pos + along * reach)
+
+    drawLines(points=points, width=2, color=edge, opacity=0.55, close=True)
+</code></pre>
+<p><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/stealth_guard.py"><code>examples/stealth_guard.py</code></a> · 117 lines</p>
+<hr />
+<h3 id="asteroids-what-rotate-is-for">Asteroids — what rotate() is for</h3>
+<p>python3 asteroids.py</p>
+<p>Left and right turn the ship, up thrusts in the direction it is facing,
+space fires. Rocks drift, split when hit, and wrap around the screen.</p>
+<p>Not one of the thirteen lessons: it is the game the lessons build towards,
+and the one that cannot be written at all without a ship that turns. Three
+things here appear nowhere in the lessons and are the whole point of it:</p>
+<pre><code>rotate(angle)            the ship turns
+Vec2.fromAngle(angle)    which way "forward" is, once it has turned
+a velocity of its own     momentum, so letting go of thrust coasts
+</code></pre>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[8, 8, 20])
+
+TURN = 200          # degrees per second
+THRUST = 320        # pixels per second per second
+MAX_SPEED = 420
+BULLET_SPEED = 560
+
+score = 0
+
+ship = add([
+    rect(26, 18),
+    pos(center()),
+    anchor(&quot;center&quot;),
+    color(200, 230, 255),
+    rotate(0),
+    area(),
+    &quot;ship&quot;,
+])
+ship.vel = vec2(0, 0)
+
+label = add([text(&quot;0&quot;, size=22), pos(12, 10), fixed()])
+
+
+def wrap(obj):
+    &quot;&quot;&quot;Off one edge, on at the other — the rule that makes it Asteroids.&quot;&quot;&quot;
+    p = obj.pos
+    if p.x &lt; 0:
+        obj.pos = vec2(width(), p.y)
+    elif p.x &gt; width():
+        obj.pos = vec2(0, p.y)
+    p = obj.pos
+    if p.y &lt; 0:
+        obj.pos = vec2(p.x, height())
+    elif p.y &gt; height():
+        obj.pos = vec2(p.x, 0)
+
+
+def spawn_rock(at=None, chunks=3):
+    r = add([
+        circle(chunks * 11),
+        pos(at or vec2(rand(0, width()), rand(0, 60))),
+        anchor(&quot;center&quot;),
+        color(150, 140, 130),
+        outline(2, (90, 85, 80)),
+        area(),
+        rotate(rand(0, 360)),
+        &quot;rock&quot;,
+    ])
+    r.vel = Vec2.fromAngle(rand(0, 360)) * rand(40, 110)
+    r.spin = rand(-90, 90)
+    r.chunks = chunks   # 3, 2, 1 — splits down to nothing
+    return r
+
+
+for _ in range(4):
+    spawn_rock()
+
+
+@onKeyDown(&quot;left&quot;)
+def turn_left():
+    ship.rotateBy(-TURN * dt())
+
+
+@onKeyDown(&quot;right&quot;)
+def turn_right():
+    ship.rotateBy(TURN * dt())
+
+
+@onKeyDown(&quot;up&quot;)
+def thrust():
+    ship.vel = ship.vel + Vec2.fromAngle(ship.angle) * THRUST * dt()
+    if ship.vel.len() &gt; MAX_SPEED:
+        ship.vel = ship.vel.unit() * MAX_SPEED
+
+
+@onKeyPress(&quot;space&quot;)
+def fire():
+    b = add([
+        circle(3),
+        pos(ship.pos),
+        anchor(&quot;center&quot;),
+        color(255, 240, 160),
+        area(),
+        &quot;bullet&quot;,
+    ])
+    b.vel = Vec2.fromAngle(ship.angle) * BULLET_SPEED
+    wait(1.2, lambda: b.destroy() if b.exists() else None)
+
+
+@onUpdate
+def fly():
+    ship.pos = ship.pos + ship.vel * dt()
+    wrap(ship)
+    for r in get(&quot;rock&quot;):
+        r.pos = r.pos + r.vel * dt()
+        r.rotateBy(r.spin * dt())
+        wrap(r)
+    for b in get(&quot;bullet&quot;):
+        b.pos = b.pos + b.vel * dt()
+        wrap(b)
+
+
+@onUpdate
+def shooting():
+    global score
+    for b in get(&quot;bullet&quot;):
+        for r in get(&quot;rock&quot;):
+            if not (b.exists() and r.exists()):
+                continue
+            if b.pos.dist(r.pos) &lt; r.chunks * 11:
+                b.destroy()
+                r.destroy()
+                score += 10 * r.chunks
+                label.text = str(score)
+                shake(6)
+                if r.chunks &gt; 1:
+                    for _ in range(2):
+                        spawn_rock(r.pos, r.chunks - 1)
+                break
+</code></pre>
+<p><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/asteroids.py"><code>examples/asteroids.py</code></a> · 136 lines</p>
+<hr />
+<h2 id="the-lesson-programs">The lesson programs</h2>
+<p>Each of these is the finished program from one lesson of the
+<a href="../guide/">guide</a>, which explains it a piece at a time. Read the
+lesson; keep the file to run.</p>
+<div class="table-responsive"><table class="table table-sm align-middle">
+<thead>
+<tr>
+<th></th>
+<th>What it shows</th>
+<th style="text-align: right;">Lines</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1</strong></td>
+<td><a href="../guide/#1-adding-a-game-object">Adding a game object</a></td>
+<td style="text-align: right;">12</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson1_adding_object.py">source</a></td>
+</tr>
+<tr>
+<td><strong>2</strong></td>
+<td><a href="../guide/#2-player-movement">Player movement</a></td>
+<td style="text-align: right;">25</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson2_player_movement.py">source</a></td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td><a href="../guide/#3-collision-handling">Collision handling</a></td>
+<td style="text-align: right;">48</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson3_collision.py">source</a></td>
+</tr>
+<tr>
+<td><strong>5</strong></td>
+<td><a href="../guide/#5-gravity">Gravity</a></td>
+<td style="text-align: right;">39</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson5_gravity.py">source</a></td>
+</tr>
+<tr>
+<td><strong>6</strong></td>
+<td><a href="../guide/#6-sprite-animation">Sprite animation</a></td>
+<td style="text-align: right;">67</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson6_sprite_animation.py">source</a></td>
+</tr>
+<tr>
+<td><strong>7</strong></td>
+<td><a href="../guide/#7-scenes">Scenes</a></td>
+<td style="text-align: right;">91</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson7_scenes.py">source</a></td>
+</tr>
+<tr>
+<td><strong>8</strong></td>
+<td><a href="../guide/#8-audio-and-buttons">Audio and buttons</a></td>
+<td style="text-align: right;">38</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson8_audio_buttons.py">source</a></td>
+</tr>
+<tr>
+<td><strong>9</strong></td>
+<td><a href="../guide/#9-timer-and-loop">Timer and loop</a></td>
+<td style="text-align: right;">17</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson9_timer_loop.py">source</a></td>
+</tr>
+<tr>
+<td><strong>10</strong></td>
+<td><a href="../guide/#10-levels">Levels</a></td>
+<td style="text-align: right;">43</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson10_levels.py">source</a></td>
+</tr>
+<tr>
+<td><strong>11</strong></td>
+<td><a href="../guide/#11-camera">Camera</a></td>
+<td style="text-align: right;">58</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson11_camera.py">source</a></td>
+</tr>
+<tr>
+<td><strong>12</strong></td>
+<td><a href="../guide/#12-sprite-atlas">Sprite atlas</a></td>
+<td style="text-align: right;">100</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson12_sprite_atlas.py">source</a></td>
+</tr>
+<tr>
+<td><strong>13</strong></td>
+<td><a href="../guide/#13-using-state-to-handle-ai">Using state to handle AI</a></td>
+<td style="text-align: right;">61</td>
+<td><a href="https://github.com/sfranz2422/kaypy/blob/main/examples/lesson13_state_ai.py">source</a></td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="coming-next">Coming next</h2>
+<p><strong>Coin Collector</strong>, a thirteen-step platform game built from nothing — the
+one to work through once the guide's lessons make sense. It exists as a
+classroom walkthrough written for a different engine, and is being rewritten
+for KayPy rather than translated, because the two think about a game in
+genuinely different ways and a line-by-line translation would teach the seams
+instead of the game.</p>
+<p>If you are teaching with this and want it sooner, or want something else
+first, say so on the <a href="https://discord.gg/sVXnsDZNm">Discord</a>.</p>
+      </article>
+    </div>
+    <aside class="col-lg-4 col-xl-3 toc-col">
+      <nav class="toc" aria-label="On this page">
+        <p class="toc-head">On this page</p>
+      <a class="toc-link toc-d1" href="#tutorials">Tutorials</a>
+      <a class="toc-link toc-d2" href="#whole-games">Whole games</a>
+      <a class="toc-link toc-d3" href="#a-door-that-asks-a-question-what-ask-say-and-pause-are-for">A door that asks a question — what ask(), say() and pause() are for</a>
+      <a class="toc-link toc-d3" href="#a-pet-that-trails-you-and-a-health-bar-that-never-does-what-follow-is-for">A pet that trails you and a health bar that never does — what follow() is for</a>
+      <a class="toc-link toc-d3" href="#a-sword-that-goes-where-the-knight-goes-what-child-objects-are-for">A sword that goes where the knight goes — what child objects are for</a>
+      <a class="toc-link toc-d3" href="#sneak-past-a-guard-who-cannot-see-through-walls-what-sentry-is-for">Sneak past a guard who cannot see through walls — what sentry() is for</a>
+      <a class="toc-link toc-d3" href="#asteroids-what-rotate-is-for">Asteroids — what rotate() is for</a>
+      <a class="toc-link toc-d2" href="#the-lesson-programs">The lesson programs</a>
+      <a class="toc-link toc-d2" href="#coming-next">Coming next</a>
+      </nav>
+    </aside>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
+<script src="../static/site.js"></script>
+
+</body>
+</html>

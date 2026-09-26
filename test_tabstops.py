@@ -32,7 +32,7 @@ import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent
-APPJS = ROOT / "play" / "play.js"
+APPJS = ROOT / "site" / "play" / "play.js"
 
 results = []
 

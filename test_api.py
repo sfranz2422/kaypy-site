@@ -35,9 +35,11 @@ import re
 import sys
 from time import perf_counter as _now
 
+import pagecode
+
 HERE = pathlib.Path(__file__).resolve().parent
-API = HERE / "content" / "api.md"
-ASSETS = HERE / "dist" / "assets"
+API = HERE / "site" / "api" / "index.html"
+ASSETS = HERE / "site" / "assets"
 
 # Stated once at the top of the page, and prepended to every example here, so
 # the two can never disagree about what an example may assume.
@@ -68,8 +70,7 @@ ap.add_argument("--kaypy", type=pathlib.Path,
 args = ap.parse_args()
 
 if not API.is_file():
-    print("  no content/api.md yet")
-    sys.exit(0)
+    sys.exit("No site/api/index.html.")
 if not (args.kaypy / "kaypy" / "__init__.py").is_file():
     sys.exit("No kaypy at %s — pass --kaypy." % args.kaypy)
 
@@ -85,11 +86,22 @@ text = API.read_text()
 
 # ------------------------------------------------------------- the headings
 #
-# `### name(...)` or `### .name(...)` — a leading dot marks something you call
-# ON an object rather than on its own.
-headings = re.findall(r"^#{3,4}\s+`?(\.?)(\w+)\(?", text, re.M)
-documented = {name for dot, name in headings if not dot}
-methods = {name for dot, name in headings if dot}
+# An <h3> or <h4> reading `name(...)` or `.name(...)` — a leading dot marks
+# something you call ON an object rather than on its own. Read out of the page
+# with the markup stripped, so `<h3><code>onKeyDown()</code></h3>` is seen as
+# onKeyDown() rather than as a <code> tag.
+NAME = re.compile(r"^(\.?)(\w+)")
+entries = []
+for level, words, _pos in pagecode.headings(text):
+    if level not in (3, 4):
+        continue
+    m = NAME.match(words)
+    if m:
+        entries.append((m.group(1), m.group(2)))
+check("the page has entries at all", len(entries) > 50,
+      "%d h3/h4 entries" % len(entries))
+documented = {name for dot, name in entries if not dot}
+methods = {name for dot, name in entries if dot}
 
 exported = set(kaypy.__all__)
 
@@ -132,7 +144,9 @@ check("no method entry is imaginary", not unknown, ", ".join(unknown[:6]))
 # Each block gets a fresh engine. Sharing one would let an example depend on
 # an object some earlier entry happened to create, and a reader arriving at
 # that one entry does not have it.
-blocks = re.findall(r"```python\n(.*?)```", text, re.S)
+found = [(code, start) for lang, code, start, _end in pagecode.blocks(text)
+         if lang == "python"]
+blocks = [code for code, _start in found]
 check("the page has examples", len(blocks) > 50, "%d blocks" % len(blocks))
 
 
@@ -146,14 +160,33 @@ def reset():
 here = os.getcwd()
 os.chdir(ASSETS)          # so loadSprite("images/bean.png") resolves
 
-# Which entry each block belongs to, so a failure names it.
-owners, current = [], "(before the first heading)"
-for line in text.splitlines():
-    m = re.match(r"^#{3,4}\s+`?(\.?\w+)", line)
-    if m:
-        current = m.group(1)
-    elif line.startswith("```python"):
-        owners.append(current)
+# Which entry each block belongs to, so a failure names it. Worked out by
+# position in the page: the last h3/h4 heading that starts before the block.
+marks = []
+for level, words, pos in pagecode.headings(text):
+    if level in (3, 4):
+        m = NAME.match(words)
+        if m:
+            marks.append((pos, m.group(1) + m.group(2)))
+
+owners = []
+for _code, start in found:
+    owner = "(before the first heading)"
+    for pos, name in marks:
+        if pos < start:
+            owner = name
+        else:
+            break
+    owners.append(owner)
+# Exactly one block sits above the first entry: the preamble the page states
+# once at the top and every example below assumes. Pinned at one, because a
+# second orphan means a whole entry's heading was lost and its examples are
+# now being attributed to the entry above it.
+orphans = [c for c, o in zip(blocks, owners) if o == "(before the first heading)"]
+check("  only the preamble sits above the first entry", len(orphans) == 1,
+      "%d blocks are above it" % len(orphans))
+check("    and it is the preamble", bool(orphans) and orphans[0] == PREAMBLE,
+      repr(orphans[0][:50]) if orphans else "there is none")
 
 failed = 0
 for i, source in enumerate(blocks):

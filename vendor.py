@@ -59,7 +59,8 @@ import sys
 from datetime import datetime, timezone
 
 HERE = pathlib.Path(__file__).resolve().parent
-DIST = HERE / "dist"
+SITE = HERE / "site"
+DIST = SITE   # the old name, kept where it is still read below
 STAMP = HERE / "vendored.json"
 
 # The modules the playground needs, and what each is for. Anything not on this

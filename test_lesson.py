@@ -13,9 +13,14 @@ wrong. They conclude that they are. That is the whole reason this file
 exists: a printed output on a teaching page is a claim, and claims get
 checked.
 
-So every fenced `python` block in content/learn.md is executed on real
-kaypy, and wherever the page shows the output underneath, the two are
-compared line for line.
+So every Python block on every lesson page is executed on real kaypy, and
+wherever the page shows the output underneath, the two are compared line for
+line.
+
+The blocks are read out of the built HTML by pagecode.py. They used to be read
+out of content/learn.md, which no longer exists: the site is hand-written HTML
+now, and there is no markdown to read. Nothing else about this file changed —
+the same programs run, on the same engine, against the same claims.
 
 THE ONE BLOCK THAT MUST NOT RUN
 
@@ -38,9 +43,16 @@ import re
 import subprocess
 import sys
 
+import pagecode
+
 HERE = pathlib.Path(__file__).resolve().parent
-LESSON = HERE / "content" / "learn.md"
-ASSETS = HERE / "dist" / "assets"
+SITE = HERE / "site"
+ASSETS = SITE / "assets"
+
+#: The lessons, in order. Named rather than globbed: a glob over site/learn/
+#: would silently pick up nothing at all if the folder were renamed, and
+#: "0 programs found" is a pass in a suite that only counts failures.
+LESSONS = ["conditionals", "loops", "lists"]
 
 #: How many blocks are allowed to carry `# DO NOT` and be skipped. Pinned so
 #: that a second one cannot appear without this number being changed.
@@ -69,46 +81,50 @@ args = ap.parse_args()
 kaypy_root = args.kaypy.expanduser().resolve()
 if not (kaypy_root / "kaypy" / "__init__.py").is_file():
     sys.exit("No kaypy at %s — pass --kaypy." % kaypy_root)
-if not LESSON.is_file():
-    sys.exit("No content/learn.md.")
+pages = [(name, SITE / "learn" / name / "index.html") for name in LESSONS]
+absent = [str(p.relative_to(HERE)) for _n, p in pages if not p.is_file()]
+if absent:
+    sys.exit("Missing lesson pages: %s" % ", ".join(absent))
 if not (ASSETS / "images" / "coin.png").is_file():
-    sys.exit("No sprites in dist/assets — run vendor.py first.")
-
-text = LESSON.read_text()
+    sys.exit("No sprites in site/assets — run vendor.py first.")
 
 # ---------------------------------------------------------------- blocks
 #
-# A `python` block, and the bare block under it if there is one, which is
-# what the page claims the program prints.
-# Any fence, not just ```python and a bare ```. The first version of this
-# could not match a tagged fence like ```text at all, so its CLOSING fence was
-# read as an opening one and every pair after it was wrong — on a page with
-# one ```text block it silently fell from fourteen programs to three and still
-# reported success, because "at least ten programs" was measured on the same
-# broken list. A parser that mis-parses quietly is worse than no parser.
-BLOCK = re.compile(r"^```([A-Za-z0-9_+-]*)\n(.*?)^```", re.S | re.M)
-blocks = [(m.group(1) or "", m.group(2), m.start()) for m in BLOCK.finditer(text)]
-
+# A Python block, and the block with no language under it if there is one,
+# which is what the page claims the program prints.
+#
+# "Directly underneath" is strict here: nothing but whitespace between the two.
+# In the markdown this used to allow a short paragraph in the gap, because a
+# fence pair is five lines of text apart even when adjacent; in the HTML an
+# adjacent pair is separated by a single newline, so anything more is a
+# different block and pairing them would compare a program against output that
+# belongs to another one.
 programs = []
-for i, (lang, body, start) in enumerate(blocks):
-    if lang != "python":
-        continue
-    claimed = None
-    if i + 1 < len(blocks) and blocks[i + 1][0] == "":
-        between = text[start + len(body):blocks[i + 1][2]]
-        # Only if it sits directly underneath, not further down the page.
-        if between.count("\n") <= 5:
-            claimed = blocks[i + 1][1]
-    programs.append((body, claimed))
+for name, path in pages:
+    page = path.read_text()
+    blocks = pagecode.blocks(page)
+    found = 0
+    for i, (lang, body, _start, end) in enumerate(blocks):
+        if lang != "python":
+            continue
+        claimed = None
+        if i + 1 < len(blocks) and blocks[i + 1][0] == "":
+            if not pagecode.text_only(page[end:blocks[i + 1][2]]).strip():
+                claimed = blocks[i + 1][1]
+        programs.append((name, body, claimed))
+        found += 1
+    # Per page, not just in total: a lesson that lost all its code would
+    # otherwise hide behind the other two.
+    check("%s has programs in it" % name, found >= 4, "%d python blocks" % found)
 
-check("the lesson has programs in it", len(programs) >= 10,
+check("the lessons have programs in them", len(programs) >= 10,
       "%d python blocks" % len(programs))
 check("and most of them state their output",
-      sum(1 for _, c in programs if c is not None) >= 6,
+      sum(1 for _, _, c in programs if c is not None) >= 6,
       "%d of %d show output"
-      % (sum(1 for _, c in programs if c is not None), len(programs)))
+      % (sum(1 for _, _, c in programs if c is not None), len(programs)))
 
-skipped = [p for p, _ in programs if "# DO NOT" in p]
+skipped = [b for _n, b, _c in programs if "# DO NOT" in b]
 check("exactly the expected number of blocks are skipped",
       len(skipped) == EXPECTED_SKIPS,
       "%d skipped, expected %d" % (len(skipped), EXPECTED_SKIPS))
@@ -125,7 +141,7 @@ env["PYTHONPATH"] = str(kaypy_root)
 crashed, wrong = [], []
 ran = 0
 
-for n, (body, claimed) in enumerate(programs, 1):
+for n, (name, body, claimed) in enumerate(programs, 1):
     if "# DO NOT" in body:
         continue
     ran += 1
@@ -134,12 +150,12 @@ for n, (body, claimed) in enumerate(programs, 1):
             [sys.executable, "-c", body],
             cwd=ASSETS, env=env, capture_output=True, text=True, timeout=60)
     except subprocess.TimeoutExpired:
-        crashed.append("block %d timed out" % n)
+        crashed.append("%s block %d timed out" % (name, n))
         continue
 
     if proc.returncode != 0:
         last = [ln for ln in proc.stderr.strip().splitlines() if ln.strip()]
-        crashed.append("block %d: %s" % (n, last[-1] if last else "failed"))
+        crashed.append("%s block %d: %s" % (name, n, last[-1] if last else "failed"))
         continue
 
     if claimed is None:
@@ -158,8 +174,8 @@ for n, (body, claimed) in enumerate(programs, 1):
     if got != want:
         first = next((i for i in range(max(len(got), len(want)))
                       if got[i:i + 1] != want[i:i + 1]), 0)
-        wrong.append("block %d line %d: page says %r, ran as %r"
-                     % (n, first + 1,
+        wrong.append("%s block %d line %d: page says %r, ran as %r"
+                     % (name, n, first + 1,
                         want[first] if first < len(want) else "(nothing)",
                         got[first] if first < len(got) else "(nothing)"))
 
@@ -167,17 +183,42 @@ check("every program runs without raising", not crashed,
       "; ".join(crashed[:2]) if crashed else "%d programs" % ran)
 check("and prints exactly what the page says it prints", not wrong,
       "; ".join(wrong[:2]) if wrong else
-      "%d outputs matched" % sum(1 for _, c in programs if c is not None))
+      "%d outputs matched" % sum(1 for _, _, c in programs if c is not None))
 
 # ------------------------------------------------- the page is a lesson
 #
 # Cheap checks on the things that make it teaching rather than reference,
 # each of which has gone missing from a draft at some point.
-check("solutions are hidden behind <details>", text.count("<details") >= 3,
-      "%d of them" % text.count("<details"))
-check("the classwork has a stretch step for fast finishers",
-      "**Stretch:**" in text)
-check("the page links the playground, so there is somewhere to type",
-      "../play/" in text)
+# Per page. Written as one loop over all three rather than against a single
+# concatenated blob, because a check on the union passes when one lesson has
+# all of it and another has none — which is exactly the state a newly split
+# page arrives in.
+#: Solutions folded away, counted across all three lessons. It is a total and
+#: not a per-page floor because the lessons are not the same shape: loops has
+#: three foldaways, conditionals and lists one each. A per-page floor of three
+#: fails honest pages, and a floor of one passes a page that lost two.
+EXPECTED_DETAILS = 5
+
+details = 0
+for name, path in pages:
+    page = path.read_text()
+    details += page.count("<details")
+    check("%s hides at least one solution behind <details>" % name,
+          page.count("<details") >= 1, "%d of them" % page.count("<details"))
+    # Markdown's `**Stretch:**` is <strong>Stretch:</strong> now.
+    check("  and has a stretch step for fast finishers",
+          re.search(r"<strong>\s*Stretch:", page) is not None)
+    # THE DEPTH. A lesson page lives at /learn/<name>/, so the playground is
+    # two levels up, not one. `../play/` here would resolve to /learn/play/ —
+    # a 404 that renders perfectly and is only found by clicking it.
+    found_play = '"../../play/"' in page
+    check("  and links the playground, so there is somewhere to type",
+          found_play,
+          "" if found_play else
+          ("found ../play/, which resolves to /learn/play/"
+           if '"../play/"' in page else "no link to the playground at all"))
+
+check("the three lessons fold away %d solutions between them" % EXPECTED_DETAILS,
+      details == EXPECTED_DETAILS, "%d, expected %d" % (details, EXPECTED_DETAILS))
 
 done()

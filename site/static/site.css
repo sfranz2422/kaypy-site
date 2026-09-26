@@ -1,0 +1,307 @@
+/* KayPy — everything Bootstrap does not already do.
+ *
+ * Bootstrap 5.3 is loaded from a CDN before this file. What is here is the
+ * palette, the prose column and three components Bootstrap has no opinion
+ * about (the hero, the lesson cards, the "On this page" sidebar). If you find
+ * yourself writing a grid, a button or a navbar rule in here, Bootstrap
+ * already has it — look there first.
+ *
+ * LIGHT IS THE DEFAULT and stays the default. A dark block follows at the
+ * bottom, behind prefers-color-scheme, so a reader who has asked their
+ * machine for dark gets it; nobody gets it who did not ask.
+ */
+
+:root {
+  /* Brand */
+  --kp-blue: #2b62aa;          /* the wordmark, links, the primary button */
+  --kp-blue-ink: #1d4677;      /* the same, pressed */
+  --kp-green: #3d7d24;         /* text-safe on white */
+
+  /* Surfaces */
+  --kp-bg: #ffffff;
+  --kp-bg-soft: #f4f8fb;
+  --kp-line: #d9e2ea;
+
+  /* Ink */
+  --kp-fg: #1a2430;
+  --kp-fg-dim: #56636f;
+
+  --kp-measure: 46rem;         /* a comfortable line length for prose */
+
+  /* Bootstrap's own variables, pointed at the palette above, so that every
+   * Bootstrap component picks up the brand without a rule of its own. */
+  --bs-body-bg: var(--kp-bg);
+  --bs-body-color: var(--kp-fg);
+  --bs-link-color: var(--kp-blue);
+  --bs-link-hover-color: var(--kp-blue-ink);
+  --bs-border-color: var(--kp-line);
+  --bs-secondary-color: var(--kp-fg-dim);
+}
+
+body {
+  background: var(--kp-bg);
+  color: var(--kp-fg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ------------------------------------------------------------- the navbar */
+
+.site-nav {
+  background: var(--kp-bg);
+  border-bottom: 1px solid var(--kp-line);
+}
+
+.navbar-brand { display: flex; align-items: center; gap: .5rem; }
+
+.brand-name {
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--kp-blue);
+  letter-spacing: -.01em;
+}
+
+.site-nav .nav-link { color: var(--kp-fg-dim); font-weight: 500; }
+.site-nav .nav-link:hover,
+.site-nav .nav-link:focus { color: var(--kp-fg); }
+
+.site-nav .nav-link.active,
+.site-nav .nav-link.dropdown-toggle.active {
+  color: var(--kp-blue);
+  font-weight: 600;
+}
+
+/* Discord and GitHub sit apart from the pages. On a phone the navbar is a
+ * single stacked list, so they get a rule above them instead. */
+@media (min-width: 992px) {
+  .nav-side .nav-link { font-size: .9rem; }
+}
+@media (max-width: 991.98px) {
+  .nav-side { border-top: 1px solid var(--kp-line); margin-top: .5rem;
+              padding-top: .5rem; }
+  .site-nav .dropdown-menu { border: 0; padding-left: .75rem; }
+}
+
+/* --------------------------------------------------------------- the hero */
+
+.hero { padding: 1rem 0 2rem; }
+.hero-creature { max-width: 220px; height: auto; }
+
+.hero .wordmark {
+  font-size: clamp(2.6rem, 9vw, 4.4rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--kp-blue);
+  margin: .25rem 0 .5rem;
+  letter-spacing: -.03em;
+}
+
+.hero h1 { color: var(--kp-fg); max-width: 22ch; margin: 0 auto 1.25rem; }
+
+.btn-kaypy {
+  background: var(--kp-blue);
+  border-color: var(--kp-blue);
+  color: #fff;
+}
+.btn-kaypy:hover, .btn-kaypy:focus {
+  background: var(--kp-blue-ink);
+  border-color: var(--kp-blue-ink);
+  color: #fff;
+}
+.btn-outline-kaypy {
+  border-color: var(--kp-line);
+  color: var(--kp-fg);
+}
+.btn-outline-kaypy:hover, .btn-outline-kaypy:focus {
+  background: var(--kp-bg-soft);
+  border-color: var(--kp-blue);
+  color: var(--kp-blue);
+}
+
+.demo img { border: 1px solid var(--kp-line); }
+
+/* -------------------------------------------------------------- the cards */
+
+.cards .card {
+  background: var(--kp-bg-soft);
+  border-color: var(--kp-line);
+}
+.cards .card-title { color: var(--kp-fg); }
+.cards .card p { color: var(--kp-fg-dim); margin-bottom: 0; font-size: .95rem; }
+
+/* The three lesson cards on /learn/. A whole card is the link, so the target
+ * is the card and not four words inside it — which matters most on a phone. */
+.lesson-card {
+  display: block;
+  height: 100%;
+  padding: 1.25rem;
+  border: 1px solid var(--kp-line);
+  border-radius: .5rem;
+  background: var(--kp-bg-soft);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .15s, transform .15s;
+}
+.lesson-card:hover, .lesson-card:focus {
+  border-color: var(--kp-blue);
+  transform: translateY(-2px);
+}
+.lesson-n {
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--kp-blue);
+}
+.lesson-card h2 { font-size: 1.15rem; margin: .2rem 0 .5rem; }
+.lesson-card p { color: var(--kp-fg-dim); font-size: .93rem; margin: 0; }
+
+/* -------------------------------------------------------------- the prose */
+
+.prose { max-width: var(--kp-measure); }
+.prose h1 { font-size: clamp(1.9rem, 5vw, 2.4rem); margin-bottom: 1rem; }
+.prose h2 {
+  font-size: 1.5rem;
+  margin-top: 2.5rem;
+  margin-bottom: .75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--kp-line);
+}
+.prose h3 { font-size: 1.15rem; margin-top: 1.75rem; margin-bottom: .5rem; }
+.prose p, .prose li { line-height: 1.65; }
+.prose ul, .prose ol { margin-bottom: 1rem; }
+.prose img { max-width: 100%; height: auto; }
+
+/* A code span inside a sentence. Not a block — those are .prose pre. */
+.prose :not(pre) > code {
+  background: var(--kp-bg-soft);
+  border: 1px solid var(--kp-line);
+  border-radius: .25rem;
+  padding: .1em .35em;
+  font-size: .89em;
+  color: var(--kp-fg);
+}
+
+/* highlight.js brings its own colours (github.min.css) but no frame. */
+.prose pre {
+  background: var(--kp-bg-soft);
+  border: 1px solid var(--kp-line);
+  border-radius: .4rem;
+  padding: .9rem 1rem;
+  overflow-x: auto;
+  margin-bottom: 1.25rem;
+}
+.prose pre code { background: none; border: 0; padding: 0; font-size: .875rem; }
+pre code.hljs { background: none; padding: 0; }
+
+.prose table { font-size: .93rem; }
+.prose hr { margin: 2.5rem 0; border-color: var(--kp-line); }
+
+.prose blockquote {
+  border-left: 3px solid var(--kp-blue);
+  background: var(--kp-bg-soft);
+  padding: .75rem 1rem;
+  margin-bottom: 1.25rem;
+}
+.prose blockquote > :last-child { margin-bottom: 0; }
+
+/* ------------------------------------------------- the on-this-page column
+ *
+ * Sticky under the navbar, which is itself sticky — hence the top offset.
+ * Below lg it is not sticky and not scrolled; it is just a short list above
+ * the page, which is the right thing on a phone.
+ */
+.toc-col { order: -1; }
+@media (min-width: 992px) { .toc-col { order: 2; } }
+
+.toc {
+  font-size: .875rem;
+  border-left: 1px solid var(--kp-line);
+  padding-left: 1rem;
+}
+@media (min-width: 992px) {
+  .toc { position: sticky; top: 5rem; max-height: calc(100vh - 7rem);
+         overflow-y: auto; }
+}
+
+.toc-head {
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--kp-fg-dim);
+  margin-bottom: .5rem;
+}
+.toc-link {
+  display: block;
+  padding: .2rem 0;
+  color: var(--kp-fg-dim);
+  text-decoration: none;
+  line-height: 1.35;
+}
+.toc-link:hover, .toc-link:focus { color: var(--kp-blue); }
+.toc-link.here { color: var(--kp-blue); font-weight: 600; }
+/* One rule per heading level the sidebar emits. All three are written out,
+ * even though d2 is the common case and looks like it needs nothing: a level
+ * with no rule of its own is indistinguishable from a typo, and the check in
+ * test_pages.py cannot tell them apart either. */
+.toc-d1 { font-weight: 600; color: var(--kp-fg); }
+.toc-d2 { padding-left: 0; }
+.toc-d3 { padding-left: .85rem; font-size: .84rem; }
+
+/* -------------------------------------------------------------- the footer */
+
+.site-foot {
+  border-top: 1px solid var(--kp-line);
+  background: var(--kp-bg-soft);
+  padding: 2rem 0;
+  margin-top: 3rem;
+  font-size: .9rem;
+}
+.site-foot p { margin-bottom: .5rem; }
+.site-foot .dim { color: var(--kp-fg-dim); font-size: .84rem; }
+
+.dim { color: var(--kp-fg-dim); }
+
+.skip {
+  position: absolute;
+  top: .5rem;
+  left: .5rem;
+  z-index: 2000;
+  background: var(--kp-blue);
+  color: #fff;
+  padding: .5rem .75rem;
+  border-radius: .3rem;
+}
+
+/* The games submission form. */
+.form-embed iframe {
+  border: 1px solid var(--kp-line);
+  border-radius: .4rem;
+  background: var(--kp-bg);
+}
+
+/* ----------------------------------------------------------------- dark
+ *
+ * Only for a reader whose machine asks for it. data-bs-theme is what tells
+ * Bootstrap's own components to follow.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --kp-bg: #1b222c;
+    --kp-bg-soft: #232c38;
+    --kp-line: #36424f;
+    --kp-fg: #eef3f8;
+    --kp-fg-dim: #a9b6c4;
+    --kp-blue: #7fb2ea;
+    --kp-blue-ink: #a8cdf5;
+    --kp-green: #8fd95e;
+
+    --bs-body-bg: var(--kp-bg);
+    --bs-body-color: var(--kp-fg);
+    --bs-emphasis-color: var(--kp-fg);
+    --bs-secondary-bg: var(--kp-bg-soft);
+    --bs-tertiary-bg: var(--kp-bg-soft);
+  }
+  .btn-kaypy { color: #10161f; }
+  .btn-kaypy:hover, .btn-kaypy:focus { color: #10161f; }
+}

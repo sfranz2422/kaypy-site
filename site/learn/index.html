@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learn Python · KayPy</title>
+<meta name="description" content="A game engine for learning Python — build a game out of components, run it in the browser, share it as one file.">
+<meta property="og:title" content="Learn Python · KayPy">
+<meta property="og:description" content="A game engine for learning Python — build a game out of components, run it in the browser, share it as one file.">
+<meta property="og:image" content="../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../static/favicon.png">
+<link rel="apple-touch-icon" href="../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../">
+      <img src="../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item active" href="../learn/">All three lessons</a></li><li><a class="dropdown-item" href="../learn/conditionals/">1 — Conditionals</a></li><li><a class="dropdown-item" href="../learn/loops/">2 — Loops</a></li><li><a class="dropdown-item" href="../learn/lists/">3 — Lists</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="../tutorials/">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <article class="prose">
+<h1 id="learn-python">Learn Python</h1>
+<p>Python, taught with a game on the screen.</p>
+<p>Most Python lessons ask you to print things. Printing is fine, and you will do
+plenty of it here — but a loop that prints <code>Wave 3 incoming</code> is a loop you have
+to <em>imagine</em>. A loop that puts forty tiles on the screen is a loop you can
+point at.</p>
+<p>So every lesson here does both. The idea first, in plain Python, where you can
+see exactly what happened. Then the same idea building something you can play.</p>
+<p><strong>You need nothing installed.</strong> Open the <a href="../play/">playground</a>, type, press
+Run. If you would rather work on your own machine, <a href="../start/">Get started</a>
+takes four commands.</p>
+<blockquote>
+<p><strong>What this is not.</strong> This is not the <a href="../guide/">guide</a>. The guide teaches
+the engine — sprites, collision, scenes — and assumes you already know what a
+variable and a function are. These pages teach Python itself, and use the
+engine to make it visible.</p>
+</blockquote>
+<hr />
+<div class="row g-3 g-lg-4 my-4">
+<div class="col-md-4">
+  <a class="lesson-card" href="conditionals/">
+    <span class="lesson-n">Lesson 1</span>
+    <h2>Conditionals</h2>
+    <p>Here is a program with no decision in it:</p>
+  </a>
+</div>
+<div class="col-md-4">
+  <a class="lesson-card" href="loops/">
+    <span class="lesson-n">Lesson 2</span>
+    <h2>Loops</h2>
+    <p>Say three waves of enemies are coming. You could write it out:</p>
+  </a>
+</div>
+<div class="col-md-4">
+  <a class="lesson-card" href="lists/">
+    <span class="lesson-n">Lesson 3</span>
+    <h2>Lists</h2>
+    <p>You already know how to hold one thing:</p>
+  </a>
+</div>
+</div>
+<h2 id="coming-next">Coming next</h2>
+<p><strong>Lesson 4 — Functions.</strong> Naming a piece of work so you can ask for it by
+name, passing it what it needs, and getting an answer back — the step that
+turns a long program into a short one.</p>
+<p>Then all four together, in a game you keep.</p>
+<p>Teaching with this, or stuck on something? There is a
+<a href="https://discord.gg/sVXnsDZNm">Discord</a>.</p>
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
+<script src="../static/site.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 1 — Conditionals · KayPy</title>
+<meta name="description" content="Learn Python with KayPy: lesson 1, conditionals.">
+<meta property="og:title" content="Lesson 1 — Conditionals · KayPy">
+<meta property="og:description" content="Learn Python with KayPy: lesson 1, conditionals.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All three lessons</a></li><li><a class="dropdown-item active" href="../../learn/conditionals/">1 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">2 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">3 — Lists</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../tutorials/">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row gx-xl-5">
+    <div class="col-lg-8 col-xl-9">
+      <article class="prose">
+<h1 id="lesson-1-conditionals">Lesson 1 — Conditionals</h1>
+<p><strong>By the end of this you can:</strong> make a program choose, compare values with
+<code>==</code> and <code>&lt;</code>, chain decisions with <code>elif</code>, combine tests with <code>and</code> and <code>or</code>,
+and make a game react to what is actually happening.</p>
+<h2 id="the-problem-conditionals-solve">The problem conditionals solve</h2>
+<p>Here is a program with no decision in it:</p>
+<pre><code class="language-python">health = 100
+health = health - 30
+print(&quot;Health:&quot;, health)
+</code></pre>
+<pre><code>Health: 70
+</code></pre>
+<p>It works. It also does exactly the same thing every single time you run it,
+which is the problem. A game that cannot notice anything is not a game — it is
+an animation. Something has to be able to ask <em>has this happened yet?</em></p>
+<p>That question is <code>if</code>:</p>
+<pre><code class="language-python">health = 30
+
+if health &lt; 50:
+    print(&quot;Warning: low health&quot;)
+
+print(&quot;Still playing&quot;)
+</code></pre>
+<pre><code>Warning: low health
+Still playing
+</code></pre>
+<p>Change <code>health</code> to 70 and run it again. The warning disappears and
+<code>Still playing</code> is all you get. The program now behaves differently depending
+on what is true, and nothing about the code changed.</p>
+<p>Two things to notice, because both catch people:</p>
+<ul>
+<li>The line ends in a <strong>colon</strong>.</li>
+<li>The line underneath is <strong>indented</strong>. That indent is what says "this belongs
+  to the <code>if</code>". <code>print("Still playing")</code> is back out at the left, so it is not
+  part of the decision and always runs.</li>
+</ul>
+<h2 id="asking-the-question">Asking the question</h2>
+<p>The thing between <code>if</code> and the colon is a <strong>comparison</strong>, and it comes out
+either <code>True</code> or <code>False</code>:</p>
+<pre><code class="language-python">print(10 &gt; 5)
+print(10 &lt; 5)
+print(10 == 10)
+print(10 != 10)
+print(10 &gt;= 10)
+print(3 &lt;= 2)
+</code></pre>
+<pre><code>True
+False
+True
+False
+True
+False
+</code></pre>
+<ul>
+<li><code>&gt;</code> and <code>&lt;</code> — bigger than, smaller than.</li>
+<li><code>&gt;=</code> and <code>&lt;=</code> — bigger <em>or equal</em>, smaller <em>or equal</em>.</li>
+<li><code>==</code> — <strong>equal</strong>. Two equals signs, always.</li>
+<li><code>!=</code> — not equal.</li>
+</ul>
+<p><strong><code>=</code> and <code>==</code> are different and it matters.</strong> One equals sign <em>stores</em>:
+<code>health = 30</code> puts 30 into health. Two equals signs <em>asks</em>: <code>health == 30</code> is a
+question whose answer is True or False. Writing this:</p>
+<pre><code class="language-text">if health = 30:
+</code></pre>
+<p>is not a typo Python can forgive — it stops with <code>SyntaxError: invalid syntax</code>,
+because you asked it to store something in the middle of a question. It is the
+most common mistake in this lesson, and the error message does not explain
+itself, so learn what the message means rather than what it says.</p>
+<h2 id="else-the-other-path"><code>else</code> — the other path</h2>
+<p><code>if</code> on its own does something or does nothing. <code>else</code> gives it somewhere to go:</p>
+<pre><code class="language-python">score = 40
+
+if score &gt;= 50:
+    print(&quot;You win&quot;)
+else:
+    print(&quot;Try again&quot;)
+</code></pre>
+<pre><code>Try again
+</code></pre>
+<p>Exactly one of those two lines will print, always. That is the point of
+<code>else</code>: there is no way to fall through both.</p>
+<h2 id="elif-more-than-two-answers"><code>elif</code> — more than two answers</h2>
+<p>Real games have more than two outcomes. <code>elif</code> — short for "else if" — chains
+them:</p>
+<pre><code class="language-python">score = 78
+
+if score &gt;= 90:
+    print(&quot;Rank: S&quot;)
+elif score &gt;= 75:
+    print(&quot;Rank: A&quot;)
+elif score &gt;= 50:
+    print(&quot;Rank: B&quot;)
+else:
+    print(&quot;Rank: C&quot;)
+</code></pre>
+<pre><code>Rank: A
+</code></pre>
+<p>Python checks them <strong>top to bottom and stops at the first one that is True</strong>.
+78 is not 90 or more, so it moves on. 78 <em>is</em> 75 or more, so it prints
+<code>Rank: A</code> and skips everything below — including <code>score &gt;= 50</code>, which is also
+true. First match wins.</p>
+<p>That "stops at the first true one" is the whole reason <code>elif</code> exists. Watch
+what happens with three separate <code>if</code> statements instead:</p>
+<pre><code class="language-python">score = 95
+
+if score &gt;= 90:
+    print(&quot;Rank: S&quot;)
+if score &gt;= 75:
+    print(&quot;Rank: A&quot;)
+if score &gt;= 50:
+    print(&quot;Rank: B&quot;)
+</code></pre>
+<pre><code>Rank: S
+Rank: A
+Rank: B
+</code></pre>
+<p>Three ranks for one score. Each <code>if</code> is its own separate question, so all
+three get asked and all three are true. Nothing errors — you just get nonsense,
+which is the worst kind of bug to find.</p>
+<p><strong>Order matters too.</strong> If you put <code>score &gt;= 50</code> first, every score of 50 or
+more prints <code>Rank: B</code> and the better ranks can never be reached. With <code>elif</code>,
+put the hardest test at the top.</p>
+<h2 id="and-or-not"><code>and</code>, <code>or</code>, <code>not</code></h2>
+<p>Sometimes one question is not enough:</p>
+<pre><code class="language-python">has_key = True
+door_locked = True
+
+if has_key and door_locked:
+    print(&quot;You unlock the door&quot;)
+
+if has_key or door_locked:
+    print(&quot;At least one of those is true&quot;)
+
+if not has_key:
+    print(&quot;You need a key&quot;)
+</code></pre>
+<pre><code>You unlock the door
+At least one of those is true
+</code></pre>
+<ul>
+<li><code>and</code> — <strong>both</strong> have to be true.</li>
+<li><code>or</code> — <strong>at least one</strong> has to be true.</li>
+<li><code>not</code> — flips it.</li>
+</ul>
+<p>The third one printed nothing, because <code>has_key</code> is True, so <code>not has_key</code> is
+False.</p>
+<p><code>True</code> and <code>False</code> are real Python values, spelled with a capital letter. You
+can store one in a variable like anything else, and a variable holding one is
+already a question you can ask:</p>
+<pre><code class="language-python">game_over = False
+
+if not game_over:
+    print(&quot;Keep going&quot;)
+</code></pre>
+<pre><code>Keep going
+</code></pre>
+<p>You never need to write <code>if game_over == True</code>. <code>if game_over</code> says the same
+thing and reads like English.</p>
+<h2 id="now-put-it-on-the-screen">Now put it on the screen</h2>
+<p>A health bar that tells you how worried to be:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+
+health = 30
+
+if health &gt; 60:
+    bar = GREEN
+elif health &gt; 25:
+    bar = YELLOW
+else:
+    bar = RED
+
+add([rect(health * 4, 30), pos(40, 40), color(bar)])
+add([text(&quot;Health: &quot; + str(health), size=24), pos(40, 90)])
+</code></pre>
+<p>Press Run. The bar is short and yellow, because 30 is more than 25 but not
+more than 60.</p>
+<blockquote>
+<p><strong>Change one number.</strong> Set <code>health</code> to 80 and run it again — long and green.
+Then 10 — short and red. One variable, three completely different pictures,
+and you did not touch the drawing code. That separation is what conditionals
+buy you.</p>
+</blockquote>
+<p><code>GREEN</code>, <code>YELLOW</code> and <code>RED</code> are colors the engine already knows. There are
+eight of them, and they are only numbers — <code>print(RED)</code> gives <code>(255, 0, 0)</code>.</p>
+<h2 id="deciding-every-frame">Deciding every frame</h2>
+<p>The examples so far decide once, when the program starts. A game has to keep
+deciding, so the test goes inside something that runs every frame:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+player = add([sprite(&quot;bean&quot;), pos(100, 300), area()])
+
+@onUpdate
+def wrap_around():
+    player.pos.x = player.pos.x + 3
+    if player.pos.x &gt; width():
+        player.pos.x = 0
+</code></pre>
+<p>The bean walks right, and the moment it goes past the right-hand edge the <code>if</code>
+notices and puts it back at 0. Run it and watch it loop forever.</p>
+<p><code>width()</code> is the width of the window, so this works whatever size you made it.
+That is worth more than typing <code>800</code> — a number you typed by hand is wrong the
+day you change the window.</p>
+<h2 id="watch-for">Watch for</h2>
+<p><strong><code>==</code> asks, <code>=</code> stores.</strong> The error is <code>SyntaxError: invalid syntax</code> and it
+points at the <code>if</code> line.</p>
+<p><strong>The colon and the indent are both required.</strong> Forgetting the colon is a
+syntax error. Forgetting the indent gives you <code>IndentationError: expected an
+indented block</code>.</p>
+<p><strong>Use <code>elif</code>, not a stack of separate <code>if</code>s</strong> — unless you really do want every
+true one to happen.</p>
+<p><strong>Put the hardest test first</strong> in an <code>elif</code> chain, or it can never be reached.</p>
+<p><strong>Do not compare to <code>True</code>.</strong> Write <code>if ready:</code> rather than <code>if ready == True:</code>.</p>
+<h2 id="classwork-1-the-damage-check">Classwork 1 — The Damage Check</h2>
+<p>Build a program that reacts to a single number.</p>
+<p>Start from this and press Run to see where you are:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+
+health = 45
+
+add([text(&quot;Health: &quot; + str(health), size=28), pos(40, 40)])
+</code></pre>
+<p>Now add, one at a time, running after each:</p>
+<ol>
+<li>A bar under the text: <code>rect(health * 4, 24)</code> at <code>pos(40, 90)</code>.</li>
+<li>Color it with an <code>if</code> / <code>elif</code> / <code>else</code> chain — green above 60, yellow above
+   25, red otherwise.</li>
+<li>A message under the bar that says <code>Critical!</code> <strong>only</strong> when health is below</li>
+<li>Use a plain <code>if</code>, with no <code>else</code>.</li>
+<li>A second variable, <code>shield = True</code>, and a line that prints <code>Shield holding</code>
+   to the console when the shield is up <strong>and</strong> health is above 0.</li>
+</ol>
+<p>Change <code>health</code> and rerun until you have seen all three bar colors, and made
+<code>Critical!</code> appear and disappear.</p>
+<p><strong>Stretch:</strong> make <code>Critical!</code> appear only when health is below 20 <strong>and</strong> the
+shield is down. What do you set the two variables to so that it shows?</p>
+<h2 id="classwork-2-the-locked-door">Classwork 2 — The Locked Door</h2>
+<p>Two sprites and one decision.</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;key&quot;, &quot;images/key.png&quot;)
+loadSprite(&quot;door&quot;, &quot;images/door.png&quot;)
+
+has_key = False
+
+add([sprite(&quot;door&quot;), pos(600, 260)])
+add([sprite(&quot;bean&quot;), pos(120, 280), area()])
+</code></pre>
+<ol>
+<li>Add the key to the screen at <code>pos(340, 300)</code> — but <strong>only when <code>has_key</code> is
+   False</strong>. Once it has been picked up there is nothing left to draw.</li>
+<li>Add a label at <code>pos(40, 40)</code> that says <code>You have the key</code> or
+   <code>The door is locked</code>, depending on <code>has_key</code>.</li>
+<li>Set <code>has_key = True</code> and run it again. The key should vanish and the label
+   should change, and you only changed one word.</li>
+</ol>
+<p><strong>Stretch:</strong> add a <code>moves_left</code> number. The label should say <code>Out of moves</code>
+when it reaches 0, whatever <code>has_key</code> is — so that test has to come <em>first</em> in
+the chain. Prove it by setting <code>has_key = True</code> and <code>moves_left = 0</code> together.</p>
+<h2 id="check-yourself">Check yourself</h2>
+<p>What does this print?</p>
+<pre><code class="language-python">lives = 3
+
+if lives &gt; 5:
+    print(&quot;Plenty&quot;)
+elif lives &gt; 0:
+    print(&quot;Careful&quot;)
+elif lives &gt; 2:
+    print(&quot;Fine&quot;)
+else:
+    print(&quot;Game over&quot;)
+</code></pre>
+<pre><code>Careful
+</code></pre>
+<details>
+<summary>Why not "Fine"?</summary>
+<p><code>lives &gt; 2</code> is true — 3 is more than 2 — but Python never gets there. It takes
+the <strong>first</strong> branch that is true, which is <code>lives &gt; 0</code>, prints <code>Careful</code>, and
+skips the rest of the chain.</p>
+<p>That third branch can never run at all. Any number that passes <code>lives &gt; 2</code> has
+already passed <code>lives &gt; 0</code> one line earlier. A branch that is impossible to
+reach is not an error and Python will not warn you, which is exactly why the
+order of an <code>elif</code> chain is worth reading twice.</p>
+</details>
+<hr />
+<hr />
+<p><a href="../">All three lessons</a> · <a href="../loops/">Lesson 2 — Loops →</a></p>
+      </article>
+    </div>
+    <aside class="col-lg-4 col-xl-3 toc-col">
+      <nav class="toc" aria-label="On this page">
+        <p class="toc-head">On this page</p>
+      <a class="toc-link toc-d1" href="#lesson-1-conditionals">Lesson 1 — Conditionals</a>
+      <a class="toc-link toc-d2" href="#the-problem-conditionals-solve">The problem conditionals solve</a>
+      <a class="toc-link toc-d2" href="#asking-the-question">Asking the question</a>
+      <a class="toc-link toc-d2" href="#else-the-other-path">else — the other path</a>
+      <a class="toc-link toc-d2" href="#elif-more-than-two-answers">elif — more than two answers</a>
+      <a class="toc-link toc-d2" href="#and-or-not">and, or, not</a>
+      <a class="toc-link toc-d2" href="#now-put-it-on-the-screen">Now put it on the screen</a>
+      <a class="toc-link toc-d2" href="#deciding-every-frame">Deciding every frame</a>
+      <a class="toc-link toc-d2" href="#watch-for">Watch for</a>
+      <a class="toc-link toc-d2" href="#classwork-1-the-damage-check">Classwork 1 — The Damage Check</a>
+      <a class="toc-link toc-d2" href="#classwork-2-the-locked-door">Classwork 2 — The Locked Door</a>
+      <a class="toc-link toc-d2" href="#check-yourself">Check yourself</a>
+      </nav>
+    </aside>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>

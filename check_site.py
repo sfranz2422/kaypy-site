@@ -25,7 +25,8 @@ import sys
 from urllib.parse import unquote, urlparse
 
 HERE = pathlib.Path(__file__).resolve().parent
-DIST = HERE / "dist"
+SITE = HERE / "site"
+DIST = SITE   # the old name, kept where it is still read below
 
 results = []
 
@@ -36,7 +37,7 @@ def check(label, ok, detail=""):
 
 
 if not DIST.is_dir():
-    sys.exit("No dist/ — run python3 build.py first.")
+    sys.exit("No site/ — this repo IS the site; check you are in the right folder.")
 
 pages = sorted(DIST.rglob("*.html"))
 check("the site built at all", bool(pages), "%d pages" % len(pages))
@@ -50,7 +51,7 @@ check("every template slot was filled", not unfilled, ", ".join(unfilled[:3]))
 
 # ------------------------------------------------------------- local links
 def resolve(page, target):
-    """Where a href from this page points, as a path in dist/."""
+    """Where a href from this page points, as a path in site/."""
     if target.startswith("/"):
         return DIST / target.lstrip("/")
     return (page.parent / target).resolve()

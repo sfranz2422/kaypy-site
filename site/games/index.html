@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Games · KayPy</title>
+<meta name="description" content="A game engine for learning Python — build a game out of components, run it in the browser, share it as one file.">
+<meta property="og:title" content="Games · KayPy">
+<meta property="og:description" content="A game engine for learning Python — build a game out of components, run it in the browser, share it as one file.">
+<meta property="og:image" content="../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../static/favicon.png">
+<link rel="apple-touch-icon" href="../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../">
+      <img src="../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../learn/">All three lessons</a></li><li><a class="dropdown-item" href="../learn/conditionals/">1 — Conditionals</a></li><li><a class="dropdown-item" href="../learn/loops/">2 — Loops</a></li><li><a class="dropdown-item" href="../learn/lists/">3 — Lists</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="../tutorials/">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../games/" aria-current="page">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row gx-xl-5">
+    <div class="col-lg-8 col-xl-9">
+      <article class="prose">
+<h1 id="games">Games</h1>
+<p>Games written in Python with kaypy, running in your browser. Each one is a
+single HTML file — the whole game, the sprites, and Python itself — built with
+<code>kaypy web</code>.</p>
+<h2 id="flappy-bean">Flappy Bean</h2>
+<p>Space or click to flap. Don't touch anything.</p>
+<p><a href="../static/games/flappy_bean/">Play Flappy Bean →</a></p>
+<p>The pipes are plain rectangles, so there is no artwork to find and every
+number that shapes the game — the gap, the gravity, how hard a flap pushes —
+sits in one block at the top, ready to be argued about.</p>
+<h2 id="dino-quest">Dino Quest</h2>
+<p>Arrows or WASD to walk, <strong>Z</strong> for the sword, <strong>space</strong> to talk to a villager.</p>
+<p><a href="../static/games/top_down_game/">Play Dino Quest →</a></p>
+<p>A top-down adventure across two villages, where the villagers ask you
+questions. Answer one right and it never comes back; answer it wrong and the
+same villager asks you again next time. The questions come from a JSON file on
+the web, so the same game can be a different quiz every week — which is the
+point of it. Enter the quiz code at the start, or leave the box empty for the
+practice questions.</p>
+<h2 id="send-in-a-game">Send in a game</h2>
+<p>If you have built something with kaypy, it can go on this page.</p>
+<p><strong>What to send:</strong> a link to the game already playable on the web — the page,
+not the source. <code>kaypy web game.py</code> makes the one file you need; upload it to
+itch.io, GitHub Pages, Netlify, or anywhere that serves a page.</p>
+<p><strong>What gets put up:</strong> anything that runs, is yours, and is fit for a
+classroom. Games get played before they go up, so allow a few days.</p>
+<p><strong>If you are a student:</strong> ask your teacher first.</p>
+<!-- The submission form.
+     This is the EMBED address, the one Google Forms gives you under
+     Send → <> , ending in /viewform?embedded=true. The edit link and the
+     short forms.gle link both render a BLANK WHITE BOX here: no error, no
+     broken-image icon, nothing. If the form stops appearing, that is the
+     first thing to check. -->
+<div class="form-embed">
+  <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdnxgZx12SyoOS-EIdWVEUeF3smuZwsSUT4Lxref0jKdBTQvw/viewform?embedded=true"
+          width="100%" height="820" frameborder="0" marginheight="0"
+          marginwidth="0" loading="lazy" title="Submit a game">Loading the form…</iframe>
+</div>
+      </article>
+    </div>
+    <aside class="col-lg-4 col-xl-3 toc-col">
+      <nav class="toc" aria-label="On this page">
+        <p class="toc-head">On this page</p>
+      <a class="toc-link toc-d1" href="#games">Games</a>
+      <a class="toc-link toc-d2" href="#flappy-bean">Flappy Bean</a>
+      <a class="toc-link toc-d2" href="#dino-quest">Dino Quest</a>
+      <a class="toc-link toc-d2" href="#send-in-a-game">Send in a game</a>
+      </nav>
+    </aside>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
+<script src="../static/site.js"></script>
+
+</body>
+</html>

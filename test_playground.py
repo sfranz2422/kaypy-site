@@ -18,7 +18,7 @@ WHAT THIS CANNOT TELL YOU
 Whether it looks right. Pyodide, CodeMirror and the canvas are a browser's
 job, and SDL's dummy driver draws nothing. Only opening the page does that:
 
-    python3 build.py --serve
+    python3 -m http.server -d site
 """
 from __future__ import annotations
 
@@ -30,8 +30,9 @@ import re
 import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
-DIST = HERE / "dist"
-PLAY = HERE / "play"
+SITE = HERE / "site"
+PLAY = SITE / "play"          # the playground IS these files now; nothing
+DIST = SITE                   # is generated, so source and built are one
 
 results = []
 
@@ -53,7 +54,7 @@ ap.add_argument("--kaypy", type=pathlib.Path,
                 default=pathlib.Path(os.path.expanduser("~/kaypy")))
 args = ap.parse_args()
 
-page = (PLAY / "play.html").read_text()
+page = (PLAY / "index.html").read_text()
 script = (PLAY / "play.js").read_text()
 
 # Comments stripped, for the same reason play.js's are below: this page
@@ -65,9 +66,9 @@ page_code = re.sub(r"<!--.*?-->", " ", page, flags=re.S)
 # ------------------------------------------------ the page loads what it needs
 for name in ("runtime.js", "export.js", "game.js", "sprites.js", "complete.js",
              "style.css", "play.js", "play.css"):
-    check("play.html loads %s" % name, './%s"' % name in page)
+    check("the playground loads %s" % name, './%s"' % name in page)
 
-check("and every vendored one is in dist/",
+check("and every vendored one is in site/play/",
       all((DIST / "play" / n).is_file()
           for n in ("runtime.js", "export.js", "game.js", "sprites.js",
                     "complete.js", "style.css")))
@@ -83,7 +84,7 @@ check("and does NOT also load site.css", "site.css" not in page_code,
 # nobody sees until they click the thing.
 wanted = set(re.findall(r'\$\("([a-z-]+)"\)', script))
 absent = sorted(w for w in wanted if ('id="%s"' % w) not in page)
-check("every id play.js looks up exists in play.html", not absent,
+check("every id play.js looks up exists in the page", not absent,
       ", ".join(absent) if absent else "%d ids" % len(wanted))
 
 # The sprite grid is styled by PyIDE's stylesheet, which names these classes.
@@ -159,7 +160,7 @@ check("and posts nothing anywhere",
 
 # ----------------------------------------------------------- the starter
 #
-# Read from play/starter.py, which IS the file that ships: build.py inlines it
+# Read from site/play/starter.py, which IS the file the page fetches.
 # into play.js with json.dumps. There is no parsing step here to get wrong.
 #
 # An earlier version kept the starter as a list of JavaScript string literals
@@ -177,15 +178,31 @@ check("  that imports kaypy", "from kaypy import *" in starter)
 check("  and starts the engine",
       re.search(r"^kaypy\(", starter, re.M) is not None)
 
-# The same text has to reach the page. This is the join that used to be lossy.
-built = DIST / "play" / "play.js"
-if built.is_file():
-    inlined = re.search(r"var STARTER = (\".*?\");\n", built.read_text(), re.S)
-    check("  and the built page carries it, character for character",
-          inlined and json.loads(inlined.group(1)) == starter,
-          "dist/play/play.js")
-    check("  with no unfilled slot left behind",
-          "{{STARTER}}" not in built.read_text())
+# HOW THE STARTER REACHES THE PAGE
+#
+# It used to be inlined into play.js by build.py. There is no build now, so
+# play.js fetches starter.py at run time — which means three new ways for the
+# starter to silently not arrive, and all three are checked here.
+#
+# The worst of them is the second: the editor is built before the fetch lands,
+# so anything reading STARTER in that window sees an empty string. If the
+# fetch were dropped and nothing replaced it, the page would open with an
+# empty editor and no error anywhere.
+check("  and play.js fetches it rather than carrying a copy",
+      'fetch("starter.py"' in script,
+      "nothing fetches starter.py")
+check("  with no stale inlined copy left beside the fetch",
+      "var STARTER = \"from kaypy" not in script)
+check("  it sits next to play.js, so the relative fetch resolves",
+      (PLAY / "starter.py").is_file())
+check("  the fetched text is put into the editor",
+      re.search(r"fetchStarter\(\)\s*\.then", script) is not None)
+check("  a saved draft is not overwritten when it lands",
+      re.search(r"if \(draft\) return", script) is not None,
+      "a late fetch would replace what the visitor had written")
+check("  and Start over refuses while it is still empty",
+      re.search(r"if \(!STARTER\)", script) is not None,
+      "pressing it early would blank the editor")
 
 # ------------------------------------------- every sprite and sound it names
 named = re.findall(r'load(?:Sprite|Sound)\("[^"]+",\s*"([^"]+)"\)', starter)
@@ -250,7 +267,7 @@ os.chdir(HERE)
 # Same four files as the three editors. The one that ships broken quietly is
 # dialog.min.css: without it find and replace WORK, and the bar asking for
 # the search term is an unstyled input floating over the code.
-play_html = (HERE / "play" / "play.html").read_text()
+play_html = page
 for addon in ("addon/dialog/dialog.min.js",
               "addon/search/searchcursor.min.js",
               "addon/search/search.min.js",
@@ -267,12 +284,6 @@ check("  and the addons load before play.js builds the editor",
       play_html.find("addon/search/search.min.js") < play_html.find("play.js"))
 
 check("  and the search bar is given a usable width",
-      ".CodeMirror-dialog input" in (HERE / "play" / "play.css").read_text())
-
-# It has to reach dist/ too — the playground is copied file by file, and a
-# tag that is only in the source is a feature only the repo has.
-built = (HERE / "dist" / "play" / "index.html")
-check("  and the built playground has them as well",
-      built.is_file() and "addon/search/search.min.js" in built.read_text())
+      ".CodeMirror-dialog input" in (PLAY / "play.css").read_text())
 
 done()

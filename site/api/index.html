@@ -1,0 +1,1404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API · KayPy</title>
+<meta name="description" content="A game engine for learning Python — build a game out of components, run it in the browser, share it as one file.">
+<meta property="og:title" content="API · KayPy">
+<meta property="og:description" content="A game engine for learning Python — build a game out of components, run it in the browser, share it as one file.">
+<meta property="og:image" content="../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../static/favicon.png">
+<link rel="apple-touch-icon" href="../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../">
+      <img src="../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../learn/">All three lessons</a></li><li><a class="dropdown-item" href="../learn/conditionals/">1 — Conditionals</a></li><li><a class="dropdown-item" href="../learn/loops/">2 — Loops</a></li><li><a class="dropdown-item" href="../learn/lists/">3 — Lists</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../api/" aria-current="page">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="../tutorials/">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row gx-xl-5">
+    <div class="col-lg-8 col-xl-9">
+      <article class="prose">
+<h1 id="api-reference">API reference</h1>
+<p>Every function KayPy gives you, with a working example for each one.</p>
+<p><strong>Every example below assumes these lines at the top:</strong></p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[141, 183, 255])
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+</code></pre>
+<p>That is what the <a href="../play/">playground</a> starts with, so you can paste any
+example straight in and press Run. Examples are fragments — they make whatever
+else they need.</p>
+<p>The names follow <a href="https://kaplayjs.com">KAPLAY</a>'s, so its documentation and
+examples describe these functions too. Where Python makes a difference, this
+page says so.</p>
+<hr />
+<h2 id="starting-a-game">Starting a game</h2>
+<h3 id="kaypywidth-height-background-joystick">kaypy(width, height, background, joystick)</h3>
+<p>Starts the engine. It must come first — before loading anything, before adding
+anything. There is no <code>run()</code> to call afterwards: the loop starts by itself
+once your file has been read.</p>
+<pre><code class="language-python">kaypy(width=1024, height=768, background=[20, 20, 40])
+</code></pre>
+<p><code>joystick=True</code> puts a d-pad and two buttons on the screen, for playing with
+a thumb. They hold the arrow keys and send <code>space</code> and <code>z</code>, so a game written
+for the keyboard works on a phone without changing a line:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, joystick=True)
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+player = add([sprite(&quot;bean&quot;), pos(100, 100)])
+
+# The d-pad drives this. Nothing here knows it is not a keyboard.
+@onKeyDown(&quot;left&quot;)
+def go_left():
+    player.move(-320, 0)
+</code></pre>
+<p>Pass a list to choose what the two buttons send:</p>
+<pre><code class="language-python">kaypy(width=800, height=600, joystick=[&quot;space&quot;, &quot;x&quot;])
+</code></pre>
+<p>It works with a mouse too, so you can try it without picking up a phone.</p>
+<h3 id="width">width()</h3>
+<p>How wide the window is, in pixels. Use it instead of typing the number twice.</p>
+<pre><code class="language-python">add([rect(width(), 20), pos(0, 0), color(90, 150, 70)])
+</code></pre>
+<h3 id="height">height()</h3>
+<p>How tall the window is.</p>
+<pre><code class="language-python"># A floor along the bottom, whatever size the window is.
+add([rect(width(), 48), pos(0, height() - 48), area(), body(isStatic=True)])
+</code></pre>
+<h3 id="center">center()</h3>
+<p>The middle of the window, as a <code>vec2</code>.</p>
+<pre><code class="language-python">add([sprite(&quot;bean&quot;), pos(center()), anchor(&quot;center&quot;)])
+</code></pre>
+<h3 id="dt">dt()</h3>
+<p>How many seconds the last frame took. Multiply by <code>dt()</code> to move at the same
+speed on a fast computer and a slow one.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 100)])
+
+@onUpdate
+def drift():
+    player.pos.x += 60 * dt()      # 60 pixels a second, not 60 a frame
+</code></pre>
+<h3 id="raycastorigin-direction-exclude-max_distance-ignore">raycast(origin, direction, exclude, max_distance, ignore)</h3>
+<p>The first <code>area()</code> a straight line runs into, as a hit with <code>.obj</code>, <code>.point</code>,
+<code>.distance</code> and <code>.normal</code> — or <code>None</code>. <code>exclude</code> skips tags, <code>ignore</code> skips
+particular objects, which is what you want when casting from an object's own
+position, since the ray starts inside its own box.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 300), area()])
+add([rect(20, 200), pos(400, 200), area(), &quot;wall&quot;])
+
+hit = raycast(player.pos, vec2(1, 0), ignore=[player])
+if hit:
+    print(&quot;wall at&quot;, hit.distance, &quot;px&quot;)
+</code></pre>
+<hr />
+<h3 id="time">time()</h3>
+<p>Seconds since <code>kaypy()</code> started.</p>
+<pre><code class="language-python">label = add([text(&quot;0&quot;), pos(10, 10), fixed()])
+
+@onUpdate
+def tick():
+    label.text = str(round(time(), 1))
+</code></pre>
+<h3 id="setgravityn">setGravity(n)</h3>
+<p>How hard things with a <code>body()</code> fall. Off by default — a top-down game wants no
+gravity at all.</p>
+<pre><code class="language-python">setGravity(2400)
+</code></pre>
+<h3 id="setbackgroundr-g-b">setBackground(r, g, b)</h3>
+<p>Change the background color after the game has started.</p>
+<pre><code class="language-python">setBackground(40, 10, 60)
+</code></pre>
+<hr />
+<h2 id="loading-pictures-and-sounds">Loading pictures and sounds</h2>
+<p>Loading and using are separate steps. Forgetting the load is the commonest
+reason a sprite does not appear.</p>
+<h3 id="loadspritename-path-slicex-slicey-anims">loadSprite(name, path, sliceX, sliceY, anims)</h3>
+<p>Make a picture available under a name. <code>sliceX</code> and <code>sliceY</code> cut a strip of
+frames out of one image, and <code>anims</code> names runs of those frames.</p>
+<pre><code class="language-python">loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+
+# A strip of 8 frames across, with two named animations cut out of it.
+loadSprite(&quot;angel&quot;, &quot;dungeon/angel.png&quot;, sliceX=8, anims={
+    &quot;idle&quot;: {&quot;from&quot;: 0, &quot;to&quot;: 3, &quot;speed&quot;: 8, &quot;loop&quot;: True},
+    &quot;run&quot;: {&quot;from&quot;: 4, &quot;to&quot;: 7, &quot;speed&quot;: 10, &quot;loop&quot;: True},
+})
+</code></pre>
+<h3 id="loadspriteatlaspath-atlas">loadSpriteAtlas(path, atlas)</h3>
+<p>One image holding many sprites, cut up by coordinates. More work than separate
+files, and it is how most real sprite sheets arrive.</p>
+<pre><code class="language-python">loadSpriteAtlas(&quot;dungeon.png&quot;, {
+    &quot;wall&quot;: {&quot;x&quot;: 16, &quot;y&quot;: 16, &quot;width&quot;: 16, &quot;height&quot;: 16},
+    &quot;hero&quot;: {&quot;x&quot;: 128, &quot;y&quot;: 196, &quot;width&quot;: 144, &quot;height&quot;: 28, &quot;sliceX&quot;: 9},
+})
+
+add([sprite(&quot;hero&quot;), pos(100, 100)])
+</code></pre>
+<h3 id="loadsoundname-path">loadSound(name, path)</h3>
+<p>Make a sound available under a name.</p>
+<pre><code class="language-python">loadSound(&quot;ding&quot;, &quot;sounds/ding.wav&quot;)
+</code></pre>
+<hr />
+<h2 id="making-things">Making things</h2>
+<h3 id="addcomponents">add(components)</h3>
+<p>Build a game object out of a list of components, and put it in the world.
+Returns the object, so you can keep it in a variable.</p>
+<pre><code class="language-python">player = add([
+    sprite(&quot;bean&quot;),
+    pos(120, 80),
+    area(),
+    body(),
+    &quot;player&quot;,                    # a plain string is a tag
+    {&quot;hits&quot;: 0, &quot;dir&quot;: 1},       # a dict is your own values
+])
+
+player.hits += 1
+</code></pre>
+<p>A <strong>tag</strong> says what something is: <code>get("enemy")</code> finds every object carrying
+one, and <code>onCollide("enemy")</code> works off it. A <strong>dict</strong> is that object's own
+state — <code>hits</code>, <code>dir</code>, <code>cooldown</code> — set as ordinary attributes you can read and
+change.</p>
+<p>A key that a component already owns is refused rather than quietly shadowing
+it, and so is a key that is not a valid Python name.</p>
+<h3 id="gettag">get(tag)</h3>
+<p>Every object carrying a tag, as a list.</p>
+<pre><code class="language-python">add([sprite(&quot;bean&quot;), pos(100, 100), &quot;enemy&quot;])
+add([sprite(&quot;bean&quot;), pos(200, 100), &quot;enemy&quot;])
+
+for e in get(&quot;enemy&quot;):
+    e.pos.x += 10
+</code></pre>
+<h3 id="destroyobj">destroy(obj)</h3>
+<p>Remove one object. <code>obj.destroy()</code> does the same thing.</p>
+<pre><code class="language-python">coin = add([sprite(&quot;bean&quot;), pos(300, 300), area(), &quot;coin&quot;])
+destroy(coin)
+</code></pre>
+<h3 id="destroyalltag">destroyAll(tag)</h3>
+<p>Remove every object carrying a tag. Returns how many went.</p>
+<pre><code class="language-python">add([sprite(&quot;bean&quot;), pos(10, 10), &quot;bullet&quot;])
+add([sprite(&quot;bean&quot;), pos(40, 10), &quot;bullet&quot;])
+
+gone = destroyAll(&quot;bullet&quot;)      # 2
+</code></pre>
+<h3 id="addlevellayout-config">addLevel(layout, config)</h3>
+<p>Build a level out of a picture made of characters. Each character maps to a
+list of components; a space is nothing.</p>
+<pre><code class="language-python">addLevel([
+    &quot;                    &quot;,
+    &quot;         @          &quot;,
+    &quot;  ====        ===   &quot;,
+    &quot;====================&quot;,
+], {
+    &quot;tileWidth&quot;: 32,
+    &quot;tileHeight&quot;: 32,
+    &quot;tiles&quot;: {
+        &quot;=&quot;: lambda: [rect(32, 32), area(), body(isStatic=True), color(90, 150, 70)],
+        &quot;@&quot;: lambda: [sprite(&quot;bean&quot;), area(), body(), &quot;player&quot;],
+    },
+})
+</code></pre>
+<h3 id="addkaboomposition-scale">addKaboom(position, scale)</h3>
+<p>The explosion from KAPLAY, at a point. Cleans itself up.</p>
+<pre><code class="language-python">addKaboom(vec2(400, 300), scale=2.0)
+</code></pre>
+<hr />
+<h2 id="components">Components</h2>
+<p>A component is one thing an object <em>has</em>. Add one, get one behavior; delete
+one, lose exactly that. Most give the object some attributes and methods of
+its own, which are listed with each.</p>
+<h3 id="posx-y">pos(x, y)</h3>
+<p>Where the object is. Without it, an object has no place in the world.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(120, 80)])
+
+player.pos.x = 300           # .pos is a vec2 you can read and set
+player.move(100, 0)          # move, in pixels per second
+player.moveTo(vec2(400, 300), 200)
+</code></pre>
+<h3 id="spritename-anim-frame">sprite(name, anim, frame)</h3>
+<p>Draw a loaded picture. <code>anim</code> starts a named animation straight away.</p>
+<pre><code class="language-python">loadSprite(&quot;angel&quot;, &quot;dungeon/angel.png&quot;, sliceX=8, anims={
+    &quot;idle&quot;: {&quot;from&quot;: 0, &quot;to&quot;: 3, &quot;speed&quot;: 8, &quot;loop&quot;: True},
+    &quot;run&quot;: {&quot;from&quot;: 4, &quot;to&quot;: 7, &quot;speed&quot;: 10, &quot;loop&quot;: True},
+})
+
+a = add([sprite(&quot;angel&quot;, anim=&quot;idle&quot;), pos(100, 100)])
+a.play(&quot;run&quot;)                # switch animation
+a.flipX = True               # face the other way
+</code></pre>
+<h3 id="rectwidth-height-radius">rect(width, height, radius)</h3>
+<p>A rectangle, for a platform or a bar when a picture would be overkill.</p>
+<pre><code class="language-python">add([rect(200, 24, radius=6), pos(80, 400), color(90, 150, 70)])
+</code></pre>
+<h3 id="circleradius">circle(radius)</h3>
+<p>A circle.</p>
+<pre><code class="language-python">add([circle(18), pos(400, 300), color(255, 200, 60)])
+</code></pre>
+<h3 id="texttext_str-size-width">text(text_str, size, width)</h3>
+<p>Words on the screen. <code>width</code> wraps them.</p>
+<pre><code class="language-python">label = add([text(&quot;Score: 0&quot;, size=28), pos(12, 12), fixed()])
+label.text = &quot;Score: 1&quot;      # change it whenever
+</code></pre>
+<h3 id="area">area()</h3>
+<p>A collision box, so the object can touch things. On its own it is a trigger you
+pass through; add <code>body()</code> to make it solid.</p>
+<pre><code class="language-python">coin = add([sprite(&quot;bean&quot;), pos(300, 300), area(), &quot;coin&quot;])
+
+if coin.isHovering():
+    pass                     # the mouse is over it
+</code></pre>
+<h3 id="bodyisstatic-mass-jumpforce">body(isStatic, mass, jumpForce)</h3>
+<p>Gravity, falling and jumping. <code>isStatic=True</code> means the thing never moves and
+everything else lands on it.</p>
+<pre><code class="language-python">setGravity(2400)
+
+add([rect(width(), 48), pos(0, height() - 48), area(), body(isStatic=True)])
+player = add([sprite(&quot;bean&quot;), pos(120, 80), area(), body(jumpForce=900)])
+
+@onKeyPress(&quot;space&quot;)
+def jump():
+    if player.isGrounded():
+        player.jump()
+</code></pre>
+<h3 id="anchorvalue">anchor(value)</h3>
+<p>Which part of the object <code>pos()</code> refers to. <code>"topleft"</code> by default; <code>"center"</code>
+and <code>"bot"</code> are the two you will reach for.</p>
+<pre><code class="language-python"># pos() now means where its feet are, which is what you want on a floor.
+add([sprite(&quot;bean&quot;), pos(200, 400), anchor(&quot;bot&quot;)])
+</code></pre>
+<h3 id="scalex-y">scale(x, y)</h3>
+<p>Bigger or smaller. One number scales both ways.</p>
+<pre><code class="language-python">add([sprite(&quot;bean&quot;), pos(200, 200), scale(2)])
+add([sprite(&quot;bean&quot;), pos(400, 200), scale(2, 0.5)])
+</code></pre>
+<h3 id="rotateangle">rotate(angle)</h3>
+<p>Turn the object, in degrees.</p>
+<pre><code class="language-python">arrow = add([rect(60, 8), pos(400, 300), anchor(&quot;center&quot;), rotate(0)])
+
+arrow.angle = 45
+arrow.rotateBy(10)
+arrow.rotateTo(90)
+</code></pre>
+<h3 id="colorr-g-b">color(r, g, b)</h3>
+<p>Tint. On a <code>rect()</code> or <code>circle()</code> it is the fill; on a sprite it multiplies.</p>
+<pre><code class="language-python">add([rect(100, 100), pos(50, 50), color(255, 80, 80)])
+</code></pre>
+<h3 id="opacityn">opacity(n)</h3>
+<p>How solid, from <code>0</code> to <code>1</code>.</p>
+<pre><code class="language-python">ghost = add([sprite(&quot;bean&quot;), pos(200, 200), opacity(0.4)])
+ghost.opacity = 1.0
+</code></pre>
+<h3 id="outlinewidth-color">outline(width, color)</h3>
+<p>A border, for a shape.</p>
+<pre><code class="language-python">add([rect(120, 40), pos(60, 60), color(40, 40, 60), outline(3, (255, 255, 255))])
+</code></pre>
+<h3 id="zvalue">z(value)</h3>
+<p>What draws on top. Higher is nearer the front.</p>
+<pre><code class="language-python">add([rect(200, 200), pos(100, 100), color(30, 30, 40), z(0)])
+add([sprite(&quot;bean&quot;), pos(150, 150), z(10)])      # in front
+</code></pre>
+<h3 id="fixed">fixed()</h3>
+<p>Stay put when the camera moves. Everything on a HUD wants this.</p>
+<pre><code class="language-python">add([text(&quot;Score: 0&quot;, size=24), pos(12, 12), fixed()])
+</code></pre>
+<h3 id="movedirection-speed">move(direction, speed)</h3>
+<p>Drift in a direction for ever, without an <code>onUpdate</code> of your own. Good for
+bullets.</p>
+<pre><code class="language-python">add([sprite(&quot;bean&quot;), pos(50, 300), move(vec2(1, 0), 400), offscreen(destroy=True)])
+</code></pre>
+<h3 id="offscreendestroy-distance">offscreen(destroy, distance)</h3>
+<p>What to do once the object is off the edge. Bullets that leave and are never
+cleaned up are the commonest slow leak in a first game.</p>
+<pre><code class="language-python">add([sprite(&quot;bean&quot;), pos(0, 100), move(vec2(1, 0), 500),
+     offscreen(destroy=True, distance=100)])
+</code></pre>
+<h3 id="tileisobstacle">tile(isObstacle)</h3>
+<p>Marks an object as part of a tile grid, for <code>addLevel()</code>. <code>isObstacle=True</code>
+means paths do not go through it.</p>
+<pre><code class="language-python">add([rect(32, 32), pos(64, 64), area(), body(isStatic=True), tile(isObstacle=True)])
+</code></pre>
+<h3 id="statestart-states">state(start, states)</h3>
+<p>A named state machine, so an enemy can idle, chase and attack without a tangle
+of booleans.</p>
+<pre><code class="language-python">enemy = add([sprite(&quot;bean&quot;), pos(400, 300), state(&quot;idle&quot;, [&quot;idle&quot;, &quot;chase&quot;])])
+
+@enemy.onStateEnter(&quot;chase&quot;)
+def start_chase():
+    print(&quot;chasing&quot;)
+
+@enemy.onStateUpdate(&quot;idle&quot;)
+def waiting():
+    pass
+
+enemy.enterState(&quot;chase&quot;)
+</code></pre>
+<h3 id="healthhp-maxhp">health(hp, maxHP)</h3>
+<p>Hit points, and the handlers that go with them. <code>onDeath</code> fires exactly once,
+however many things land in the same frame — a death handler that runs twice
+drops two coins and scores twice.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 100), health(3)])
+
+@player.onHurt
+def ouch(amount):
+    print(&quot;hp now&quot;, player.hp)
+
+@player.onDeath
+def died():
+    player.destroy()
+
+player.hurt(1)
+player.heal(1)
+player.isAlive()
+</code></pre>
+<h3 id="followobj-offset-speed">follow(obj, offset, speed)</h3>
+<p>Be where another object is. Without <code>speed</code> it locks on exactly, every frame,
+which is what a health bar or a name label wants. With <code>speed</code> it chases at
+that many pixels per second instead, which is what a pet or a hunting enemy
+wants. If the target is destroyed, the follower stops where it stands.</p>
+<pre><code class="language-python">enemy = add([sprite(&quot;bean&quot;), pos(400, 200)])
+add([rect(40, 6), pos(0, 0), color(220, 60, 60),
+     follow(enemy, offset=vec2(-4, -30))])
+
+player = add([sprite(&quot;bean&quot;), pos(100, 300)])
+add([circle(10), pos(0, 0), follow(player, speed=180)])
+</code></pre>
+<hr />
+<h3 id="sentrycandidates-direction-fieldofview-range-lineofsight-raycastexclude-checkfrequency">sentry(candidates, direction, fieldOfView, range, lineOfSight, raycastExclude, checkFrequency)</h3>
+<p>Notice when something comes into view. <code>fieldOfView</code> is the whole width of the
+cone in degrees; <code>range</code> is how far it can see; <code>lineOfSight=True</code> means walls
+stop it. Leave <code>direction</code> out and it looks wherever <code>rotate()</code> has the object
+turned. <code>onObjectsSpotted</code> fires when it goes from seeing nothing to seeing
+something, and <code>.spotted</code> is the current list.</p>
+<p><code>range</code> is not KAPLAY's — without it a guard sees to the end of the level, so
+leaving it out behaves exactly as KAPLAY does.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(600, 300), area(), &quot;player&quot;])
+
+guard = add([sprite(&quot;bean&quot;), pos(200, 300), area(), rotate(0),
+             sentry(&quot;player&quot;, fieldOfView=70, range=300, lineOfSight=True)])
+
+@guard.onObjectsSpotted
+def seen(objects):
+    print(&quot;spotted&quot;, len(objects))
+</code></pre>
+<hr />
+<h3 id="lifespanseconds-fade">lifespan(seconds, fade)</h3>
+<p>Destroy the object after a while, fading out first if you ask. Belongs to the
+bullet, rather than to a timer somewhere else holding it alive.</p>
+<pre><code class="language-python">add([sprite(&quot;bean&quot;), pos(300, 200), lifespan(2, fade=0.5)])
+</code></pre>
+<hr />
+<h2 id="every-frame">Every frame</h2>
+<h3 id="onupdatefn-onupdatetag-fn">onUpdate(fn) / onUpdate(tag, fn)</h3>
+<p>Run something on every frame. With a tag, it runs once per object carrying it,
+and the object is passed in.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 100)])
+
+@onUpdate
+def creep():
+    player.pos.x += 1
+
+add([sprite(&quot;bean&quot;), pos(300, 100), &quot;enemy&quot;])
+
+@onUpdate(&quot;enemy&quot;)
+def drift(e):
+    e.pos.y += 0.5
+</code></pre>
+<h3 id="run">run()</h3>
+<p>Not KAPLAY's API, and you almost never want it. The loop starts by itself once
+your file has finished — that is the whole point. It exists for the rare
+program that must start the loop early, on purpose.</p>
+<pre><code class="language-python"># Written for completeness. A normal game never calls this.
+# run()
+</code></pre>
+<hr />
+<h2 id="keyboard">Keyboard</h2>
+<p>Key names are KAPLAY's: <code>"left"</code>, <code>"right"</code>, <code>"up"</code>, <code>"down"</code>, <code>"space"</code>,
+<code>"enter"</code>, <code>"escape"</code>, and any letter or digit as itself.</p>
+<h3 id="onkeydownkey-fn">onKeyDown(key, fn)</h3>
+<p>Every frame the key is held. This is the one for walking.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 100)])
+
+@onKeyDown(&quot;right&quot;)
+def go_right():
+    player.move(320, 0)
+</code></pre>
+<h3 id="onkeypresskey-fn">onKeyPress(key, fn)</h3>
+<p>Once, the frame the key goes down. This is the one for jumping — <code>onKeyDown</code>
+would fire every frame you hold space.</p>
+<pre><code class="language-python">setGravity(2400)
+player = add([sprite(&quot;bean&quot;), pos(100, 100), area(), body()])
+
+@onKeyPress(&quot;space&quot;)
+def jump():
+    if player.isGrounded():
+        player.jump(900)
+</code></pre>
+<h3 id="onkeyreleasekey-fn">onKeyRelease(key, fn)</h3>
+<p>Once, when the key comes back up.</p>
+<pre><code class="language-python">@onKeyRelease(&quot;space&quot;)
+def let_go():
+    print(&quot;released&quot;)
+</code></pre>
+<h3 id="iskeydownkey">isKeyDown(key)</h3>
+<p>Ask, rather than being told. Useful inside an <code>onUpdate</code> that already has a
+reason to run.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 100)])
+
+@onUpdate
+def walk():
+    if isKeyDown(&quot;left&quot;):
+        player.move(-320, 0)
+    if isKeyDown(&quot;right&quot;):
+        player.move(320, 0)
+</code></pre>
+<hr />
+<h2 id="mouse">Mouse</h2>
+<p>Buttons are named — <code>"left"</code>, <code>"right"</code>, <code>"middle"</code> — and default to the left
+one. pygame numbers them 1, 2, 3 with middle in the middle, which is not the
+order anyone guesses.</p>
+<h3 id="onclickfn">onClick(fn)</h3>
+<p>A left click anywhere. On an object with <code>area()</code>, use <code>obj.onClick</code> instead
+and it only fires on that object.</p>
+<pre><code class="language-python">@onClick
+def clicked():
+    print(&quot;clicked at&quot;, mousePos())
+</code></pre>
+<h3 id="onmousepressbutton-fn">onMousePress(button, fn)</h3>
+<p>Once, when a button goes down.</p>
+<pre><code class="language-python">@onMousePress(&quot;right&quot;)
+def aim():
+    print(&quot;right button down&quot;)
+</code></pre>
+<h3 id="onmousereleasebutton-fn">onMouseRelease(button, fn)</h3>
+<p>Once, when a button comes back up.</p>
+<pre><code class="language-python">@onMouseRelease
+def fire():
+    print(&quot;let go&quot;)
+</code></pre>
+<h3 id="onmousedownbutton-fn">onMouseDown(button, fn)</h3>
+<p>Every frame a button is held — for dragging or hold-to-charge.</p>
+<pre><code class="language-python">brush = add([circle(6), pos(0, 0), color(255, 80, 80)])
+
+@onMouseDown
+def drag():
+    brush.pos = mousePos()
+</code></pre>
+<h3 id="onmousemovefn">onMouseMove(fn)</h3>
+<p>Whenever the mouse moves.</p>
+<pre><code class="language-python">@onMouseMove
+def look():
+    pass
+</code></pre>
+<h3 id="ismousedownbutton">isMouseDown(button)</h3>
+<p>Is that button held right now?</p>
+<pre><code class="language-python">@onUpdate
+def check():
+    if isMouseDown(&quot;left&quot;):
+        pass
+</code></pre>
+<h3 id="ismousepressedbutton">isMousePressed(button)</h3>
+<p>Did it go down this frame?</p>
+<pre><code class="language-python">@onUpdate
+def check():
+    if isMousePressed():
+        print(&quot;just pressed&quot;)
+</code></pre>
+<h3 id="ismousereleasedbutton">isMouseReleased(button)</h3>
+<p>Did it come up this frame?</p>
+<pre><code class="language-python">@onUpdate
+def check():
+    if isMouseReleased():
+        print(&quot;just released&quot;)
+</code></pre>
+<h3 id="ismousemoved">isMouseMoved()</h3>
+<p>Did the mouse move this frame?</p>
+<pre><code class="language-python">@onUpdate
+def check():
+    if isMouseMoved():
+        pass
+</code></pre>
+<h3 id="mousepos">mousePos()</h3>
+<p>Where the mouse is, as a <code>vec2</code>, in screen coordinates.</p>
+<pre><code class="language-python">aim = add([circle(4), pos(0, 0)])
+
+@onUpdate
+def follow():
+    aim.pos = mousePos()
+</code></pre>
+<h3 id="mousedeltapos">mouseDeltaPos()</h3>
+<p>How far the mouse moved this frame, as a <code>vec2</code>.</p>
+<pre><code class="language-python">@onUpdate
+def look():
+    d = mouseDeltaPos()
+    if d.x or d.y:
+        pass
+</code></pre>
+<h3 id="toworldpos">toWorld(pos)</h3>
+<p>Turn a screen position into a world position. With the camera moved, the mouse
+is not where it looks.</p>
+<pre><code class="language-python">setCamPos(vec2(400, 0))
+
+@onUpdate
+def where():
+    spot = toWorld(mousePos())
+</code></pre>
+<hr />
+<h2 id="drawing-straight-to-the-screen">Drawing straight to the screen</h2>
+<p>Marks for one frame — a health bar, an aim line, a grid — rather than things in
+the world. They only work inside <code>onDraw</code>, and say so if you call them
+elsewhere: a drawing that silently never appears is close to undebuggable.</p>
+<h3 id="ondrawfn">onDraw(fn)</h3>
+<p>Where the draw functions below are allowed. Runs after the game objects.</p>
+<pre><code class="language-python">@onDraw
+def hud():
+    drawText(text=&quot;Score: 0&quot;, pos=vec2(12, 12), size=24, fixed=True)
+</code></pre>
+<h3 id="drawrectpos-width-height-color">drawRect(pos, width, height, color, ...)</h3>
+<p>A rectangle. <code>radius</code> rounds the corners, <code>fixed=True</code> pins it to the screen.</p>
+<pre><code class="language-python">@onDraw
+def bar():
+    drawRect(pos=vec2(12, 40), width=120, height=12, color=(60, 60, 60), fixed=True)
+    drawRect(pos=vec2(12, 40), width=80, height=12, color=(90, 200, 90), fixed=True)
+</code></pre>
+<h3 id="drawcirclepos-radius-color">drawCircle(pos, radius, color, ...)</h3>
+<p>A circle, centred on <code>pos</code>.</p>
+<pre><code class="language-python">@onDraw
+def blip():
+    drawCircle(pos=vec2(400, 300), radius=30, color=(255, 200, 60), opacity=0.6)
+</code></pre>
+<h3 id="drawlinep1-p2-width-color">drawLine(p1, p2, width, color, ...)</h3>
+<p>A line from one point to another.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 100)])
+
+@onDraw
+def aim_line():
+    drawLine(p1=player.pos, p2=mousePos(), width=2, color=(255, 255, 255))
+</code></pre>
+<h3 id="drawlinespoints-width-color-close">drawLines(points, width, color, close, ...)</h3>
+<p>A run of connected lines. <code>close=True</code> joins the last point back to the first.</p>
+<pre><code class="language-python">@onDraw
+def shape():
+    drawLines(points=[vec2(100, 100), vec2(200, 140), vec2(160, 220)],
+              width=3, color=(120, 200, 255), close=True)
+</code></pre>
+<h3 id="drawtexttext-pos-size-color">drawText(text, pos, size, color, ...)</h3>
+<p>Words, in the same font as the <code>text()</code> component.</p>
+<pre><code class="language-python">@onDraw
+def label():
+    drawText(text=&quot;Paused&quot;, pos=vec2(340, 280), size=32, color=(255, 255, 255))
+</code></pre>
+<h3 id="drawspritesprite-pos-frame">drawSprite(sprite, pos, frame, ...)</h3>
+<p>One frame of a loaded sprite, without making a game object out of it. Good for
+a row of lives.</p>
+<pre><code class="language-python">@onDraw
+def lives():
+    for i in range(3):
+        drawSprite(sprite=&quot;bean&quot;, pos=vec2(12 + i * 28, 70), width=24, height=24,
+                   fixed=True)
+</code></pre>
+<hr />
+<h2 id="pausing-and-asking-a-question">Pausing, and asking a question</h2>
+<p>A panel freezes the game, puts a question or a message over it, and starts
+the game again when it is answered. The same lines work in a browser and on
+your own computer: in a browser the panel is real HTML, so the text can be
+selected and a link is a real link; on a desktop KayPy draws it.</p>
+<p><strong>These call you back rather than returning an answer.</strong> In a browser,
+waiting for a click would stop the page — including the click being waited
+for — so the tab would hang instead of pausing. Your function gets the answer
+when there is one.</p>
+<h3 id="pause">pause()</h3>
+<p>Freeze the game, leaving the picture up. Timers, gravity, collisions and
+every <code>onUpdate</code> stop; the frame is still drawn.</p>
+<p>Key handlers keep running, which is what lets a pause menu un-pause itself.
+Nothing moves while paused, because everything that moves is scaled by
+<code>dt()</code> and <code>dt()</code> is zero.</p>
+<pre><code class="language-python">@onKeyPress(&quot;escape&quot;)
+def toggle():
+    resume() if isPaused() else pause()
+</code></pre>
+<h3 id="resume">resume()</h3>
+<p>Start the game moving again.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 100)])
+pause()
+resume()
+</code></pre>
+<h3 id="ispaused">isPaused()</h3>
+<p>Is the game frozen right now?</p>
+<pre><code class="language-python">label = add([text(&quot;&quot;), pos(12, 12), fixed()])
+
+@onUpdate
+def show():
+    label.text = &quot;PAUSED&quot; if isPaused() else &quot;&quot;
+</code></pre>
+<h3 id="saytext-link-button">say(text, link, button)</h3>
+<p>Pause and show a message: the text, and one button to close it. Enter or
+space closes it too. <code>link</code> is a <code>(label, url)</code> pair — a real link in a
+browser, and on a desktop it opens your browser.</p>
+<pre><code class="language-python">say(&quot;You found the key!&quot;)
+
+@say(&quot;I built this in 2023.&quot;, link=(&quot;See the repo&quot;, &quot;https://github.com&quot;))
+def after():
+    print(&quot;they closed it&quot;)
+</code></pre>
+<p>A message has nothing to fill in, so your function is called with nothing.
+Give it <code>ask()</code> if you want an answer back.</p>
+<h3 id="askquestion-choices-answer-placeholder">ask(question, choices, answer, placeholder)</h3>
+<p>Pause and ask something. With <code>choices</code> it is multiple choice, and can be
+answered by clicking or by pressing the number beside it. Without <code>choices</code>
+it is a box to type in.</p>
+<p>With <code>answer=</code>, your function is told <strong>True or False</strong>. Without it, your
+function is given <strong>what was picked or typed</strong>.</p>
+<pre><code class="language-python">@ask(&quot;Which keyword starts a loop?&quot;, [&quot;if&quot;, &quot;for&quot;, &quot;def&quot;], answer=1)
+def checked(correct):
+    if correct:
+        print(&quot;open sesame&quot;)
+
+@ask(&quot;What is your name?&quot;)
+def greeted(reply):
+    print(&quot;Hello, &quot; + reply)
+</code></pre>
+<p><code>answer</code> may be the position of the right choice (<code>answer=1</code>) or its text
+(<code>answer="for"</code>). For a typed answer it can be one string or a list of
+acceptable ones, and marking ignores capitals and stray spaces — <code>"  PARIS "</code>
+matches <code>answer="paris"</code>.</p>
+<p><strong>Ask several and they queue up.</strong> Only one panel is on screen at a time, so a
+second <code>say()</code> or <code>ask()</code> opened while one is up waits its turn and appears
+when that one is answered. Writing a quiz as a stack of decorators therefore
+does what it looks like:</p>
+<pre><code class="language-python">@ask(&quot;What is your name?&quot;)
+def greeted(reply):
+    print(&quot;Hello, &quot; + reply)
+
+@ask(&quot;Which keyword starts a loop?&quot;, [&quot;if&quot;, &quot;for&quot;, &quot;def&quot;], answer=1)
+def checked(correct):
+    if correct:
+        print(&quot;open sesame&quot;)
+</code></pre>
+<p>They are asked top to bottom, and the game stays paused until the last one is
+answered. <code>close()</code> dismisses the panel on screen and moves on to the next;
+it does not cancel the ones behind it.</p>
+<h3 id="isshowing">isShowing()</h3>
+<p>Is a panel up right now?</p>
+<pre><code class="language-python">say(&quot;Mind the gap.&quot;)
+if isShowing():
+    pass
+</code></pre>
+<h3 id="close">close()</h3>
+<p>Take the panel away and start the game again. Answering does this for you;
+it is here for a game that needs to close one itself.</p>
+<pre><code class="language-python">say(&quot;This closes itself in a moment.&quot;)
+close()
+</code></pre>
+<hr />
+<h2 id="collisions">Collisions</h2>
+<h3 id="oncollidetag_a-tag_b-fn">onCollide(tag_a, tag_b, fn)</h3>
+<p>Every time anything tagged <code>tag_a</code> touches anything tagged <code>tag_b</code>. For one
+particular object, use <code>obj.onCollide(tag)</code> instead.</p>
+<pre><code class="language-python">add([sprite(&quot;bean&quot;), pos(100, 100), area(), &quot;player&quot;])
+add([sprite(&quot;bean&quot;), pos(110, 100), area(), &quot;coin&quot;])
+
+@onCollide(&quot;player&quot;, &quot;coin&quot;)
+def got(p, c):
+    c.destroy()
+</code></pre>
+<hr />
+<h2 id="camera">Camera</h2>
+<h3 id="setcampospos">setCamPos(pos)</h3>
+<p>Move the camera. Anything with <code>fixed()</code> stays where it is.</p>
+<pre><code class="language-python">setCamPos(vec2(600, 200))
+</code></pre>
+<h3 id="setcamscalen">setCamScale(n)</h3>
+<p>Zoom. Above 1 is closer in. A <code>vec2</code> zooms each axis by a different amount,
+for a letterboxed cutscene or a squash as something lands.</p>
+<pre><code class="language-python">setCamScale(1.5)                # closer in, both ways
+setCamScale(vec2(2, 0.4))       # twice as wide, squashed flat
+</code></pre>
+<h3 id="shaken">shake(n)</h3>
+<p>Shake the camera, once. Settles by itself.</p>
+<pre><code class="language-python">shake(12)
+</code></pre>
+<hr />
+<h2 id="sound">Sound</h2>
+<h3 id="playname-loop-paused-volume">play(name, loop, paused, volume)</h3>
+<p>Play a loaded sound. Returns a handle whose <code>.volume</code> and <code>.paused</code> you can
+change while it plays.</p>
+<pre><code class="language-python">loadSound(&quot;ding&quot;, &quot;sounds/ding.wav&quot;)
+
+s = play(&quot;ding&quot;, volume=0.5)
+s.volume = 0.2
+s.paused = True
+</code></pre>
+<hr />
+<h2 id="time_1">Time</h2>
+<h3 id="waitseconds-fn">wait(seconds, fn)</h3>
+<p>Do something once, later.</p>
+<pre><code class="language-python">@wait(1.5)
+def later():
+    print(&quot;one and a half seconds in&quot;)
+</code></pre>
+<h3 id="loopseconds-fn">loop(seconds, fn)</h3>
+<p>Do something over and over, for ever.</p>
+<pre><code class="language-python">@loop(2)
+def spawn():
+    add([sprite(&quot;bean&quot;), pos(rand(0, width()), 0), area()])
+</code></pre>
+<h3 id="tweenstart-end-duration-setter-ease">tween(start, end, duration, setter, ease)</h3>
+<p>Change a value smoothly over time. <code>setter</code> is called with each step.</p>
+<pre><code class="language-python">box = add([rect(40, 40), pos(50, 50), color(255, 120, 60)])
+
+tween(50, 600, 1.2, lambda x: setattr(box.pos, &quot;x&quot;, x), easings.easeOutQuad)
+</code></pre>
+<h3 id="easings">easings</h3>
+<p>The curves <code>tween</code> can take, as attributes: <code>linear</code>, <code>easeInQuad</code>,
+<code>easeOutQuad</code>, <code>easeInOutQuad</code>, <code>easeOutBounce</code> and the rest.</p>
+<pre><code class="language-python">box = add([circle(12), pos(50, 300)])
+
+tween(50, 700, 1.0, lambda x: setattr(box.pos, &quot;x&quot;, x), easings.easeOutBounce)
+</code></pre>
+<hr />
+<h2 id="scenes">Scenes</h2>
+<h3 id="scenename-fn">scene(name, fn)</h3>
+<p>Define a named screen — a menu, a level, a game-over. The function builds it.</p>
+<pre><code class="language-python">@scene(&quot;menu&quot;)
+def menu():
+    add([text(&quot;Press space&quot;, size=32), pos(200, 280)])
+
+    @onKeyPress(&quot;space&quot;)
+    def start():
+        go(&quot;game&quot;)
+
+@scene(&quot;game&quot;)
+def game():
+    add([sprite(&quot;bean&quot;), pos(100, 100)])
+
+go(&quot;menu&quot;)
+</code></pre>
+<h3 id="goname-args">go(name, *args)</h3>
+<p>Switch to a scene. Everything from the old one is thrown away first —
+objects, handlers and timers — so nothing leaks between screens.</p>
+<pre><code class="language-python">@scene(&quot;level&quot;)
+def level(number):
+    add([text(&quot;Level &quot; + str(number), size=28), pos(20, 20)])
+
+go(&quot;level&quot;, 3)
+</code></pre>
+<hr />
+<h2 id="saving">Saving</h2>
+<p>Kept in a file next to the game on a computer, and in the browser's own
+storage on the web. Only things that can be written down: numbers, text,
+<code>True</code>/<code>False</code>, <code>None</code>, and lists and dicts of those.</p>
+<h3 id="setdatakey-value">setData(key, value)</h3>
+<p>Remember something under a name. Returns <code>True</code> if it was written — a
+locked-down school account is not a reason to crash.</p>
+<pre><code class="language-python">setData(&quot;highscore&quot;, 1200)
+setData(&quot;settings&quot;, {&quot;sound&quot;: True, &quot;level&quot;: 3})
+</code></pre>
+<h3 id="getdatakey-default">getData(key, default)</h3>
+<p>What was remembered, or <code>default</code> if there is nothing.</p>
+<pre><code class="language-python">best = getData(&quot;highscore&quot;, 0)
+</code></pre>
+<hr />
+<h2 id="maths-and-helpers">Maths and helpers</h2>
+<h3 id="vec2x-y">vec2(x, y)</h3>
+<p>A pair of numbers, with the arithmetic that goes with them. <code>vec2(3)</code> means
+<code>(3, 3)</code>; <code>vec2(other)</code> copies.</p>
+<pre><code class="language-python">a = vec2(3, 4)
+b = a.add(vec2(1, 1))
+a.len()
+a.unit()
+a.dist(b)
+a.lerp(b, 0.5)
+</code></pre>
+<h3 id="vec2">Vec2</h3>
+<p>The class itself, for <code>isinstance</code> checks. <code>vec2()</code> is how you make one.</p>
+<pre><code class="language-python">p = vec2(1, 2)
+if isinstance(p, Vec2):
+    pass
+</code></pre>
+<h3 id="randa-b">rand(a, b)</h3>
+<p>A random float. One argument means from zero.</p>
+<pre><code class="language-python">x = rand(0, width())
+</code></pre>
+<h3 id="randia-b">randi(a, b)</h3>
+<p>A random whole number, <code>b</code> not included.</p>
+<pre><code class="language-python">n = randi(1, 7)          # 1 to 6
+</code></pre>
+<h3 id="chooseseq">choose(seq)</h3>
+<p>One item from a list, at random.</p>
+<pre><code class="language-python">name = choose([&quot;bean&quot;, &quot;bean&quot;, &quot;bean&quot;])
+</code></pre>
+<h3 id="chanceprobability">chance(probability)</h3>
+<p><code>True</code> that often. <code>chance(0.2)</code> is true one time in five.</p>
+<pre><code class="language-python">@loop(1)
+def maybe():
+    if chance(0.3):
+        add([sprite(&quot;bean&quot;), pos(rand(0, width()), 0)])
+</code></pre>
+<h3 id="lerpa-b-t">lerp(a, b, t)</h3>
+<p>Blend from <code>a</code> to <code>b</code>. Works on numbers and on <code>vec2</code>.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 100)])
+target = vec2(600, 400)
+
+@onUpdate
+def chase():
+    player.pos = lerp(player.pos, target, 0.05)
+</code></pre>
+<h3 id="clampvalue-low-high">clamp(value, low, high)</h3>
+<p>Keep a number inside a range.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 100)])
+
+@onUpdate
+def keep_in():
+    player.pos.x = clamp(player.pos.x, 0, width())
+</code></pre>
+<h3 id="wavelow-high-t-func">wave(low, high, t, func)</h3>
+<p>A value swinging between two others, for ever. Good for bobbing and pulsing.</p>
+<pre><code class="language-python">cloud = add([sprite(&quot;bean&quot;), pos(200, 100)])
+
+@onUpdate
+def bob():
+    cloud.pos.y = wave(80, 120, time() * 2)
+</code></pre>
+<h3 id="rgbr-g-b">rgb(r, g, b)</h3>
+<p>A color as a plain tuple. One argument means gray, and a hex string works too.</p>
+<pre><code class="language-python">add([rect(80, 80), pos(40, 40), color(rgb(255, 120, 60))])
+</code></pre>
+<h3 id="red">RED</h3>
+<p>The eight named colors are plain <code>(r, g, b)</code> tuples, so they go anywhere a
+color goes: <code>color()</code>, <code>outline()</code>, <code>setBackground()</code> and <code>background=</code>.</p>
+<pre><code class="language-python">add([rect(80, 80), pos(40, 40), color(RED)])
+</code></pre>
+<h3 id="green">GREEN</h3>
+<pre><code class="language-python">add([circle(30), pos(120, 60), color(GREEN)])
+</code></pre>
+<h3 id="blue">BLUE</h3>
+<pre><code class="language-python">setBackground(BLUE)
+</code></pre>
+<h3 id="yellow">YELLOW</h3>
+<pre><code class="language-python">add([text(&quot;score: 0&quot;), pos(20, 20), color(YELLOW)])
+</code></pre>
+<h3 id="magenta">MAGENTA</h3>
+<pre><code class="language-python">add([rect(40, 40), pos(200, 80), color(MAGENTA)])
+</code></pre>
+<h3 id="cyan">CYAN</h3>
+<pre><code class="language-python">add([rect(60, 20), pos(60, 200), outline(3, CYAN)])
+</code></pre>
+<h3 id="white">WHITE</h3>
+<p><code>WHITE</code> is <code>(255, 255, 255)</code>, which is also what <code>color()</code> gives you if you
+pass it nothing at all.</p>
+<pre><code class="language-python">add([text(&quot;ready&quot;), pos(40, 140), color(WHITE)])
+</code></pre>
+<h3 id="black">BLACK</h3>
+<pre><code class="language-python">add([rect(50, 50), pos(150, 150), color(BLACK)])
+</code></pre>
+<h3 id="deg2raddegrees">deg2rad(degrees)</h3>
+<p>Degrees to radians.</p>
+<pre><code class="language-python">r = deg2rad(90)
+</code></pre>
+<h3 id="rad2degradians">rad2deg(radians)</h3>
+<p>Radians to degrees.</p>
+<pre><code class="language-python">d = rad2deg(3.14159)
+</code></pre>
+<hr />
+<h2 id="debugging">Debugging</h2>
+<h3 id="debug">debug</h3>
+<p><code>debug.inspect = True</code> draws every collision box, so you can see why two
+things are not touching. <strong>F1</strong> toggles it while the game runs.</p>
+<pre><code class="language-python">debug.inspect = True
+</code></pre>
+<hr />
+<h2 id="what-you-can-call-on-an-object">What you can call on an object</h2>
+<p><code>add()</code> hands back an object, and what that object can do depends on which
+components it has. These are written <code>obj.name()</code> because you call them on the
+thing, not on their own.</p>
+<h3 id="addcomponents_1">.add([components])</h3>
+<p>Build a game object <strong>inside</strong> this one. A child's <code>pos()</code> is measured from its
+parent rather than from the screen, and it moves when the parent moves.
+Destroying the parent destroys its children too.</p>
+<p>Use it for the things that belong to something: a sword in a hand, a health bar
+over a head, a turret on a tank.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 200), area()])
+
+sword = player.add([rect(6, 30), pos(28, 6), color(200, 200, 220), area()])
+
+player.pos = vec2(400, 350)     # the sword goes too, still at +28, +6
+</code></pre>
+<h3 id="destroy">.destroy()</h3>
+<p>Remove it from the world. Same as <code>destroy(obj)</code>.</p>
+<pre><code class="language-python">coin = add([sprite(&quot;bean&quot;), pos(300, 300), area()])
+coin.destroy()
+</code></pre>
+<h3 id="exists">.exists()</h3>
+<p>Is it still in the world? A handler holding an object that has already been
+destroyed is a common shape for a crash.</p>
+<pre><code class="language-python">coin = add([sprite(&quot;bean&quot;), pos(300, 300)])
+coin.destroy()
+if not coin.exists():
+    pass
+</code></pre>
+<h3 id="hascomp_id">.has(comp_id)</h3>
+<p>Does it have that component?</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(0, 0), area(), body()])
+if player.has(&quot;body&quot;):
+    pass
+</code></pre>
+<h3 id="is_tag">.is_(tag)</h3>
+<p>Does it carry that tag? Named with a trailing underscore because <code>is</code> is a
+Python keyword — one of the few places the API cannot match KAPLAY exactly.</p>
+<pre><code class="language-python">e = add([sprite(&quot;bean&quot;), pos(0, 0), &quot;enemy&quot;])
+e.is_(&quot;enemy&quot;)
+</code></pre>
+<h3 id="usecomp">.use(comp)</h3>
+<p>Add a component after the object has been made.</p>
+<pre><code class="language-python">ghost = add([sprite(&quot;bean&quot;), pos(100, 100)])
+ghost.use(area())
+ghost.use(body())
+</code></pre>
+<h3 id="compcomp_id">.comp(comp_id)</h3>
+<p>The component object itself, when you need at its internals.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(0, 0), area(), body()])
+b = player.comp(&quot;body&quot;)
+</code></pre>
+<h3 id="movedx-dy">.move(dx, dy)</h3>
+<p>Move, in pixels per second — so it is frame-rate independent already and does
+not need <code>dt()</code>. From <code>pos()</code>.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 100)])
+
+@onKeyDown(&quot;right&quot;)
+def go():
+    player.move(320, 0)
+</code></pre>
+<h3 id="movetotarget-speed">.moveTo(target, speed)</h3>
+<p>Head towards a point. Without a speed it arrives at once.</p>
+<pre><code class="language-python">enemy = add([sprite(&quot;bean&quot;), pos(600, 300)])
+
+@onUpdate
+def chase():
+    enemy.moveTo(vec2(100, 300), 80)
+</code></pre>
+<h3 id="jumpforce">.jump(force)</h3>
+<p>Jump, if it has a <code>body()</code>. Uses the component's <code>jumpForce</code> when you give no
+number.</p>
+<pre><code class="language-python">setGravity(2400)
+player = add([sprite(&quot;bean&quot;), pos(100, 100), area(), body(jumpForce=900)])
+
+@onKeyPress(&quot;space&quot;)
+def jump():
+    player.jump()
+</code></pre>
+<h3 id="isgrounded">.isGrounded()</h3>
+<p>Is it standing on something? Check this before jumping, or a player can jump
+in mid-air for ever.</p>
+<pre><code class="language-python">setGravity(2400)
+player = add([sprite(&quot;bean&quot;), pos(100, 100), area(), body()])
+
+@onKeyPress(&quot;space&quot;)
+def jump():
+    if player.isGrounded():
+        player.jump(900)
+</code></pre>
+<h3 id="ongroundfn">.onGround(fn)</h3>
+<p>Fires when it lands.</p>
+<pre><code class="language-python">setGravity(2400)
+player = add([sprite(&quot;bean&quot;), pos(100, 40), area(), body()])
+
+@player.onGround
+def landed():
+    print(&quot;thud&quot;)
+</code></pre>
+<h3 id="oncollidetag-fn">.onCollide(tag, fn)</h3>
+<p>Every time this object touches something with that tag. The other object is
+passed in.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 100), area()])
+add([sprite(&quot;bean&quot;), pos(105, 100), area(), &quot;coin&quot;])
+
+@player.onCollide(&quot;coin&quot;)
+def collect(coin):
+    coin.destroy()
+</code></pre>
+<h3 id="oncollideupdatetag-fn">.onCollideUpdate(tag, fn)</h3>
+<p>Every frame the two are overlapping, rather than once when they meet.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 100), area()])
+
+@player.onCollideUpdate(&quot;lava&quot;)
+def burning(lava):
+    pass
+</code></pre>
+<h3 id="oncollideendtag-fn">.onCollideEnd(tag, fn)</h3>
+<p>Once, when they stop touching.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 100), area()])
+
+@player.onCollideEnd(&quot;water&quot;)
+def out(water):
+    pass
+</code></pre>
+<h3 id="onupdatefn">.onUpdate(fn)</h3>
+<p>Every frame, for this object only.</p>
+<pre><code class="language-python">cloud = add([sprite(&quot;bean&quot;), pos(100, 100)])
+
+@cloud.onUpdate
+def drift():
+    cloud.pos.x += 0.5
+</code></pre>
+<h3 id="onclickfn_1">.onClick(fn)</h3>
+<p>A click on this object. Needs <code>area()</code>.</p>
+<pre><code class="language-python">button = add([rect(120, 40), pos(60, 60), area()])
+
+@button.onClick
+def pressed():
+    print(&quot;clicked&quot;)
+</code></pre>
+<h3 id="ishovering">.isHovering()</h3>
+<p>Is the mouse over it? Needs <code>area()</code>.</p>
+<pre><code class="language-python">button = add([rect(120, 40), pos(60, 60), area()])
+
+@onUpdate
+def highlight():
+    if button.isHovering():
+        button.color = (255, 255, 255)
+</code></pre>
+<h3 id="playname">.play(name)</h3>
+<p>Start a named animation, on an object with an animated <code>sprite()</code>.</p>
+<pre><code class="language-python">loadSprite(&quot;angel&quot;, &quot;dungeon/angel.png&quot;, sliceX=8, anims={
+    &quot;idle&quot;: {&quot;from&quot;: 0, &quot;to&quot;: 3, &quot;speed&quot;: 8, &quot;loop&quot;: True},
+    &quot;run&quot;: {&quot;from&quot;: 4, &quot;to&quot;: 7, &quot;speed&quot;: 10, &quot;loop&quot;: True},
+})
+
+a = add([sprite(&quot;angel&quot;), pos(100, 100)])
+a.play(&quot;run&quot;)
+</code></pre>
+<h3 id="curanim">.curAnim()</h3>
+<p>Which animation is playing, by name.</p>
+<pre><code class="language-python">loadSprite(&quot;angel&quot;, &quot;dungeon/angel.png&quot;, sliceX=8, anims={
+    &quot;idle&quot;: {&quot;from&quot;: 0, &quot;to&quot;: 3, &quot;speed&quot;: 8, &quot;loop&quot;: True},
+})
+
+a = add([sprite(&quot;angel&quot;, anim=&quot;idle&quot;), pos(100, 100)])
+if a.curAnim() == &quot;idle&quot;:
+    pass
+</code></pre>
+<h3 id="size">.size()</h3>
+<p>How big it is on screen, as a <code>vec2</code>. Works for a sprite, a rect, a circle and
+text.</p>
+<pre><code class="language-python">label = add([text(&quot;Score&quot;, size=24), pos(10, 10)])
+w = label.size()
+</code></pre>
+<h3 id="hurtamount">.hurt(amount)</h3>
+<p>Take damage, on an object with <code>health()</code>.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 100), health(3)])
+player.hurt(1)
+</code></pre>
+<h3 id="healamount">.heal(amount)</h3>
+<p>The other way. Never goes above <code>maxHP</code>.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 100), health(3, maxHP=5)])
+player.hurt(2)
+player.heal(1)
+</code></pre>
+<h3 id="isalive">.isAlive()</h3>
+<p>Are its hit points above zero?</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 100), health(1)])
+player.hurt(1)
+alive = player.isAlive()
+</code></pre>
+<h3 id="sethpvalue">.setHP(value)</h3>
+<p>Set hit points outright, without counting as damage or healing.</p>
+<pre><code class="language-python">player = add([sprite(&quot;bean&quot;), pos(100, 100), health(3)])
+player.setHP(2)
+</code></pre>
+<h3 id="onhurtfn-onhealfn-ondeathfn">.onHurt(fn) / .onHeal(fn) / .onDeath(fn)</h3>
+<p>Handlers for the three. <code>onDeath</code> fires <strong>exactly once</strong>, however many things
+land in the same frame, and it does not destroy the object — so it can play an
+animation first.</p>
+<pre><code class="language-python">enemy = add([sprite(&quot;bean&quot;), pos(300, 300), health(2)])
+
+@enemy.onHurt
+def flinch(amount):
+    shake(4)
+
+@enemy.onDeath
+def die():
+    addKaboom(enemy.pos)
+    enemy.destroy()
+
+enemy.hurt(2)
+</code></pre>
+<h3 id="enterstatename">.enterState(name)</h3>
+<p>Switch a <code>state()</code> object to another state.</p>
+<pre><code class="language-python">enemy = add([sprite(&quot;bean&quot;), pos(300, 300), state(&quot;idle&quot;, [&quot;idle&quot;, &quot;chase&quot;])])
+enemy.enterState(&quot;chase&quot;)
+</code></pre>
+<h3 id="onstateentername-fn">.onStateEnter(name, fn)</h3>
+<p>Runs once, when it arrives in that state.</p>
+<pre><code class="language-python">enemy = add([sprite(&quot;bean&quot;), pos(300, 300), state(&quot;idle&quot;, [&quot;idle&quot;, &quot;chase&quot;])])
+
+@enemy.onStateEnter(&quot;chase&quot;)
+def begin():
+    print(&quot;after them&quot;)
+</code></pre>
+<h3 id="onstateupdatename-fn">.onStateUpdate(name, fn)</h3>
+<p>Runs every frame while it is in that state.</p>
+<pre><code class="language-python">enemy = add([sprite(&quot;bean&quot;), pos(300, 300), state(&quot;idle&quot;, [&quot;idle&quot;, &quot;chase&quot;])])
+
+@enemy.onStateUpdate(&quot;chase&quot;)
+def chasing():
+    enemy.pos.x -= 1
+</code></pre>
+<h3 id="rotatebydegrees-rotatetodegrees">.rotateBy(degrees) / .rotateTo(degrees)</h3>
+<p>Turn by an amount, or to an angle. Needs <code>rotate()</code>.</p>
+<pre><code class="language-python">arrow = add([rect(60, 8), pos(400, 300), anchor(&quot;center&quot;), rotate(0)])
+arrow.rotateBy(15)
+arrow.rotateTo(90)
+</code></pre>
+      </article>
+    </div>
+    <aside class="col-lg-4 col-xl-3 toc-col">
+      <nav class="toc" aria-label="On this page">
+        <p class="toc-head">On this page</p>
+      <a class="toc-link toc-d1" href="#api-reference">API reference</a>
+      <a class="toc-link toc-d2" href="#starting-a-game">Starting a game</a>
+      <a class="toc-link toc-d3" href="#kaypywidth-height-background-joystick">kaypy(width, height, background, joystick)</a>
+      <a class="toc-link toc-d3" href="#width">width()</a>
+      <a class="toc-link toc-d3" href="#height">height()</a>
+      <a class="toc-link toc-d3" href="#center">center()</a>
+      <a class="toc-link toc-d3" href="#dt">dt()</a>
+      <a class="toc-link toc-d3" href="#raycastorigin-direction-exclude-max_distance-ignore">raycast(origin, direction, exclude, max_distance, ignore)</a>
+      <a class="toc-link toc-d3" href="#time">time()</a>
+      <a class="toc-link toc-d3" href="#setgravityn">setGravity(n)</a>
+      <a class="toc-link toc-d3" href="#setbackgroundr-g-b">setBackground(r, g, b)</a>
+      <a class="toc-link toc-d2" href="#loading-pictures-and-sounds">Loading pictures and sounds</a>
+      <a class="toc-link toc-d3" href="#loadspritename-path-slicex-slicey-anims">loadSprite(name, path, sliceX, sliceY, anims)</a>
+      <a class="toc-link toc-d3" href="#loadspriteatlaspath-atlas">loadSpriteAtlas(path, atlas)</a>
+      <a class="toc-link toc-d3" href="#loadsoundname-path">loadSound(name, path)</a>
+      <a class="toc-link toc-d2" href="#making-things">Making things</a>
+      <a class="toc-link toc-d3" href="#addcomponents">add(components)</a>
+      <a class="toc-link toc-d3" href="#gettag">get(tag)</a>
+      <a class="toc-link toc-d3" href="#destroyobj">destroy(obj)</a>
+      <a class="toc-link toc-d3" href="#destroyalltag">destroyAll(tag)</a>
+      <a class="toc-link toc-d3" href="#addlevellayout-config">addLevel(layout, config)</a>
+      <a class="toc-link toc-d3" href="#addkaboomposition-scale">addKaboom(position, scale)</a>
+      <a class="toc-link toc-d2" href="#components">Components</a>
+      <a class="toc-link toc-d3" href="#posx-y">pos(x, y)</a>
+      <a class="toc-link toc-d3" href="#spritename-anim-frame">sprite(name, anim, frame)</a>
+      <a class="toc-link toc-d3" href="#rectwidth-height-radius">rect(width, height, radius)</a>
+      <a class="toc-link toc-d3" href="#circleradius">circle(radius)</a>
+      <a class="toc-link toc-d3" href="#texttext_str-size-width">text(text_str, size, width)</a>
+      <a class="toc-link toc-d3" href="#area">area()</a>
+      <a class="toc-link toc-d3" href="#bodyisstatic-mass-jumpforce">body(isStatic, mass, jumpForce)</a>
+      <a class="toc-link toc-d3" href="#anchorvalue">anchor(value)</a>
+      <a class="toc-link toc-d3" href="#scalex-y">scale(x, y)</a>
+      <a class="toc-link toc-d3" href="#rotateangle">rotate(angle)</a>
+      <a class="toc-link toc-d3" href="#colorr-g-b">color(r, g, b)</a>
+      <a class="toc-link toc-d3" href="#opacityn">opacity(n)</a>
+      <a class="toc-link toc-d3" href="#outlinewidth-color">outline(width, color)</a>
+      <a class="toc-link toc-d3" href="#zvalue">z(value)</a>
+      <a class="toc-link toc-d3" href="#fixed">fixed()</a>
+      <a class="toc-link toc-d3" href="#movedirection-speed">move(direction, speed)</a>
+      <a class="toc-link toc-d3" href="#offscreendestroy-distance">offscreen(destroy, distance)</a>
+      <a class="toc-link toc-d3" href="#tileisobstacle">tile(isObstacle)</a>
+      <a class="toc-link toc-d3" href="#statestart-states">state(start, states)</a>
+      <a class="toc-link toc-d3" href="#healthhp-maxhp">health(hp, maxHP)</a>
+      <a class="toc-link toc-d3" href="#followobj-offset-speed">follow(obj, offset, speed)</a>
+      <a class="toc-link toc-d3" href="#sentrycandidates-direction-fieldofview-range-lineofsight-raycastexclude-checkfrequency">sentry(candidates, direction, fieldOfView, range, lineOfSight, raycastExclude, checkFrequency)</a>
+      <a class="toc-link toc-d3" href="#lifespanseconds-fade">lifespan(seconds, fade)</a>
+      <a class="toc-link toc-d2" href="#every-frame">Every frame</a>
+      <a class="toc-link toc-d3" href="#onupdatefn-onupdatetag-fn">onUpdate(fn) / onUpdate(tag, fn)</a>
+      <a class="toc-link toc-d3" href="#run">run()</a>
+      <a class="toc-link toc-d2" href="#keyboard">Keyboard</a>
+      <a class="toc-link toc-d3" href="#onkeydownkey-fn">onKeyDown(key, fn)</a>
+      <a class="toc-link toc-d3" href="#onkeypresskey-fn">onKeyPress(key, fn)</a>
+      <a class="toc-link toc-d3" href="#onkeyreleasekey-fn">onKeyRelease(key, fn)</a>
+      <a class="toc-link toc-d3" href="#iskeydownkey">isKeyDown(key)</a>
+      <a class="toc-link toc-d2" href="#mouse">Mouse</a>
+      <a class="toc-link toc-d3" href="#onclickfn">onClick(fn)</a>
+      <a class="toc-link toc-d3" href="#onmousepressbutton-fn">onMousePress(button, fn)</a>
+      <a class="toc-link toc-d3" href="#onmousereleasebutton-fn">onMouseRelease(button, fn)</a>
+      <a class="toc-link toc-d3" href="#onmousedownbutton-fn">onMouseDown(button, fn)</a>
+      <a class="toc-link toc-d3" href="#onmousemovefn">onMouseMove(fn)</a>
+      <a class="toc-link toc-d3" href="#ismousedownbutton">isMouseDown(button)</a>
+      <a class="toc-link toc-d3" href="#ismousepressedbutton">isMousePressed(button)</a>
+      <a class="toc-link toc-d3" href="#ismousereleasedbutton">isMouseReleased(button)</a>
+      <a class="toc-link toc-d3" href="#ismousemoved">isMouseMoved()</a>
+      <a class="toc-link toc-d3" href="#mousepos">mousePos()</a>
+      <a class="toc-link toc-d3" href="#mousedeltapos">mouseDeltaPos()</a>
+      <a class="toc-link toc-d3" href="#toworldpos">toWorld(pos)</a>
+      <a class="toc-link toc-d2" href="#drawing-straight-to-the-screen">Drawing straight to the screen</a>
+      <a class="toc-link toc-d3" href="#ondrawfn">onDraw(fn)</a>
+      <a class="toc-link toc-d3" href="#drawrectpos-width-height-color">drawRect(pos, width, height, color, ...)</a>
+      <a class="toc-link toc-d3" href="#drawcirclepos-radius-color">drawCircle(pos, radius, color, ...)</a>
+      <a class="toc-link toc-d3" href="#drawlinep1-p2-width-color">drawLine(p1, p2, width, color, ...)</a>
+      <a class="toc-link toc-d3" href="#drawlinespoints-width-color-close">drawLines(points, width, color, close, ...)</a>
+      <a class="toc-link toc-d3" href="#drawtexttext-pos-size-color">drawText(text, pos, size, color, ...)</a>
+      <a class="toc-link toc-d3" href="#drawspritesprite-pos-frame">drawSprite(sprite, pos, frame, ...)</a>
+      <a class="toc-link toc-d2" href="#pausing-and-asking-a-question">Pausing, and asking a question</a>
+      <a class="toc-link toc-d3" href="#pause">pause()</a>
+      <a class="toc-link toc-d3" href="#resume">resume()</a>
+      <a class="toc-link toc-d3" href="#ispaused">isPaused()</a>
+      <a class="toc-link toc-d3" href="#saytext-link-button">say(text, link, button)</a>
+      <a class="toc-link toc-d3" href="#askquestion-choices-answer-placeholder">ask(question, choices, answer, placeholder)</a>
+      <a class="toc-link toc-d3" href="#isshowing">isShowing()</a>
+      <a class="toc-link toc-d3" href="#close">close()</a>
+      <a class="toc-link toc-d2" href="#collisions">Collisions</a>
+      <a class="toc-link toc-d3" href="#oncollidetag_a-tag_b-fn">onCollide(tag_a, tag_b, fn)</a>
+      <a class="toc-link toc-d2" href="#camera">Camera</a>
+      <a class="toc-link toc-d3" href="#setcampospos">setCamPos(pos)</a>
+      <a class="toc-link toc-d3" href="#setcamscalen">setCamScale(n)</a>
+      <a class="toc-link toc-d3" href="#shaken">shake(n)</a>
+      <a class="toc-link toc-d2" href="#sound">Sound</a>
+      <a class="toc-link toc-d3" href="#playname-loop-paused-volume">play(name, loop, paused, volume)</a>
+      <a class="toc-link toc-d2" href="#time_1">Time</a>
+      <a class="toc-link toc-d3" href="#waitseconds-fn">wait(seconds, fn)</a>
+      <a class="toc-link toc-d3" href="#loopseconds-fn">loop(seconds, fn)</a>
+      <a class="toc-link toc-d3" href="#tweenstart-end-duration-setter-ease">tween(start, end, duration, setter, ease)</a>
+      <a class="toc-link toc-d3" href="#easings">easings</a>
+      <a class="toc-link toc-d2" href="#scenes">Scenes</a>
+      <a class="toc-link toc-d3" href="#scenename-fn">scene(name, fn)</a>
+      <a class="toc-link toc-d3" href="#goname-args">go(name, *args)</a>
+      <a class="toc-link toc-d2" href="#saving">Saving</a>
+      <a class="toc-link toc-d3" href="#setdatakey-value">setData(key, value)</a>
+      <a class="toc-link toc-d3" href="#getdatakey-default">getData(key, default)</a>
+      <a class="toc-link toc-d2" href="#maths-and-helpers">Maths and helpers</a>
+      <a class="toc-link toc-d3" href="#vec2x-y">vec2(x, y)</a>
+      <a class="toc-link toc-d3" href="#vec2">Vec2</a>
+      <a class="toc-link toc-d3" href="#randa-b">rand(a, b)</a>
+      <a class="toc-link toc-d3" href="#randia-b">randi(a, b)</a>
+      <a class="toc-link toc-d3" href="#chooseseq">choose(seq)</a>
+      <a class="toc-link toc-d3" href="#chanceprobability">chance(probability)</a>
+      <a class="toc-link toc-d3" href="#lerpa-b-t">lerp(a, b, t)</a>
+      <a class="toc-link toc-d3" href="#clampvalue-low-high">clamp(value, low, high)</a>
+      <a class="toc-link toc-d3" href="#wavelow-high-t-func">wave(low, high, t, func)</a>
+      <a class="toc-link toc-d3" href="#rgbr-g-b">rgb(r, g, b)</a>
+      <a class="toc-link toc-d3" href="#red">RED</a>
+      <a class="toc-link toc-d3" href="#green">GREEN</a>
+      <a class="toc-link toc-d3" href="#blue">BLUE</a>
+      <a class="toc-link toc-d3" href="#yellow">YELLOW</a>
+      <a class="toc-link toc-d3" href="#magenta">MAGENTA</a>
+      <a class="toc-link toc-d3" href="#cyan">CYAN</a>
+      <a class="toc-link toc-d3" href="#white">WHITE</a>
+      <a class="toc-link toc-d3" href="#black">BLACK</a>
+      <a class="toc-link toc-d3" href="#deg2raddegrees">deg2rad(degrees)</a>
+      <a class="toc-link toc-d3" href="#rad2degradians">rad2deg(radians)</a>
+      <a class="toc-link toc-d2" href="#debugging">Debugging</a>
+      <a class="toc-link toc-d3" href="#debug">debug</a>
+      <a class="toc-link toc-d2" href="#what-you-can-call-on-an-object">What you can call on an object</a>
+      <a class="toc-link toc-d3" href="#addcomponents_1">.add([components])</a>
+      <a class="toc-link toc-d3" href="#destroy">.destroy()</a>
+      <a class="toc-link toc-d3" href="#exists">.exists()</a>
+      <a class="toc-link toc-d3" href="#hascomp_id">.has(comp_id)</a>
+      <a class="toc-link toc-d3" href="#is_tag">.is_(tag)</a>
+      <a class="toc-link toc-d3" href="#usecomp">.use(comp)</a>
+      <a class="toc-link toc-d3" href="#compcomp_id">.comp(comp_id)</a>
+      <a class="toc-link toc-d3" href="#movedx-dy">.move(dx, dy)</a>
+      <a class="toc-link toc-d3" href="#movetotarget-speed">.moveTo(target, speed)</a>
+      <a class="toc-link toc-d3" href="#jumpforce">.jump(force)</a>
+      <a class="toc-link toc-d3" href="#isgrounded">.isGrounded()</a>
+      <a class="toc-link toc-d3" href="#ongroundfn">.onGround(fn)</a>
+      <a class="toc-link toc-d3" href="#oncollidetag-fn">.onCollide(tag, fn)</a>
+      <a class="toc-link toc-d3" href="#oncollideupdatetag-fn">.onCollideUpdate(tag, fn)</a>
+      <a class="toc-link toc-d3" href="#oncollideendtag-fn">.onCollideEnd(tag, fn)</a>
+      <a class="toc-link toc-d3" href="#onupdatefn">.onUpdate(fn)</a>
+      <a class="toc-link toc-d3" href="#onclickfn_1">.onClick(fn)</a>
+      <a class="toc-link toc-d3" href="#ishovering">.isHovering()</a>
+      <a class="toc-link toc-d3" href="#playname">.play(name)</a>
+      <a class="toc-link toc-d3" href="#curanim">.curAnim()</a>
+      <a class="toc-link toc-d3" href="#size">.size()</a>
+      <a class="toc-link toc-d3" href="#hurtamount">.hurt(amount)</a>
+      <a class="toc-link toc-d3" href="#healamount">.heal(amount)</a>
+      <a class="toc-link toc-d3" href="#isalive">.isAlive()</a>
+      <a class="toc-link toc-d3" href="#sethpvalue">.setHP(value)</a>
+      <a class="toc-link toc-d3" href="#onhurtfn-onhealfn-ondeathfn">.onHurt(fn) / .onHeal(fn) / .onDeath(fn)</a>
+      <a class="toc-link toc-d3" href="#enterstatename">.enterState(name)</a>
+      <a class="toc-link toc-d3" href="#onstateentername-fn">.onStateEnter(name, fn)</a>
+      <a class="toc-link toc-d3" href="#onstateupdatename-fn">.onStateUpdate(name, fn)</a>
+      <a class="toc-link toc-d3" href="#rotatebydegrees-rotatetodegrees">.rotateBy(degrees) / .rotateTo(degrees)</a>
+      </nav>
+    </aside>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
+<script src="../static/site.js"></script>
+
+</body>
+</html>

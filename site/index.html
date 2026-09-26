@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KayPy — a game engine for learning Python</title>
+<meta name="description" content="A game engine for learning Python — build a game out of components, run it in the browser, share it as one file.">
+<meta property="og:title" content="KayPy">
+<meta property="og:description" content="A game engine for learning Python — build a game out of components, run it in the browser, share it as one file.">
+<meta property="og:image" content="./static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="./static/favicon.png">
+<link rel="apple-touch-icon" href="./static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="./static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="./">
+      <img src="./static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="./" aria-current="page">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="./start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="./learn/">All three lessons</a></li><li><a class="dropdown-item" href="./learn/conditionals/">1 — Conditionals</a></li><li><a class="dropdown-item" href="./learn/loops/">2 — Loops</a></li><li><a class="dropdown-item" href="./learn/lists/">3 — Lists</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="./guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="./api/">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="./tutorials/">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="./games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="./play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl pt-4 pt-lg-5">
+  <div class="hero text-center">
+    <img src="./static/creature.png" alt="" width="300" height="317"
+         class="img-fluid hero-creature">
+    <p class="wordmark">KayPy</p>
+    <h1 class="display-5 fw-semibold">Write a game in Python.</h1>
+    <p class="d-flex flex-wrap gap-2 justify-content-center">
+      <a class="btn btn-kaypy btn-lg" href="./play/">Open the playground</a>
+      <a class="btn btn-outline-kaypy btn-lg" href="./start/">Get started</a>
+    </p>
+  </div>
+</div>
+
+<div class="container-xl pb-4 pb-lg-5">
+  <div class="row justify-content-center">
+    <div class="col-xl-10">
+      <article class="prose">
+
+
+  <p class="demo text-center">
+    <img src="./static/demo.gif" width="980" height="420" class="img-fluid rounded shadow-sm" loading="lazy"
+         alt="Sixteen lines of Python on the left; on the right a character
+              falls, lands on the ground and jumps.">
+  </p>
+
+  <p>
+    That is a whole game — a character that falls, lands and jumps. There is no
+    <code>run()</code> call and no main loop to write. The loop starts on its own
+    once your file has been read, so the first thing a beginner writes is the
+    part they came for.
+  </p>
+
+  <div class="row g-4 cards">
+    <div class="col-sm-6 col-lg-3"><div class="card h-100"><div class="card-body">
+      <h3 class="h5 card-title">Nothing to install, to start</h3>
+      <p>The playground runs Python in your browser. No account, no setup, no
+      download — write a game and press Run. <a href="./play/">Try it →</a></p>
+    </div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card h-100"><div class="card-body">
+      <h3 class="h5 card-title">Games are built from parts</h3>
+      <p>A player is a sprite, plus a position, plus a body. Add one component,
+      get one behavior. <a href="#components">How that works →</a></p>
+    </div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card h-100"><div class="card-body">
+      <h3 class="h5 card-title">One file, one web page</h3>
+      <p><code>kaypy web game.py</code> builds a single HTML file. Double-click it
+      to play; upload the same file to itch.io. <a href="./start/">How →</a></p>
+    </div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card h-100"><div class="card-body">
+      <h3 class="h5 card-title">Written for a classroom</h3>
+      <p>Thirteen lessons from an empty file to enemy AI, and error messages
+      aimed at somebody three weeks into programming.
+      <a href="./guide/">The guide →</a></p>
+    </div></div></div>
+  </div>
+
+  <p class="dim">
+    Teaching with this, or stuck on something? There is a
+    <a href="https://discord.gg/sVXnsDZNm">Discord</a>.
+  </p>
+
+  <h2 id="components">Games are built from parts</h2>
+
+  <p>
+    KayPy is <a href="https://pyga.me">pygame-ce</a> underneath, all the way
+    down. What it adds is a shape for a game. Instead of one <code>while
+    True</code> loop where the whole game happens at once, you describe an object
+    by listing what it <em>has</em>:
+  </p>
+
+  <pre><code class="language-python">player = add([
+      sprite("bean"),  # it looks like this
+      pos(100, 200),   # it is here
+      area(),          # it has a collision box
+      body(),          # gravity, jumping, isGrounded()
+      "player",        # a tag, for finding it later
+  ])
+  </code></pre>
+
+  <p>
+    Each line does one thing, so a student can add one line and watch one thing
+    change. Delete <code>body()</code> and the player floats. Add
+    <code>health(3)</code> and it can be hurt. Nothing else in the file has to be
+    rewritten to make room, which is the part that usually ends a beginner's
+    first game.
+  </p>
+
+  <p>
+    Collisions read the same way — say what two tags do when they touch, and the
+    engine watches for it:
+  </p>
+
+  <pre><code class="language-python">@player.onCollide("coin")
+  def collect(coin):
+      coin.destroy()
+      play("score")
+  </code></pre>
+
+  <h2>Errors in words, not stack traces</h2>
+
+  <p>
+    When a game crashes, KayPy trims the traceback down to the line in
+    <em>your</em> file and says what went wrong in a sentence. A beginner who
+    misspells a sprite name gets told they misspelled a sprite name — not forty
+    lines of engine internals with their own mistake buried in the middle.
+  </p>
+
+  <h2>Take it home</h2>
+
+  <p>
+    A game written in the playground runs unchanged on your own computer:
+  </p>
+
+  <pre><code class="language-python">pip install kaypy
+  python game.py
+  </code></pre>
+
+  <p>
+    and <code>kaypy new mygame</code> sets up a folder with the sprites already
+    in it. Nothing you write here is stuck here — not in this browser, not on
+    this site, not in a format only we can open.
+  </p>
+
+  <h2>Where the API comes from</h2>
+
+  <p>
+    The function names follow <a href="https://kaplayjs.com">KAPLAY</a>, a
+    JavaScript game engine with unusually good documentation. You do not need to
+    know it or ever touch JavaScript. It means only that when you search for how
+    to do something, there are examples to find — and they translate almost line
+    for line into Python.
+  </p>
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
+<script src="./static/site.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 3 — Lists · KayPy</title>
+<meta name="description" content="Learn Python with KayPy: lesson 3, lists.">
+<meta property="og:title" content="Lesson 3 — Lists · KayPy">
+<meta property="og:description" content="Learn Python with KayPy: lesson 3, lists.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All three lessons</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">1 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">2 — Loops</a></li><li><a class="dropdown-item active" href="../../learn/lists/">3 — Lists</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../tutorials/">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row gx-xl-5">
+    <div class="col-lg-8 col-xl-9">
+      <article class="prose">
+<h1 id="lesson-3-lists">Lesson 3 — Lists</h1>
+<p><strong>By the end of this you can:</strong> keep many values in one name, reach any of
+them by number, add and remove items while the program runs, ask whether
+something is in there, and loop over the whole thing.</p>
+<h2 id="the-problem-lists-solve">The problem lists solve</h2>
+<p>You already know how to hold one thing:</p>
+<pre><code class="language-python">enemy = &quot;ghosty&quot;
+print(enemy)
+</code></pre>
+<pre><code>ghosty
+</code></pre>
+<p>Now hold three. The obvious way is three variables:</p>
+<pre><code class="language-python">enemy1 = &quot;ghosty&quot;
+enemy2 = &quot;bobo&quot;
+enemy3 = &quot;gigagantrum&quot;
+print(enemy1, enemy2, enemy3)
+</code></pre>
+<pre><code>ghosty bobo gigagantrum
+</code></pre>
+<p>That works right up until it doesn't. How do you spawn <em>all</em> of them? Three
+lines. How about twenty enemies? Twenty variables and twenty lines. And you
+cannot loop over them, because <code>enemy1</code> and <code>enemy2</code> are unrelated names that
+happen to look similar — Python sees no connection at all.</p>
+<p>A <strong>list</strong> is one name holding many values, in order:</p>
+<pre><code class="language-python">enemies = [&quot;ghosty&quot;, &quot;bobo&quot;, &quot;gigagantrum&quot;]
+print(enemies)
+print(len(enemies))
+</code></pre>
+<pre><code>['ghosty', 'bobo', 'gigagantrum']
+3
+</code></pre>
+<p>Square brackets, commas between the items. <code>len()</code> tells you how many are in
+there.</p>
+<h2 id="reaching-one-item">Reaching one item</h2>
+<p>Each item has a position number, and you get at it with square brackets:</p>
+<pre><code class="language-python">enemies = [&quot;ghosty&quot;, &quot;bobo&quot;, &quot;gigagantrum&quot;]
+
+print(enemies[0])
+print(enemies[1])
+print(enemies[2])
+</code></pre>
+<pre><code>ghosty
+bobo
+gigagantrum
+</code></pre>
+<p><strong>Counting starts at 0.</strong> The first item is <code>enemies[0]</code>, not <code>enemies[1]</code>.
+This feels wrong for about a week and then never bothers you again. It is the
+same 0 that <code>range(5)</code> starts at, which is not a coincidence.</p>
+<p>So the last item of a three-item list is at index 2 — one less than the
+length. Asking for <code>enemies[3]</code> does not give you nothing; it stops the
+program with <code>IndexError: list index out of range</code>.</p>
+<p>There is a shortcut for counting from the end:</p>
+<pre><code class="language-python">enemies = [&quot;ghosty&quot;, &quot;bobo&quot;, &quot;gigagantrum&quot;]
+
+print(enemies[-1])
+print(enemies[-2])
+</code></pre>
+<pre><code>gigagantrum
+bobo
+</code></pre>
+<p><code>-1</code> is the last item, whatever the length is. That is worth knowing, because
+<code>enemies[len(enemies) - 1]</code> is the same thing written the long way.</p>
+<h2 id="changing-a-list-while-it-runs">Changing a list while it runs</h2>
+<p>A list is not fixed once you make it. This is the part that makes it useful in
+a game:</p>
+<pre><code class="language-python">bag = [&quot;coin&quot;, &quot;key&quot;]
+
+bag.append(&quot;bomb&quot;)
+print(bag)
+
+bag.remove(&quot;key&quot;)
+print(bag)
+
+print(len(bag))
+</code></pre>
+<pre><code>['coin', 'key', 'bomb']
+['coin', 'bomb']
+2
+</code></pre>
+<ul>
+<li><code>append()</code> adds one item <strong>to the end</strong>.</li>
+<li><code>remove()</code> takes out the <strong>first</strong> item matching what you name.</li>
+<li><code>len()</code> keeps up on its own — you never maintain a count yourself.</li>
+</ul>
+<p>You can also change an item in place, by assigning to its position:</p>
+<pre><code class="language-python">bag = [&quot;coin&quot;, &quot;key&quot;, &quot;bomb&quot;]
+bag[1] = &quot;lamp&quot;
+print(bag)
+</code></pre>
+<pre><code>['coin', 'lamp', 'bomb']
+</code></pre>
+<p><strong><code>remove()</code> on something that is not there is an error</strong>, so it is usually
+paired with a check — which is the next thing.</p>
+<h2 id="asking-what-is-in-there">Asking what is in there</h2>
+<p><code>in</code> answers a yes-or-no question about a list, and gives you back <code>True</code> or
+<code>False</code> — so it goes straight into an <code>if</code>:</p>
+<pre><code class="language-python">bag = [&quot;coin&quot;, &quot;key&quot;]
+
+print(&quot;key&quot; in bag)
+print(&quot;bomb&quot; in bag)
+
+if &quot;key&quot; in bag:
+    print(&quot;The door opens&quot;)
+else:
+    print(&quot;The door is locked&quot;)
+</code></pre>
+<pre><code>True
+False
+The door opens
+</code></pre>
+<p>This is the safe way to use <code>remove()</code>:</p>
+<pre><code class="language-python">bag = [&quot;coin&quot;, &quot;key&quot;]
+
+if &quot;bomb&quot; in bag:
+    bag.remove(&quot;bomb&quot;)
+
+print(bag)
+</code></pre>
+<pre><code>['coin', 'key']
+</code></pre>
+<p>Nothing was removed and nothing crashed. Without the <code>if</code>, that <code>remove()</code>
+would have stopped the program.</p>
+<h2 id="looping-over-a-list">Looping over a list</h2>
+<p>This is where lists and loops meet, and it is the reason both lessons exist:</p>
+<pre><code class="language-python">enemies = [&quot;ghosty&quot;, &quot;bobo&quot;, &quot;gigagantrum&quot;]
+
+for enemy in enemies:
+    print(&quot;Spawning&quot;, enemy)
+</code></pre>
+<pre><code>Spawning ghosty
+Spawning bobo
+Spawning gigagantrum
+</code></pre>
+<p>Read it out loud: <em>for each enemy in enemies</em>. The loop variable holds one
+item at a time, and the loop runs exactly as many times as there are items —
+you never write the number 3 anywhere. Add a fourth enemy to the list and the
+loop handles it with no other change. That is the whole point.</p>
+<p>You do not usually need <code>range()</code> and index numbers to walk a list. But when
+you want the position as well as the item, <code>enumerate()</code> gives you both:</p>
+<pre><code class="language-python">scores = [120, 340, 90]
+
+for i, score in enumerate(scores):
+    print(i, score)
+</code></pre>
+<pre><code>0 120
+1 340
+2 90
+</code></pre>
+<h2 id="a-few-more-things-lists-do">A few more things lists do</h2>
+<pre><code class="language-python">scores = [120, 340, 90, 500]
+
+print(sum(scores))
+print(max(scores))
+print(min(scores))
+print(sorted(scores))
+print(scores)
+</code></pre>
+<pre><code>1050
+500
+90
+[90, 120, 340, 500]
+[120, 340, 90, 500]
+</code></pre>
+<p>Look at the last two lines. <code>sorted()</code> hands back a <strong>new</strong> sorted list and
+leaves the original alone — which is why <code>scores</code> still prints in its old
+order underneath. If you want to sort the list itself, <code>scores.sort()</code> does
+that and returns nothing.</p>
+<p>And you can take a slice — a piece of a list — with two numbers:</p>
+<pre><code class="language-python">scores = [500, 340, 120, 90, 10]
+
+print(scores[0:3])
+print(scores[:3])
+print(scores[2:])
+</code></pre>
+<pre><code>[500, 340, 120]
+[500, 340, 120]
+[120, 90, 10]
+</code></pre>
+<p>The same "up to but not including" rule as <code>range()</code>: <code>scores[0:3]</code> gives you
+items 0, 1 and 2, and stops before 3. Leaving a number out means "from the
+start" or "to the end". <code>scores[:3]</code> is how you take a top three.</p>
+<h2 id="now-put-it-on-the-screen">Now put it on the screen</h2>
+<p>One list, one loop, a row of enemies:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+loadSprite(&quot;ghosty&quot;, &quot;images/ghosty.png&quot;)
+loadSprite(&quot;bobo&quot;, &quot;images/bobo.png&quot;)
+loadSprite(&quot;gigagantrum&quot;, &quot;images/gigagantrum.png&quot;)
+
+wave = [&quot;ghosty&quot;, &quot;bobo&quot;, &quot;ghosty&quot;, &quot;gigagantrum&quot;, &quot;bobo&quot;]
+
+for i, name in enumerate(wave):
+    add([sprite(name), pos(100 + i * 130, 260), area(), &quot;enemy&quot;])
+</code></pre>
+<p>Five enemies, spaced out, and the list decides which is which. <code>i</code> does the
+spacing exactly as it did in the loops lesson; <code>name</code> picks the sprite.</p>
+<blockquote>
+<p><strong>Change the list.</strong> Add <code>"ghosty"</code> to the end and run it — six enemies, no
+other edit. Put the same name in five times for a wave of one kind. Delete
+two and the row gets shorter. You are editing the <em>data</em>, not the code, and
+that is the difference a list makes.</p>
+</blockquote>
+<h2 id="building-a-list-as-the-game-runs">Building a list as the game runs</h2>
+<p>Lists are most useful when they grow. Here every object that gets made is kept
+so you can do something to all of them later:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+
+coins = []
+
+for i in range(6):
+    coin = add([rect(20, 20), pos(80 + i * 100, 300), color(YELLOW)])
+    coins.append(coin)
+
+print(&quot;made&quot;, len(coins), &quot;coins&quot;)
+
+for coin in coins:
+    coin.pos.y = coin.pos.y - 40
+</code></pre>
+<pre><code>made 6 coins
+</code></pre>
+<p>The first loop makes them and remembers each one. The second loop moves every
+one of them 40 pixels up. Without the list you would have six variables and
+no way to talk about all of them at once.</p>
+<h2 id="watch-for">Watch for</h2>
+<p><strong>Counting starts at 0.</strong> The last item is at <code>len(thing) - 1</code>, or just <code>-1</code>.</p>
+<p><strong><code>IndexError: list index out of range</code></strong> means you asked for a position that
+is not there. Usually it is an off-by-one — check whether you meant <code>- 1</code>.</p>
+<p><strong><code>append()</code> takes one item.</strong> <code>bag.append("coin", "key")</code> is an error. Two
+items means two calls, or <code>bag.extend(["coin", "key"])</code>.</p>
+<p><strong><code>remove()</code> needs the item to be there</strong>, so check with <code>in</code> first.</p>
+<p><strong><code>sorted()</code> gives a new list; <code>.sort()</code> changes the one you have</strong> and returns
+<code>None</code>. Writing <code>scores = scores.sort()</code> throws your list away and leaves you
+with <code>None</code> — and nothing complains until you try to use it.</p>
+<p><strong>An empty list is <code>[]</code></strong>, and <code>if bag:</code> is False when it is empty. You do not
+need <code>if len(bag) &gt; 0:</code>.</p>
+<h2 id="classwork-1-the-inventory">Classwork 1 — The Inventory</h2>
+<p>A bag you can put things in and take things out of.</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSprite(&quot;key&quot;, &quot;images/key.png&quot;)
+loadSprite(&quot;lamp&quot;, &quot;images/lamp.png&quot;)
+
+bag = [&quot;coin&quot;, &quot;key&quot;]
+
+add([text(&quot;Bag:&quot;, size=28), pos(40, 40)])
+</code></pre>
+<p>One step at a time, running after each:</p>
+<ol>
+<li>Loop over <code>bag</code> and draw each item as a sprite in a row starting at
+   <code>pos(40, 100)</code>, 90 pixels apart. Use <code>enumerate()</code> for the spacing.</li>
+<li>Under the row, a label showing how many things you are carrying — use
+   <code>len(bag)</code>, not a number you typed.</li>
+<li><code>bag.append("lamp")</code> <strong>before</strong> the drawing loop. Run it. Three sprites and
+   the count says 3, and you did not touch the drawing code.</li>
+<li>A <code>CAPACITY = 3</code> limit: only append when <code>len(bag) &lt; CAPACITY</code>, otherwise
+   print <code>Bag is full</code> to the console.</li>
+<li>Remove the key — safely. Check <code>if "key" in bag:</code> first, then
+   <code>bag.remove("key")</code>.</li>
+</ol>
+<p><strong>Stretch:</strong> draw the bag sorted alphabetically without changing the order you
+actually carry things in. Which of <code>sorted(bag)</code> and <code>bag.sort()</code> do you want,
+and why does it matter here?</p>
+<h2 id="classwork-2-the-wave-spawner">Classwork 2 — The Wave Spawner</h2>
+<p>The list decides the wave. Each wave is harder than the last because the list
+gets longer.</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+loadSprite(&quot;ghosty&quot;, &quot;images/ghosty.png&quot;)
+loadSprite(&quot;bobo&quot;, &quot;images/bobo.png&quot;)
+loadSprite(&quot;gigagantrum&quot;, &quot;images/gigagantrum.png&quot;)
+
+wave = [&quot;ghosty&quot;, &quot;ghosty&quot;]
+wave_number = 1
+</code></pre>
+<ol>
+<li>Draw the wave: loop over it with <code>enumerate()</code> and put each sprite on
+   screen, spaced across the window.</li>
+<li>A label at the top showing the wave number and how many enemies are in it.</li>
+<li>Make wave 2: <code>wave.append("bobo")</code> and add 1 to <code>wave_number</code>, then run it
+   again. Three enemies.</li>
+<li>Make wave 3 harder still by appending <code>"gigagantrum"</code>. Four enemies, and
+   each wave is one line of change.</li>
+<li>Use a conditional from Lesson 1: if the wave has more than three enemies,
+   label it <code>DANGER</code> — otherwise <code>Clear</code>.</li>
+</ol>
+<p><strong>Stretch:</strong> space the enemies using <code>width()</code> divided by <code>len(wave)</code> instead
+of a fixed 130 pixels, so the row always fits no matter how long the list gets.
+Add six more enemies and check that nothing runs off the edge.</p>
+<h2 id="check-yourself">Check yourself</h2>
+<p>What does this print?</p>
+<pre><code class="language-python">loot = [&quot;coin&quot;, &quot;key&quot;, &quot;coin&quot;]
+
+loot.remove(&quot;coin&quot;)
+loot.append(&quot;gem&quot;)
+
+print(loot)
+print(len(loot))
+print(&quot;coin&quot; in loot)
+</code></pre>
+<pre><code>['key', 'coin', 'gem']
+3
+True
+</code></pre>
+<details>
+<summary>Why is there still a coin?</summary>
+<p><code>remove()</code> takes out the <strong>first</strong> match and then stops. There were two coins,
+so one of them is still there — at position 1, because everything after the
+removed item shifts down to fill the gap.</p>
+<p>That is why <code>"coin" in loot</code> is still <code>True</code>, and why <code>remove()</code> in a loop
+catches people out: it does not remove <em>all</em> of something, only the next one
+it finds.</p>
+</details>
+<hr />
+<hr />
+<p><a href="../loops/">← Lesson 2 — Loops</a> · <a href="../">All three lessons</a></p>
+      </article>
+    </div>
+    <aside class="col-lg-4 col-xl-3 toc-col">
+      <nav class="toc" aria-label="On this page">
+        <p class="toc-head">On this page</p>
+      <a class="toc-link toc-d1" href="#lesson-3-lists">Lesson 3 — Lists</a>
+      <a class="toc-link toc-d2" href="#the-problem-lists-solve">The problem lists solve</a>
+      <a class="toc-link toc-d2" href="#reaching-one-item">Reaching one item</a>
+      <a class="toc-link toc-d2" href="#changing-a-list-while-it-runs">Changing a list while it runs</a>
+      <a class="toc-link toc-d2" href="#asking-what-is-in-there">Asking what is in there</a>
+      <a class="toc-link toc-d2" href="#looping-over-a-list">Looping over a list</a>
+      <a class="toc-link toc-d2" href="#a-few-more-things-lists-do">A few more things lists do</a>
+      <a class="toc-link toc-d2" href="#now-put-it-on-the-screen">Now put it on the screen</a>
+      <a class="toc-link toc-d2" href="#building-a-list-as-the-game-runs">Building a list as the game runs</a>
+      <a class="toc-link toc-d2" href="#watch-for">Watch for</a>
+      <a class="toc-link toc-d2" href="#classwork-1-the-inventory">Classwork 1 — The Inventory</a>
+      <a class="toc-link toc-d2" href="#classwork-2-the-wave-spawner">Classwork 2 — The Wave Spawner</a>
+      <a class="toc-link toc-d2" href="#check-yourself">Check yourself</a>
+      </nav>
+    </aside>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>

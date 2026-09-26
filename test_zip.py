@@ -29,8 +29,9 @@ import tempfile
 import zipfile
 
 HERE = pathlib.Path(__file__).resolve().parent
-DIST = HERE / "dist"
-PLAY = HERE / "play"
+SITE = HERE / "site"
+DIST = SITE
+PLAY = SITE / "play"
 
 results = []
 
@@ -47,7 +48,7 @@ def done():
     sys.exit(1 if bad else 0)
 
 
-page = (PLAY / "play.html").read_text()
+page = (PLAY / "index.html").read_text()
 script = (PLAY / "play.js").read_text()
 
 check("the page loads the zip writer", './zip.js"' in page)
