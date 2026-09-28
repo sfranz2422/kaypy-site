@@ -63,6 +63,7 @@ PAGES = [
     "guide/index.html",
     "api/index.html",
     "tutorials/index.html",
+    "tutorials/dungeon-dash/index.html",
     "games/index.html",
     "play/index.html",
     "404.html",

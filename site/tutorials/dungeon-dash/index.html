@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Dungeon Dash · KayPy</title>
+<meta name="description" content="How Dungeon Dash was built, a step at a time: levels drawn as pictures, a knight, coins, a door that waits, and the bugs found along the way.">
+<meta property="og:title" content="Building Dungeon Dash · KayPy">
+<meta property="og:description" content="How Dungeon Dash was built, a step at a time.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All three lessons</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">1 — Conditionals</a></li><li><a class="dropdown-item active" href="../../learn/loops/">2 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">3 — Lists</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../../tutorials/" aria-current="page">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <article class="prose">
+<h1 id="building-dungeon-dash">Building Dungeon Dash</h1>
+
+<p><a href="../../static/games/dungeon_dash/">Play it first →</a> Five rooms and
+a boss. Collect every coin in a room and the door opens; each door gives you a
+new move, and the next room has a coin you cannot reach without it.</p>
+
+<p>This is how it was built, a step at a time. Every numbered step below is a
+whole program: copy it into
+<a href="../../play/">the playground</a>, press Run, and it works. Then break
+something on purpose and see what changes — that teaches you more than reading
+does.</p>
+
+<h2 id="the-one-big-idea">The one big idea: a level is a picture</h2>
+
+<p>The hardest part of a platform game sounds like it should be the maths.
+It isn't. It's that a level has a hundred walls in it, and typing a hundred
+positions is miserable and impossible to change.</p>
+
+<p>So a level here is a <strong>picture made of letters</strong>. One letter is
+one tile:</p>
+
+<pre><code class="language-python">LEVEL_1 = [
+    "####################",
+    "#                  #",
+    "#             o   D#",
+    "#            #######",
+    "#        o         #",
+    "#       #####      #",
+    "#     o#           #",
+    "#   #              #",
+    "#  ###             #",
+    "#       #          #",
+    "#      P   o   g   #",
+    "####################",
+]</code></pre>
+
+<p><code>#</code> is a wall, <code>o</code> is a coin, <code>P</code> is where
+you start, <code>D</code> is the door and <code>g</code> is a goblin. Moving a
+coin means moving an <code>o</code>. Nothing else in the game has to be told
+about it.</p>
+
+<h2 id="step-1-a-room">Step 1 — a room</h2>
+
+<p><code>addLevel()</code> walks the picture. Every time it meets a letter
+it looks it up in <code>tiles</code> and builds whatever it finds there. A
+letter that isn't listed is ignored, which is why a space does nothing.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 48
+kaypy(width=TILE * 20, height=TILE * 13, background=[22, 20, 30])
+setGravity(2400)
+
+loadSprite(&quot;wall&quot;, &quot;dungeon/wall_mid.png&quot;)
+
+ROOM = [
+    &quot;####################&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;####################&quot;,
+]
+
+addLevel(ROOM, {
+    &quot;tileWidth&quot;: TILE,
+    &quot;tileHeight&quot;: TILE,
+    &quot;tiles&quot;: {
+        &quot;#&quot;: lambda: [sprite(&quot;wall&quot;), scale(3), area(), body(isStatic=True)],
+    },
+})</code></pre>
+
+<p>Run it and you get an empty stone room. <code>body(isStatic=True)</code>
+is what makes a wall solid and immovable — without it the walls fall.</p>
+
+<h2 id="step-2-a-knight-who-runs-and-jumps">Step 2 — a knight who runs and jumps</h2>
+
+<p>The player is a tile too. Put a <code>P</code> in the picture, add it
+to <code>tiles</code>, and moving where you start means moving that letter.</p>
+
+<p>The arrow keys are the fiddly part, and not for the reason you'd expect.
+The obvious way is <code>onKeyDown</code>, which asks the computer "is right
+held down <em>right now?</em>" every frame. That works — until something
+pauses the game, which it will in step 4. So the game keeps its own note
+instead: pressed sets it, released clears it.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 48
+SPEED = 270
+JUMP = 850
+
+kaypy(width=TILE * 20, height=TILE * 13, background=[22, 20, 30])
+setGravity(2400)
+
+loadSprite(&quot;wall&quot;, &quot;dungeon/wall_mid.png&quot;)
+loadSprite(&quot;knight&quot;, &quot;dungeon/knight_m.png&quot;, sliceX=9, anims={
+    &quot;idle&quot;: {&quot;from&quot;: 0, &quot;to&quot;: 3, &quot;speed&quot;: 8, &quot;loop&quot;: True},
+    &quot;run&quot;: {&quot;from&quot;: 4, &quot;to&quot;: 7, &quot;speed&quot;: 10, &quot;loop&quot;: True},
+})
+
+ROOM = [
+    &quot;####################&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#            ####  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#      ####        #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#  P               #&quot;,
+    &quot;####################&quot;,
+]
+
+addLevel(ROOM, {
+    &quot;tileWidth&quot;: TILE,
+    &quot;tileHeight&quot;: TILE,
+    &quot;tiles&quot;: {
+        &quot;#&quot;: lambda: [sprite(&quot;wall&quot;), scale(3), area(), body(isStatic=True)],
+        &quot;P&quot;: lambda: [sprite(&quot;knight&quot;), scale(3), area(),
+                      body(jumpForce=JUMP), anchor(&quot;bot&quot;), &quot;player&quot;],
+    },
+})
+
+player = get(&quot;player&quot;)[0]
+
+holding_left = False
+holding_right = False
+
+
+@onKeyPress(&quot;left&quot;)
+def press_left():
+    global holding_left
+    holding_left = True
+
+
+@onKeyRelease(&quot;left&quot;)
+def let_go_left():
+    global holding_left
+    holding_left = False
+
+
+@onKeyPress(&quot;right&quot;)
+def press_right():
+    global holding_right
+    holding_right = True
+
+
+@onKeyRelease(&quot;right&quot;)
+def let_go_right():
+    global holding_right
+    holding_right = False
+
+
+@onKeyPress(&quot;space&quot;)
+def jump():
+    if player.isGrounded():
+        player.jump(JUMP)
+
+
+@onUpdate
+def each_frame():
+    if holding_left:
+        player.move(-SPEED, 0)
+        player.flipX = True
+    if holding_right:
+        player.move(SPEED, 0)
+        player.flipX = False</code></pre>
+
+<p><strong>Try it:</strong> change <code>JUMP</code> to 400 and see how
+little you can reach. Change <code>setGravity</code> to 800 and float.</p>
+
+<h2 id="step-3-coins-and-a-door-that-waits">Step 3 — coins, and a door that waits</h2>
+
+<p>This is the whole game in miniature. The door exists from the start;
+it just refuses to work until the count is met.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 48
+SPEED = 270
+JUMP = 850
+
+kaypy(width=TILE * 20, height=TILE * 13, background=[22, 20, 30])
+setGravity(2400)
+
+loadSprite(&quot;wall&quot;, &quot;dungeon/wall_mid.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;dungeon/dungeon_coin.png&quot;, sliceX=4, anims={
+    &quot;idle&quot;: {&quot;from&quot;: 0, &quot;to&quot;: 3, &quot;speed&quot;: 8, &quot;loop&quot;: True},
+})
+loadSprite(&quot;door_shut&quot;, &quot;dungeon/doors_leaf_closed.png&quot;)
+loadSprite(&quot;door_open&quot;, &quot;dungeon/doors_leaf_open.png&quot;)
+loadSound(&quot;ding&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSprite(&quot;knight&quot;, &quot;dungeon/knight_m.png&quot;, sliceX=9, anims={
+    &quot;idle&quot;: {&quot;from&quot;: 0, &quot;to&quot;: 3, &quot;speed&quot;: 8, &quot;loop&quot;: True},
+    &quot;run&quot;: {&quot;from&quot;: 4, &quot;to&quot;: 7, &quot;speed&quot;: 10, &quot;loop&quot;: True},
+})
+
+ROOM = [
+    &quot;####################&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#                  #&quot;,
+    &quot;#           o      #&quot;,
+    &quot;#            ####  #&quot;,
+    &quot;#     o           D#&quot;,
+    &quot;#      ####    #####&quot;,
+    &quot;#                  #&quot;,
+    &quot;#  P        o      #&quot;,
+    &quot;####################&quot;,
+]
+
+addLevel(ROOM, {
+    &quot;tileWidth&quot;: TILE,
+    &quot;tileHeight&quot;: TILE,
+    &quot;tiles&quot;: {
+        &quot;#&quot;: lambda: [sprite(&quot;wall&quot;), scale(3), area(), body(isStatic=True)],
+        &quot;P&quot;: lambda: [sprite(&quot;knight&quot;), scale(3), area(),
+                      body(jumpForce=JUMP), anchor(&quot;bot&quot;), &quot;player&quot;],
+        &quot;o&quot;: lambda: [sprite(&quot;coin&quot;), scale(3), area(), anchor(&quot;center&quot;),
+                      &quot;coin&quot;],
+        &quot;D&quot;: lambda: [sprite(&quot;door_shut&quot;), scale(1.5), area(), anchor(&quot;bot&quot;),
+                      &quot;door&quot;],
+    },
+})
+
+player = get(&quot;player&quot;)[0]
+
+holding_left = False
+holding_right = False
+
+
+@onKeyPress(&quot;left&quot;)
+def press_left():
+    global holding_left
+    holding_left = True
+
+
+@onKeyRelease(&quot;left&quot;)
+def let_go_left():
+    global holding_left
+    holding_left = False
+
+
+@onKeyPress(&quot;right&quot;)
+def press_right():
+    global holding_right
+    holding_right = True
+
+
+@onKeyRelease(&quot;right&quot;)
+def let_go_right():
+    global holding_right
+    holding_right = False
+
+
+@onKeyPress(&quot;space&quot;)
+def jump():
+    if player.isGrounded():
+        player.jump(JUMP)
+
+
+@onUpdate
+def each_frame():
+    if holding_left:
+        player.move(-SPEED, 0)
+        player.flipX = True
+    if holding_right:
+        player.move(SPEED, 0)
+        player.flipX = False
+
+
+coins_collected = 0
+total_coins = len(get(&quot;coin&quot;))
+
+label = add([text(&quot;0 / &quot; + str(total_coins), size=24), pos(16, 14), fixed()])
+
+
+@player.onCollide(&quot;coin&quot;)
+def got_coin(coin):
+    global coins_collected
+
+    coin.destroy()
+    coins_collected = coins_collected + 1
+    label.text = str(coins_collected) + &quot; / &quot; + str(total_coins)
+    play(&quot;ding&quot;)
+
+    # The last coin opens the door.
+    if coins_collected &gt;= total_coins:
+        for door in get(&quot;door&quot;):
+            door.use(sprite(&quot;door_open&quot;))
+
+
+@player.onCollide(&quot;door&quot;)
+def reached_door(door):
+    # The door is there the whole time. It only works once you have them all.
+    if coins_collected &lt; total_coins:
+        return
+    say(&quot;You got them all!&quot;)</code></pre>
+
+<p><code>coins_collected</code> is an ordinary variable at the top of the
+file, and the function that changes it says <code>global</code> first — that
+is Python's way of saying "the one at the top, not a new one of my own".</p>
+
+<h2 id="step-4-five-rooms-instead-of-one">Step 4 — five rooms instead of one</h2>
+
+<p>Five levels do not mean five copies of the code. They mean five
+pictures and one function. <code>scene</code> gives that function a name and
+<code>go</code> runs it, with the level number as an argument:</p>
+
+<pre><code class="language-python">LEVELS = [LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5]
+
+
+@scene("play")
+def build_level(number):
+    picture = LEVELS[number]
+
+    addLevel(picture, {
+        "tileWidth": TILE,
+        "tileHeight": TILE,
+        "tiles": TILES,
+    })
+    ...
+
+
+go("play", 0)</code></pre>
+
+<p>And the door moves you on:</p>
+
+<pre><code class="language-python">@player.onCollide("door")
+def reached_door(door):
+    global level_over
+
+    if coins_collected &lt; total_coins:
+        return
+    level_over = True
+    say("Level " + str(number + 1) + " done!",
+        then=lambda answer: go("play", number + 1))</code></pre>
+
+<div class="callout"><p><strong>Careful with the name.</strong> The scene
+is called <code>"play"</code>, but the function must not be, because kaypy
+already has a <code>play()</code> for sounds. Calling the function
+<code>play</code> quietly replaced it, and every <code>play("ding")</code> in
+the game started calling the scene instead — with <code>"ding"</code> as the
+level number. It died on <code>LEVELS[number]</code> with
+<code>TypeError: list indices must be integers</code>, pointing at a line
+nowhere near the mistake.</p></div>
+
+<h2 id="step-5-a-new-move-every-room">Step 5 — a new move every room</h2>
+
+<p>Which moves you have depends on nothing but which level you are on:</p>
+<pre><code class="language-python">can_double_jump = number &gt;= 1
+can_dash = number &gt;= 2
+can_wall_jump = number &gt;= 3</code></pre>
+<p>and the jump key does whichever of them applies:</p>
+
+<pre><code class="language-python">    @onKeyPress(&quot;space&quot;)
+    def jump():
+        global jumps_left, wall_left
+
+        if level_over:
+            return
+
+        # On the ground: an ordinary jump, and your air jump comes back.
+        if player.isGrounded():
+            player.jump(JUMP)
+            jumps_left = 1
+            return
+
+        # Next to a wall: push off it, away from the way you are facing,
+        # and turn round. The little bit of time in wall_left is
+        # deliberate -- without it you would have to press space on the
+        # exact frame you touch the wall, which nobody can do.
+        if can_wall_jump and wall_left &gt; 0:
+            player.jump(JUMP)
+            if player.flipX:
+                player.move(SPEED * 2, 0)
+            else:
+                player.move(-SPEED * 2, 0)
+            player.flipX = not player.flipX
+            wall_left = 0
+            play(&quot;swoosh&quot;)
+            return
+
+        # In the air with a jump left: the double jump.
+        if can_double_jump and jumps_left &gt; 0:
+            player.jump(JUMP)
+            jumps_left = jumps_left - 1</code></pre>
+
+<p>The dash is just "move very fast for a moment", and the wall jump is
+"push away from the way you're facing". Neither needs to know which way is
+which, because <code>player.flipX</code> is already true when the sprite faces
+left — that <em>is</em> which way you are facing, and keeping a second copy of
+it would only give you something that can disagree with the screen.</p>
+
+<h2 id="step-6-things-that-move">Step 6 — things that move</h2>
+
+<p>Each enemy gets its own <code>onUpdate</code>, which runs every frame
+for that one enemy. The goblin's whole patrol is one call to
+<code>wave()</code>, which swings a number between two values forever:</p>
+
+<pre><code class="language-python">    for goblin in get(&quot;goblin&quot;):
+
+        @goblin.onUpdate
+        def patrol(g=goblin, home=goblin.pos.x):
+            # g=goblin is not a typo. Without it every one of these
+            # functions would share the SAME goblin -- whichever one the
+            # loop finished on -- and all the others would stand still.
+            #
+            # wave() swings a number between two values forever, so this one
+            # line is the whole patrol. It is the same function the moving
+            # platforms use.
+            left = home - GOBLIN_RANGE * TILE
+            right = home + GOBLIN_RANGE * TILE
+            g.pos.x = wave(left, right, time() * GOBLIN_SPEED)
+
+            # Which way to face: work out where it will be in a moment, and
+            # if that is further left than it is now, it is walking left.
+            soon = wave(left, right, (time() + 0.05) * GOBLIN_SPEED)
+            g.flipX = soon &lt; g.pos.x</code></pre>
+
+<p><code>g=goblin</code> is not a typo. Without it every one of those
+functions would share the <em>same</em> goblin — whichever one the loop
+finished on — and all the others would stand still. <code>home=goblin.pos.x</code>
+works the same way: it is worked out once, now, and the function keeps it.</p>
+
+<p>The boss works on a rhythm rather than remembered timers. The whole fight
+is "how far through the current cycle are we", which <code>time()</code>
+answers on its own:</p>
+
+<pre><code class="language-python">            point = time() % BOSS_CYCLE
+
+            if point &lt; BOSS_WAIT:
+                # Walking. This is the only part that chooses a direction,
+                # so the charge below simply keeps going the way it ended up
+                # facing.
+                b.play(&quot;run&quot;)
+                b.opacity = 1
+                b.flipX = player.pos.x &lt; b.pos.x
+                if b.flipX:
+                    b.move(-BOSS_WALK, 0)
+                else:
+                    b.move(BOSS_WALK, 0)
+
+            elif point &lt; BOSS_WAIT + BOSS_TELL:
+                # The warning. It stands still and flashes, so the charge can
+                # be learned instead of being a surprise.
+                b.play(&quot;idle&quot;)
+                b.opacity = 0.4 + 0.6 * abs(wave(-1, 1, time() * 20))
+
+            else:
+                # The charge, straight ahead, fast.
+                b.play(&quot;run&quot;)
+                b.opacity = 1
+                if b.flipX:
+                    b.move(-BOSS_CHARGE, 0)
+                else:
+                    b.move(BOSS_CHARGE, 0)</code></pre>
+
+<h2 id="four-things-that-went-wrong">Four things that went wrong</h2>
+
+<p>None of these produced an error message. That is what makes them worth
+reading.</p>
+
+<h3 id="the-player-is-taller-than-a-tile">The player is taller than a tile</h3>
+<p>The knight is 28 pixels drawn at scale 3, so 84 tall against 48-pixel
+tiles — one and three quarter tiles. Standing on the floor its head is up in
+the tile above, so <strong>a gap one tile high is a wall it cannot walk
+through</strong>. Level 1 shipped with the start directly under a platform:
+pressing right moved the player four pixels and the collision resolver put it
+straight back, every frame. It looked exactly like the arrow keys not
+working.</p>
+
+<h3 id="a-speed-that-was-not-a-speed">A speed that was not a speed</h3>
+<p>The goblin's patrol was changed to use <code>wave()</code>, and the old
+<code>GOBLIN_SPEED = 90</code> came along with it. But <code>wave()</code>'s
+third argument is an <em>angle</em>, not pixels per second — so 90 meant
+fourteen round trips a second. The goblin became a blur. The test that was
+supposed to catch it measured how <em>far</em> the goblin moved, which was
+correct the whole time, and never how fast.</p>
+
+<h3 id="a-clock-that-starts-again">A clock that starts again</h3>
+<p>The dash was stored as a deadline: <code>dash_until = time() + 0.16</code>,
+checked each frame against <code>time()</code>. But <strong>time() restarts at
+zero on a new level</strong>. Dash 25 seconds into level 3 and you leave behind
+a deadline of 25.16; the next level's clock starts at 0, so the dash runs for
+the next 25 seconds. Both timers are countdowns now —
+<code>dash_left</code>, counted down by <code>dt()</code> — because a
+countdown has nothing to compare against and cannot be wrong about what time
+it is.</p>
+
+<h3 id="a-key-that-was-never-released">A key that was never released</h3>
+<p>Walking into the door opens a message, and a message pauses the game. Let
+go of the arrow key while it is paused and the release can be missed — after
+which the computer goes on insisting the key is still down, and the next level
+starts with the knight sprinting into a wall. That is why step 2 keeps its own
+note of which arrow is held, and forgets both at the start of every level.</p>
+
+<h2 id="make-it-yours">Make it yours</h2>
+
+<ul>
+<li>Draw a sixth level. Twenty characters wide, thirteen tall, one
+<code>P</code>, one <code>D</code>, and at least four <code>o</code>. Add it to
+<code>LEVELS</code>.</li>
+<li>Add a letter to <code>TILES</code> — a spike that hurts you, a key you need
+before the door opens, a spring that throws you upward.</li>
+<li>Give the goblin a longer patrol by changing <code>GOBLIN_RANGE</code>, or a
+faster one with <code>GOBLIN_SPEED</code>. Remember which of those is an angle.</li>
+<li>Make the boss take more hits, and give it a second attack when it is down
+to two.</li>
+</ul>
+
+<p>The whole game is one file. <a href="../../play/">Open the playground →</a></p>
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>

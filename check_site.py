@@ -127,9 +127,33 @@ else:
     print("  note  no playground yet")
 
 # --------------------------------------------------------------- page size
+#
+# TWO BUDGETS, BECAUSE THERE ARE TWO KINDS OF FILE HERE.
+#
+# A page is words and markup; 400 KB of that means something has gone wrong,
+# usually an image pasted in as a data: URL.
+#
+# A game under static/games/ is not a page. It is a whole application with
+# the sprites, the sounds and the engine inside it, which is the entire point
+# of `kaypy web` — one file you can email or drop on itch.io. Those start at
+# a quarter of a megabyte and there is no way to make them smaller without
+# taking something out of the game.
+#
+# They still get a limit, because the thing that actually matters is a class
+# of thirty opening one on the school wifi in period one. Dungeon Dash came
+# in at 921 KB on the first build; nearly half of that was one 205 KB coin
+# sound being carried for a noise that lasts a fifth of a second.
+PAGE_LIMIT = 400_000
+GAME_LIMIT = 1_500_000
+
+
+def size_limit(path):
+    return GAME_LIMIT if "games" in path.parts else PAGE_LIMIT
+
+
 big = [(p.relative_to(DIST), p.stat().st_size) for p in pages
-       if p.stat().st_size > 400_000]
-check("no page is absurdly large", not big,
+       if p.stat().st_size > size_limit(p.relative_to(DIST))]
+check("no page or game is absurdly large", not big,
       ", ".join("%s %.0f KB" % (n, s / 1024) for n, s in big[:2]))
 
 bad = results.count(False)

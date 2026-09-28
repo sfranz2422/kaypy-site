@@ -204,6 +204,18 @@ pre code.hljs { background: none; padding: 0; }
 }
 .prose blockquote > :last-child { margin-bottom: 0; }
 
+/* An aside in a tutorial: a trap worth stopping for, without breaking the
+ * flow of the steps. Same shape as a blockquote but warmer, so the two do not
+ * look like the same thing saying different things. */
+.callout {
+  border-left: 3px solid var(--amber);
+  background: var(--bg-head);
+  border-radius: 0 .4rem .4rem 0;
+  padding: .85rem 1rem;
+  margin: 1.25rem 0;
+}
+.callout > :last-child { margin-bottom: 0; }
+
 /* ------------------------------------------------- the on-this-page column
  *
  * Sticky under the navbar, which is itself sticky — hence the top offset.
