@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building a turn-based battle · KayPy</title>
+<meta name="description" content="How the turn-based battle scene was built: fighters as data, a menu, speed order, and a game with no game objects in it.">
+<meta property="og:title" content="Building Dungeon Dash · KayPy">
+<meta property="og:description" content="How Dungeon Dash was built, a step at a time.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All three lessons</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">1 — Conditionals</a></li><li><a class="dropdown-item active" href="../../learn/loops/">2 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">3 — Lists</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../../tutorials/" aria-current="page">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <article class="prose">
+<h1 id="building-a-turn-based-battle">Building a turn-based battle</h1>
+
+<p><a href="../../static/games/rpg_battle/">Play it first →</a> The knight on
+the right, three monsters on the left, and the four commands every old
+role-playing game had: Attack, Magic, Item, Run.</p>
+
+<p>It is a proof of concept rather than a whole game — one battle, win or
+lose. It earns a tutorial because of <em>how</em> it is written.</p>
+
+<h2 id="nobody-here-is-a-game-object">Nobody here is a game object</h2>
+
+<p>Every other game on this site is built out of game objects: things with a
+position that fall, collide and get destroyed. <code>add()</code> makes one,
+and the engine then moves it, bumps it into walls and tells you when it
+touches something.</p>
+
+<p>A battle needs none of that. Nothing moves, nothing falls, and nothing
+bumps into anything. So there is <strong>not a single <code>add()</code> in
+this game</strong>. Every fighter is a plain dictionary, and the screen is
+drawn from those dictionaries every frame.</p>
+
+<div class="callout"><p>This is worth noticing as a habit, not just a trick.
+The question is not "how do I make this a game object?" but "does this thing
+need to exist in the world, or do I just need to draw it?" A health bar, a
+menu, a message — none of those are things in a world.</p></div>
+
+<h2 id="step-1-the-fighters-are-data">Step 1 — the fighters are data</h2>
+
+<p>A fighter is a dictionary of numbers and a picture. Drawing one
+is <code>drawSprite</code>, which paints a sprite straight onto the screen
+without making an object for it.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+WIDE = 960
+TALL = 640
+
+kaypy(width=WIDE, height=TALL, background=[18, 16, 24])
+
+IDLE_RUN = {&quot;idle&quot;: {&quot;from&quot;: 0, &quot;to&quot;: 3, &quot;speed&quot;: 8, &quot;loop&quot;: True},
+            &quot;run&quot;: {&quot;from&quot;: 4, &quot;to&quot;: 7, &quot;speed&quot;: 10, &quot;loop&quot;: True}}
+
+loadSprite(&quot;knight&quot;, &quot;dungeon/knight_m.png&quot;, sliceX=9, anims=IDLE_RUN)
+loadSprite(&quot;goblin&quot;, &quot;dungeon/goblin.png&quot;, sliceX=8, anims=IDLE_RUN)
+
+# A fighter is a dictionary. That is the whole idea.
+hero = {
+    &quot;name&quot;: &quot;Knight&quot;,
+    &quot;hp&quot;: 40, &quot;max_hp&quot;: 40,
+    &quot;picture&quot;: &quot;knight&quot;,
+    &quot;x&quot;: 740, &quot;y&quot;: 330,
+}
+
+monsters = [
+    {&quot;name&quot;: &quot;Goblin&quot;, &quot;hp&quot;: 18, &quot;max_hp&quot;: 18,
+     &quot;picture&quot;: &quot;goblin&quot;, &quot;x&quot;: 150, &quot;y&quot;: 330},
+]
+
+INK = rgb(235, 235, 245)
+DIM = rgb(150, 150, 170)
+
+
+@onDraw
+def draw_everything():
+    for monster in monsters:
+        drawSprite(sprite=monster[&quot;picture&quot;],
+                   pos=vec2(monster[&quot;x&quot;], monster[&quot;y&quot;]),
+                   width=64, height=64, anchor=&quot;bot&quot;)
+        drawText(text=monster[&quot;name&quot;],
+                 pos=vec2(monster[&quot;x&quot;], monster[&quot;y&quot;] + 8),
+                 size=16, color=DIM, anchor=&quot;top&quot;)
+
+    drawSprite(sprite=hero[&quot;picture&quot;], pos=vec2(hero[&quot;x&quot;], hero[&quot;y&quot;]),
+               width=64, height=112, anchor=&quot;bot&quot;)
+    drawText(text=hero[&quot;name&quot;] + &quot;   HP &quot; + str(hero[&quot;hp&quot;]),
+             pos=vec2(hero[&quot;x&quot;], hero[&quot;y&quot;] + 8),
+             size=16, color=INK, anchor=&quot;top&quot;)</code></pre>
+
+<p>Run it and you have a goblin facing a knight. To make the
+goblin tougher, change a number. To add a second monster, copy the block and
+change the name, the picture and where it stands — which is what the finished
+game does:</p>
+
+<pre><code class="language-python">monsters = [
+    {&quot;name&quot;: &quot;Goblin&quot;,   &quot;hp&quot;: 18, &quot;max_hp&quot;: 18, &quot;attack&quot;: 3, &quot;defence&quot;: 2,
+     &quot;speed&quot;: 8, &quot;picture&quot;: &quot;goblin&quot;,   &quot;x&quot;: 150, &quot;y&quot;: 330, &quot;friend&quot;: False},
+    {&quot;name&quot;: &quot;Skeleton&quot;, &quot;hp&quot;: 24, &quot;max_hp&quot;: 24, &quot;attack&quot;: 4, &quot;defence&quot;: 3,
+     &quot;speed&quot;: 5, &quot;picture&quot;: &quot;skeleton&quot;, &quot;x&quot;: 290, &quot;y&quot;: 330, &quot;friend&quot;: False},
+    {&quot;name&quot;: &quot;Chort&quot;,    &quot;hp&quot;: 30, &quot;max_hp&quot;: 30, &quot;attack&quot;: 6, &quot;defence&quot;: 4,
+     &quot;speed&quot;: 3, &quot;picture&quot;: &quot;chort&quot;,    &quot;x&quot;: 430, &quot;y&quot;: 330, &quot;friend&quot;: False},
+]</code></pre>
+
+<h2 id="step-2-a-menu-you-can-move-around">Step 2 — a menu you can move around</h2>
+
+<p>The menu is a list of words and a number saying which row you
+are on. Up and down change the number and wrap around the ends; the drawing
+puts a bar behind whichever row that is.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+WIDE = 960
+TALL = 640
+
+kaypy(width=WIDE, height=TALL, background=[18, 16, 24])
+
+COMMANDS = [&quot;Attack&quot;, &quot;Magic&quot;, &quot;Item&quot;, &quot;Run&quot;]
+
+cursor = 0
+message = &quot;What will you do?&quot;
+
+INK = rgb(235, 235, 245)
+GOLD = rgb(240, 200, 90)
+BOX = rgb(28, 26, 38)
+
+
+@onKeyPress(&quot;up&quot;)
+def move_up():
+    global cursor
+    cursor = cursor - 1
+    if cursor &lt; 0:
+        cursor = len(COMMANDS) - 1
+
+
+@onKeyPress(&quot;down&quot;)
+def move_down():
+    global cursor
+    cursor = cursor + 1
+    if cursor &gt; len(COMMANDS) - 1:
+        cursor = 0
+
+
+@onKeyPress(&quot;space&quot;)
+def choose():
+    global message
+    message = &quot;You chose &quot; + COMMANDS[cursor] + &quot;.&quot;
+
+
+@onDraw
+def draw_menu():
+    drawRect(pos=vec2(20, 430), width=WIDE - 40, height=54, color=BOX,
+             radius=8)
+    drawText(text=message, pos=vec2(40, 446), size=20, color=INK)
+
+    drawRect(pos=vec2(20, 496), width=380, height=130, color=BOX, radius=8)
+    row = 0
+    while row &lt; len(COMMANDS):
+        if row == cursor:
+            drawRect(pos=vec2(34, 506 + row * 28), width=352, height=26,
+                     color=rgb(64, 58, 32), radius=4)
+        drawText(text=COMMANDS[row], pos=vec2(66, 510 + row * 28), size=20,
+                 color=GOLD if row == cursor else INK)
+        row = row + 1</code></pre>
+
+<div class="callout"><p><strong>Make the cursor obvious.</strong>
+This drew a small <code>&gt;</code> at first, and in a browser pane that is a
+few pixels. The game looked like it was ignoring the keyboard. A filled bar
+behind the row is the whole fix, and it is worth doing before anyone tells you
+the game is broken.</p></div>
+
+<h2 id="step-3-whose-turn-is-it">Step 3 — whose turn is it?</h2>
+
+<p>Everyone has a speed. The turn order is just everybody still
+standing, sorted fastest first — one list, rebuilt each round. That is also
+how a monster that has just been defeated stops getting turns, without any
+special case for it.</p>
+
+<pre><code class="language-python">def build_order():
+    &quot;&quot;&quot;Everyone still standing, fastest first.&quot;&quot;&quot;
+    global order, turn
+
+    fighters = []
+    if hero[&quot;hp&quot;] &gt; 0:
+        fighters.append(hero)
+    for monster in living_monsters():
+        fighters.append(monster)
+
+    # Sort by speed, highest first. sorted() leaves the original list alone
+    # and hands back a new one in the order we asked for.
+    order = sorted(fighters, key=speed_of, reverse=True)
+    turn = 0</code></pre>
+
+<p><code>sorted()</code> hands back a new list in the order you
+asked for and leaves the original alone. <code>reverse=True</code> puts the
+biggest speed first.</p>
+
+<h2 id="step-4-doing-something">Step 4 — doing something</h2>
+
+<p>Damage is attack minus defence, give or take a little, and
+never less than one — so a strong defence makes you hard to hurt but never
+invincible:</p>
+
+<pre><code class="language-python">def damage_from(attacker, defender):
+    &quot;&quot;&quot;Attack minus defence, give or take a little, never less than one.&quot;&quot;&quot;
+    rough = attacker[&quot;attack&quot;] + randi(0, 3) - defender[&quot;defence&quot;]
+    if rough &lt; 1:
+        rough = 1
+    return rough</code></pre>
+
+<p>Every action ends by putting a line on the message bar and
+pausing for a moment. That pause is the only thing in the whole game that
+happens over time:</p>
+
+<pre><code class="language-python">@onUpdate
+def each_frame():
+    &quot;&quot;&quot;The only thing that happens over time: waiting on a message.&quot;&quot;&quot;
+    global pause_left, doing, keep_turn
+
+    if doing != &quot;watching&quot;:
+        return
+
+    pause_left = pause_left - dt()
+    if pause_left &gt; 0:
+        return
+
+    # The message has had its moment.
+    if battle_finished():
+        return
+    if keep_turn:
+        doing = &quot;choosing&quot;      # it was only an explanation
+        return
+    next_turn()</code></pre>
+
+<h2 id="two-things-that-went-wrong">Two things that went wrong</h2>
+
+<h3 id="the-battle-never-ended">The battle never ended</h3>
+<p>Winning called <code>say_and_wait("You win!")</code> — and that function
+set the game's state to "watching a message", <em>after</em> the code had just
+set it to "over". So the end state was wiped every time, and the battle never
+actually finished.</p>
+<p>It looked completely fine, because the message sits there for ninety-nine
+seconds. Nobody playing it would ever notice. It would have broken the moment
+anything came after a battle — a reward screen, a next fight, anything.</p>
+
+<h3 id="a-refusal-cost-you-your-turn">A refusal cost you your turn</h3>
+<p>Choosing a spell you could not afford printed "Not enough MP" and then
+passed the turn to the monsters. Being told no is not a turn. The fix is that
+a message can say which kind it is:</p>
+
+<pre><code class="language-python">def say_and_wait(words, seconds=0.9, yours_again=False, ends_it=False):
+    &quot;&quot;&quot;Put a line on the message bar and hold there for a moment.
+
+    yours_again=True means the message did not use up a turn -- it was a
+    refusal, like trying to cast a spell you cannot afford.
+
+    ends_it=True means this is the last thing that will happen.
+
+    THE ORDER MATTERS HERE. This used to be called AFTER the caller had set
+    doing = &quot;over&quot;, and then quietly set doing = &quot;watching&quot; itself, so the
+    battle never actually reached its end state. It still looked finished,
+    because the message sat there for ninety-nine seconds -- which is exactly
+    the kind of bug that survives being played.
+    &quot;&quot;&quot;
+    global message, pause_left, doing, keep_turn
+
+    message = words
+    pause_left = seconds
+    doing = &quot;over&quot; if ends_it else &quot;watching&quot;
+    keep_turn = yours_again</code></pre>
+
+<h2 id="make-it-yours">Make it yours</h2>
+
+<ul>
+<li>Add a fourth monster. Copy a block in <code>monsters</code>, change the
+name and picture, and give it an <code>x</code> that does not overlap the
+others.</li>
+<li>Add a spell to <code>spells</code>. A cheap one that always does the same
+damage, or an expensive one that hits everything — that last one needs a loop
+over <code>living_monsters()</code>.</li>
+<li>Give the monsters a brain. Right now every monster attacks. Make the
+weakest one drink a potion when it is nearly finished.</li>
+<li>Give the knight a friend. That is the big one: a second fighter with
+<code>"friend": True</code>, which means the turn order already handles it and
+you need somewhere to put a second status box.</li>
+</ul>
+
+<p><a href="../../play/">Open the playground →</a></p>
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>
