@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 7 — Decorators · KayPy</title>
+<meta name="description" content="Learn Python with KayPy: lesson 7, decorators.">
+<meta property="og:title" content="Lesson 7 — Decorators · KayPy">
+<meta property="og:description" content="Learn Python with KayPy: lesson 7, decorators.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All seven lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li><li><a class="dropdown-item" href="../../learn/functions/">6 — Functions</a></li><li><a class="dropdown-item active" href="../../learn/decorators/">7 — Decorators</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../tutorials/">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row gx-xl-5">
+    <div class="col-lg-8 col-xl-9">
+      <article class="prose">
+<h1 id="lesson-7-decorators">Lesson 7 — Decorators</h1>
+<p><strong>By the end of this you can:</strong> read the <code>@</code> lines that every kaypy game is
+built out of, write your own, tell the two shapes apart, and recognise the
+three ways they go wrong without saying anything.</p>
+<p>This is the last piece of Python you need before the games in the
+<a href="../../tutorials/">tutorials</a> read as ordinary code rather than magic.</p>
+<h2 id="the-line-you-keep-writing">The line you keep writing</h2>
+<p><a href="../functions/">Lesson 6</a> ended with this pattern: define a function, then
+hand it to the engine by name.</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+
+
+def announce():
+    print(&quot;Tick&quot;)
+
+
+loop(1.0, announce)
+</code></pre>
+<p>It works, and the same shape covers everything a game reacts to:</p>
+<pre><code class="language-text">onKeyPress(&quot;space&quot;, jump)
+onUpdate(move_everything)
+onCollide(&quot;bullet&quot;, &quot;enemy&quot;, explode)
+</code></pre>
+<p>There is one thing wrong with it, and it is not the typing. It is that the
+function and the fact that it is a handler are <strong>in two different places</strong>.
+You read <code>def announce():</code>, get to the bottom of it, and only then find out
+what calls it. In a game with fifteen handlers, the list of hand-overs at the
+end is a table of contents nobody keeps in order.</p>
+<h2 id="the-same-thing-written-above-it">The same thing, written above it</h2>
+<p>An <code>@</code> line moves the hand-over to the top:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+
+
+@loop(1.0)
+def announce():
+    print(&quot;Tick&quot;)
+</code></pre>
+<p>That is a <strong>decorator</strong>, and it means exactly what the previous version meant.
+Python reads it in this order:</p>
+<ol>
+<li>Define the function <code>announce</code>, the normal way.</li>
+<li>Hand it to <code>loop(1.0)</code>.</li>
+<li>Leave the name <code>announce</code> pointing at your function.</li>
+</ol>
+<p>So the whole of the <code>@</code> syntax is: <strong>define this, then give it to that.</strong> The
+work still happens when the engine decides — a second from now, when a key
+goes down, when two things touch — not when Python reads the line.</p>
+<p>Step 3 is worth saying out loud, because people assume the function has been
+swallowed. It has not:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+
+
+@onKeyPress(&quot;space&quot;)
+def jump():
+    print(&quot;Jumped!&quot;)
+
+
+print(&quot;jump is still called&quot;, jump.__name__)
+jump()
+</code></pre>
+<pre><code>jump is still called jump
+Jumped!
+</code></pre>
+<p>It is registered with the engine <em>and</em> it is still an ordinary function you
+can call yourself. That matters when you want the same thing to happen for two
+reasons — a key press and a collision — without writing it twice.</p>
+<h2 id="two-shapes">Two shapes</h2>
+<p>Some decorators have brackets and some do not, and the difference is not
+style:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+
+
+@onUpdate
+def every_frame():
+    pass
+
+
+@onKeyPress(&quot;space&quot;)
+def on_space():
+    pass
+
+
+@loop(0.5)
+def twice_a_second():
+    pass
+
+
+print(&quot;three handlers registered&quot;)
+</code></pre>
+<pre><code>three handlers registered
+</code></pre>
+<p><strong>The rule: brackets when it needs to know something else.</strong></p>
+<ul>
+<li><code>@onUpdate</code> needs nothing. Every frame is every frame, so there is nothing
+  to tell it and no brackets.</li>
+<li><code>@onKeyPress("space")</code> needs the key. <code>@loop(0.5)</code> needs the interval.
+  <code>@onCollide("player", "spike")</code> needs both tags.</li>
+</ul>
+<p>Read <code>@onKeyPress("space")</code> as two steps: <code>onKeyPress("space")</code> runs first and
+produces something that is waiting for a function, and the <code>@</code> hands your
+function to it. That is why the brackets are there — they are an ordinary
+call, made before your function exists.</p>
+<p><code>@onUpdate</code> also takes a tag, and then it has brackets like the rest:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+
+add([rect(30, 30), pos(100, 100), color(200, 60, 60), &quot;enemy&quot;])
+add([rect(30, 30), pos(200, 100), color(200, 60, 60), &quot;enemy&quot;])
+
+
+@onUpdate(&quot;enemy&quot;)
+def drift(enemy):
+    enemy.pos.x = enemy.pos.x + 60 * dt()
+</code></pre>
+<p><code>@onUpdate("enemy")</code> runs once per frame <strong>for each tagged object</strong>, and hands
+you the object it is talking about. Two enemies means <code>drift</code> is called twice
+a frame, with a different <code>enemy</code> each time. The <code>"enemy"</code> in the component
+list is what puts an object in that group — a plain string among the
+components is a <strong>tag</strong>.</p>
+<h2 id="forgetting-the-brackets">Forgetting the brackets</h2>
+<p>This is the mistake, and it is a bad one because nothing complains:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+
+
+@onKeyPress
+def jump():
+    print(&quot;Jumped!&quot;)
+
+
+print(&quot;jump is now called&quot;, jump.__name__)
+</code></pre>
+<pre><code>jump is now called decorator
+</code></pre>
+<p>No error. The program runs. Space does nothing, forever.</p>
+<p>Here is what happened. <code>onKeyPress</code> expects the key first, so it took your
+<em>function</em> as the key — and then, having been given no function, it did what it
+does when it is used with brackets: it handed back the thing that waits for
+one. That thing is now sitting under the name <code>jump</code>, and your function is
+gone. Nothing was ever registered, so nothing was ever going to fire.</p>
+<p><code>print(jump.__name__)</code> is the quickest way to catch it. If it says anything
+other than the name you wrote, the decorator above it is the wrong shape.</p>
+<blockquote>
+<p><strong>When a handler does nothing at all, check this line first.</strong> The instinct
+is to suspect the collision, the key name, the sprite — all of which are
+harder to check and none of which will be the problem when the <code>@</code> line is
+missing its brackets.</p>
+</blockquote>
+<h2 id="what-the-engine-hands-you">What the engine hands you</h2>
+<p>Each kind of handler is called with different things, and the tutorials'
+examples are the quickest reference:</p>
+<ul>
+<li><code>@onUpdate</code>, <code>@onKeyPress("x")</code>, <code>@loop(1)</code> — nothing.</li>
+<li><code>@onUpdate("enemy")</code> — the tagged object.</li>
+<li><code>@onCollide("bullet", "enemy")</code> — both objects, in the order the tags were
+  named.</li>
+<li><code>@player.onCollide("coin")</code> — the <em>other</em> object, since you already have
+  the player.</li>
+</ul>
+<p>kaypy is relaxed about this in one direction: <strong>your function may take fewer
+parameters than it is offered</strong>, and the extras are dropped. Both of these are
+fine, and you write the second when you do not care which coin it was:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+
+player = add([rect(30, 30), pos(100, 100), area()])
+add([sprite(&quot;coin&quot;), pos(100, 100), area(), &quot;coin&quot;])
+
+coins = 0
+
+
+@player.onCollide(&quot;coin&quot;)
+def picked_up(coin):
+    global coins
+    coins = coins + 1
+    destroy(coin)
+
+
+@player.onCollide(&quot;coin&quot;)
+def play_a_noise():
+    print(&quot;ding&quot;)
+</code></pre>
+<pre><code>ding
+</code></pre>
+<p>Taking <em>more</em> than it is offered is not forgiven — that is a <code>TypeError</code>
+naming the parameter nothing was supplied for, which is at least loud.</p>
+<p>And note what the first one needed: <code>global coins</code>, from
+<a href="../functions/">lesson 6</a>. Every decorated handler is a function, so every
+decorated handler that changes a score needs it.</p>
+<h2 id="decorating-a-method">Decorating something that belongs to an object</h2>
+<p><code>@player.onCollide("coin")</code> is worth a second look, because it is a decorator
+whose name has a dot in it:</p>
+<pre><code class="language-text">@player.onCollide(&quot;coin&quot;)
+def picked_up(coin):
+    ...
+</code></pre>
+<p>Nothing new is going on. The <code>@</code> line is still just an expression that
+produces something waiting for a function — this time it comes from an object
+you made rather than from the engine as a whole. The difference in behaviour
+is scope: <code>onCollide("player", "coin")</code> watches every player-tagged object,
+while <code>player.onCollide("coin")</code> watches that one.</p>
+<p>Use the object form when you are holding the object, which is most of the
+time. Use the tag form for pairs that come and go while the game runs —
+bullets and enemies, where neither one is a variable you kept.</p>
+<h2 id="two-handlers-one-name">Two handlers, one name</h2>
+<p>One more thing that behaves unlike you would guess:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+
+log = []
+
+
+@loop(0.01)
+def tick():
+    log.append(&quot;first&quot;)
+
+
+@loop(0.01)
+def tick():
+    log.append(&quot;second&quot;)
+
+
+@onUpdate
+def check():
+    if len(log) &gt;= 2:
+        print(sorted(set(log)))
+        quit()
+</code></pre>
+<pre><code>['first', 'second']
+</code></pre>
+<p>Both of them run. Re-using the name did not replace the first handler,
+because the engine was handed the function itself and does not care what it
+was called — the name is only how <em>you</em> refer to it. So the second <code>def</code>
+rebinds the name and leaves the first function registered and running, with
+nothing left to call it by.</p>
+<p>That is a nuisance when it is an accident, which is usually: two <code>@onUpdate</code>
+handlers both called <code>update</code>, and a bug that behaves like the old code never
+went away. Give every handler a name that says what it does and the problem
+disappears.</p>
+<h2 id="a-game-is-a-stack-of-these">A game is a stack of these</h2>
+<p>Put together, this is what a whole small game looks like — and by now there is
+nothing in it you have not met:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+
+score = 0
+label = add([text(&quot;Score: 0&quot;, size=28), pos(20, 20)])
+player = add([sprite(&quot;bean&quot;), pos(400, 300), area()])
+
+
+def add_point():
+    global score
+    score = score + 1
+    label.text = &quot;Score: &quot; + str(score)
+
+
+@onKeyDown(&quot;right&quot;)
+def go_right():
+    player.pos.x = player.pos.x + 240 * dt()
+
+
+@onKeyDown(&quot;left&quot;)
+def go_left():
+    player.pos.x = player.pos.x - 240 * dt()
+
+
+@loop(1.5)
+def drop_a_coin():
+    add([sprite(&quot;coin&quot;), pos(rand(40, 760), rand(40, 560)), area(), &quot;coin&quot;])
+
+
+@player.onCollide(&quot;coin&quot;)
+def collect(coin):
+    destroy(coin)
+    add_point()
+</code></pre>
+<p>Four handlers and one ordinary function. The <code>@</code> lines say <em>when</em>; the
+functions under them say <em>what</em>; <code>add_point</code> is shared by anything that ever
+needs to score, and is called by name because nothing in the engine calls it.</p>
+<p>That is the whole pattern. Every game in the <a href="../../games/">games</a> section is
+this, with more of it.</p>
+<h2 id="watch-for">Watch for</h2>
+<p><strong><code>@</code> means "define this, then hand it over".</strong> The function does not run
+when Python reads it.</p>
+<p><strong>Brackets when the decorator needs to know something.</strong> <code>@onUpdate</code> bare,
+<code>@onKeyPress("space")</code> with.</p>
+<p><strong>A missing pair of brackets fails silently.</strong> <code>print(your_handler.__name__)</code>
+tells you within seconds.</p>
+<p><strong>Handlers are functions</strong>, so changing a score in one needs <code>global</code>.</p>
+<p><strong>Two handlers with the same name both run.</strong> Name them for what they do.</p>
+<p><strong>Your function may take fewer parameters than it is offered</strong>, never more.</p>
+<h2 id="classwork-1-rewrite-it-with-at-signs">Classwork 1 — Rewrite It With <code>@</code></h2>
+<p>This program is written entirely in the hand-over style. Run it first, so you
+know what it does:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+player = add([sprite(&quot;bean&quot;), pos(400, 300), area()])
+
+
+def go_up():
+    player.pos.y = player.pos.y - 200 * dt()
+
+
+def go_down():
+    player.pos.y = player.pos.y + 200 * dt()
+
+
+def spin():
+    print(&quot;spin&quot;)
+
+
+onKeyDown(&quot;up&quot;, go_up)
+onKeyDown(&quot;down&quot;, go_down)
+loop(2.0, spin)
+</code></pre>
+<ol>
+<li>Rewrite all three as decorators. Delete the three hand-over lines at the
+   bottom. Run it — it should behave identically.</li>
+<li>Add left and right the same way.</li>
+<li>Add an <code>@onKeyPress("space")</code> that prints the player's position. Notice
+   that <code>onKeyDown</code> fires every frame the key is held and <code>onKeyPress</code> fires
+   once — hold both down and watch the difference in the output pane.</li>
+<li>Deliberately break one: take the brackets off <code>@onKeyPress("space")</code> and
+   run it again. Then print its <code>__name__</code> and confirm what it says.</li>
+</ol>
+<p><strong>Stretch:</strong> make one function handle both up and down by giving it a
+parameter, then register it twice — once by hand for each key, since a
+decorator cannot pass an argument of your choosing. Which reads better?</p>
+<h2 id="classwork-2-the-collector">Classwork 2 — The Collector</h2>
+<p>Build the small game from the section above, one handler at a time. Start
+here:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+
+score = 0
+label = add([text(&quot;Score: 0&quot;, size=28), pos(20, 20)])
+player = add([sprite(&quot;bean&quot;), pos(400, 300), area()])
+</code></pre>
+<ol>
+<li>Add left and right movement with two <code>@onKeyDown</code> handlers.</li>
+<li>Add an <code>add_point()</code> function — a plain one, no decorator — that raises
+   the score and updates the label. It needs <code>global</code>.</li>
+<li>Drop a coin every second and a half with <code>@loop(1.5)</code>, at
+   <code>pos(rand(40, 760), rand(40, 560))</code>, tagged <code>"coin"</code>.</li>
+<li>Collect them with <code>@player.onCollide("coin")</code>: <code>destroy</code> the coin and call
+   <code>add_point()</code>.</li>
+<li>Add a timer. A <code>seconds_left</code> variable, a second label, and an
+   <code>@loop(1.0)</code> that counts it down — and when it reaches 0, stops dropping
+   coins. (Making the drop stop is the interesting bit: a flag the drop
+   handler checks with an <code>if</code> is the simplest way.)</li>
+</ol>
+<p><strong>Stretch:</strong> make coins worth more when there are fewer of them. <code>get("coin")</code>
+hands back a list of every object with that tag, so <code>len(get("coin"))</code> is how
+many are on screen — <a href="../lists/">lesson 5</a>, doing real work.</p>
+<h2 id="check-yourself">Check yourself</h2>
+<p>Run this and press space. What happens, and why?</p>
+<pre><code class="language-text">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+
+score = 0
+
+
+@onKeyPress(&quot;space&quot;)
+def add_point():
+    score = score + 1
+    print(&quot;Score:&quot;, score)
+</code></pre>
+<details>
+<summary>It crashes — and the traceback appears a long way from the mistake</summary>
+<p>Pressing space raises <code>UnboundLocalError: local variable 'score' referenced
+before assignment</code>, because <code>score = score + 1</code> assigns to <code>score</code>, which
+makes it local for the whole function, which means the <code>score</code> on the
+right-hand side is the local one — and nothing has ever been put in it.
+<code>global score</code> at the top of the function is the fix.</p>
+<p>The part worth noticing is <em>when</em> it happens. The program starts fine. The
+window opens, the handler registers, everything looks right — and the error
+arrives whenever somebody first presses space, which might be a minute later
+or in front of a class. A decorated function is code you have written and not
+yet run.</p>
+<p>That is the real cost of the <code>@</code> style, and the reason a game's handlers are
+worth testing one at a time as you add them rather than all at the end.</p>
+</details>
+<hr />
+<hr />
+<p><a href="../functions/">← Lesson 6 — Functions</a> · <a href="../">All seven lessons</a></p>
+      </article>
+    </div>
+    <aside class="col-lg-4 col-xl-3 toc-col">
+      <nav class="toc" aria-label="On this page">
+        <p class="toc-head">On this page</p>
+      <a class="toc-link toc-d1" href="#lesson-7-decorators">Lesson 7 — Decorators</a>
+      <a class="toc-link toc-d2" href="#the-line-you-keep-writing">The line you keep writing</a>
+      <a class="toc-link toc-d2" href="#the-same-thing-written-above-it">The same thing, written above it</a>
+      <a class="toc-link toc-d2" href="#two-shapes">Two shapes</a>
+      <a class="toc-link toc-d2" href="#forgetting-the-brackets">Forgetting the brackets</a>
+      <a class="toc-link toc-d2" href="#what-the-engine-hands-you">What the engine hands you</a>
+      <a class="toc-link toc-d2" href="#decorating-a-method">Decorating something that belongs to an object</a>
+      <a class="toc-link toc-d2" href="#two-handlers-one-name">Two handlers, one name</a>
+      <a class="toc-link toc-d2" href="#a-game-is-a-stack-of-these">A game is a stack of these</a>
+      <a class="toc-link toc-d2" href="#watch-for">Watch for</a>
+      <a class="toc-link toc-d2" href="#classwork-1-rewrite-it-with-at-signs">Classwork 1 — Rewrite It With @</a>
+      <a class="toc-link toc-d2" href="#classwork-2-the-collector">Classwork 2 — The Collector</a>
+      <a class="toc-link toc-d2" href="#check-yourself">Check yourself</a>
+      </nav>
+    </aside>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>

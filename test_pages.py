@@ -62,6 +62,8 @@ PAGES = [
     "learn/conditionals/index.html",
     "learn/loops/index.html",
     "learn/lists/index.html",
+    "learn/functions/index.html",
+    "learn/decorators/index.html",
     "guide/index.html",
     "api/index.html",
     "tutorials/index.html",
@@ -234,25 +236,26 @@ for rel, page in pages.items():
 #
 # The single Learn page had a twelve-hundred-line sidebar down its right, which
 # is what prompted the split. These check the split actually happened rather
-# than that five files exist.
+# than that seven files exist.
 #
 #: The lessons in order. The order is the point: it is what the numbering, the
 #: hub cards and the prev/next rows all have to agree with, and a lesson that
 #: was renumbered everywhere except one of the three reads as a typo the
 #: author cannot see.
-LESSONS = ["variables", "input", "conditionals", "loops", "lists"]
+LESSONS = ["variables", "input", "conditionals", "loops", "lists",
+           "functions", "decorators"]
 
 hub = pages["learn/index.html"]
 for number, slug in enumerate(LESSONS, 1):
     check("the hub links the %s lesson" % slug,
           'href="%s/"' % slug in hub)
     lesson = pages["learn/%s/index.html" % slug]
-    check("  and %s is one lesson, not all five" % slug,
+    check("  and %s is one lesson, not all seven" % slug,
           len(re.findall(r"<h1[^>]*>", lesson)) == 1
           and lesson.count("Classwork") <= 4,
           "%d h1, %d mentions of Classwork"
           % (len(re.findall(r"<h1[^>]*>", lesson)), lesson.count("Classwork")))
-    check("  and the dropdown in its own header reaches the other four",
+    check("  and the dropdown in its own header reaches the other six",
           all('href="../../learn/%s/"' % other in lesson
               for other in LESSONS),
           "the header dropdown is incomplete")
