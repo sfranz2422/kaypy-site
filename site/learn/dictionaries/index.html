@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 8 — Dictionaries · KayPy</title>
+<meta name="description" content="Learn Python with KayPy: lesson 8, dictionaries.">
+<meta property="og:title" content="Lesson 8 — Dictionaries · KayPy">
+<meta property="og:description" content="Learn Python with KayPy: lesson 8, dictionaries.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All eight lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li><li><a class="dropdown-item" href="../../learn/functions/">6 — Functions</a></li><li><a class="dropdown-item" href="../../learn/decorators/">7 — Decorators</a></li><li><a class="dropdown-item active" href="../../learn/dictionaries/">8 — Dictionaries</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../tutorials/">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row gx-xl-5">
+    <div class="col-lg-8 col-xl-9">
+      <article class="prose">
+<h1 id="lesson-8-dictionaries">Lesson 8 — Dictionaries</h1>
+<p><strong>By the end of this you can:</strong> hold a pile of values under names instead of
+numbers, look one up, cope with a name that is not there, go through the lot,
+and read the two dictionary shapes that every kaypy game is built on.</p>
+<h2 id="the-problem-with-slot-numbers">The problem with slot numbers</h2>
+<p>A list from <a href="../lists/">lesson 5</a> can hold a whole monster:</p>
+<pre><code class="language-python">goblin = [&quot;Goblin&quot;, 30, 3, 90]
+
+print(goblin[1])
+</code></pre>
+<pre><code>30
+</code></pre>
+<p>What is 30? You have to go back and count. Second slot, so… health, probably.
+And <code>goblin[3]</code> is 90, which could be speed, or gold, or how far it can see.</p>
+<p>Now imagine that list is written in one file and read in another, and that
+somebody adds an armour value in the middle. Every <code>goblin[2]</code> in the program
+now quietly means something else. Nothing errors. The goblin just starts
+behaving oddly.</p>
+<p>Lists are right when the things in them are <strong>the same kind of thing</strong> and the
+order matters — every enemy on screen, every score this week. They are wrong
+when the slots mean different things, and that is what a dictionary is for.</p>
+<h2 id="a-name-for-every-value">A name for every value</h2>
+<p>Same monster, labelled:</p>
+<pre><code class="language-python">goblin = {&quot;name&quot;: &quot;Goblin&quot;, &quot;health&quot;: 30, &quot;attack&quot;: 3, &quot;speed&quot;: 90}
+
+print(goblin[&quot;health&quot;])
+print(goblin[&quot;name&quot;], &quot;hits for&quot;, goblin[&quot;attack&quot;])
+</code></pre>
+<pre><code>30
+Goblin hits for 3
+</code></pre>
+<p>Curly brackets instead of square ones, and every value has a <strong>key</strong> in front
+of it with a colon between. Written out over several lines it reads like a
+character sheet, which is exactly what it is:</p>
+<pre><code class="language-python">goblin = {
+    &quot;name&quot;: &quot;Goblin&quot;,
+    &quot;health&quot;: 30,
+    &quot;attack&quot;: 3,
+    &quot;speed&quot;: 90,
+}
+
+print(goblin)
+</code></pre>
+<pre><code>{'name': 'Goblin', 'health': 30, 'attack': 3, 'speed': 90}
+</code></pre>
+<p>The comma after the last one is allowed and is worth getting into the habit
+of: adding a line later then touches one line instead of two.</p>
+<p>Looking a value up uses square brackets, same as a list — <code>goblin["health"]</code>.
+The difference is what goes inside them. A list takes a position; a
+dictionary takes a key you chose.</p>
+<h2 id="changing-and-adding">Changing and adding</h2>
+<p>Assignment works the way it does everywhere else:</p>
+<pre><code class="language-python">goblin = {&quot;name&quot;: &quot;Goblin&quot;, &quot;health&quot;: 30}
+
+goblin[&quot;health&quot;] = goblin[&quot;health&quot;] - 12
+print(goblin[&quot;health&quot;])
+
+goblin[&quot;gold&quot;] = 7
+print(goblin)
+</code></pre>
+<pre><code>18
+{'name': 'Goblin', 'health': 18, 'gold': 7}
+</code></pre>
+<p>The first change is the one you would expect: <code>goblin["health"]</code> behaves like
+any other variable, so <code>goblin["health"] - 12</code> is worked out first and the
+answer goes back in.</p>
+<p>The third line is the surprising one. <code>goblin["gold"] = 7</code> uses a key that did
+not exist, and rather than complaining, Python <strong>adds it</strong>. There is no
+<code>append</code> for dictionaries, because there is nothing to append to — you just
+assign to the key you want and it appears.</p>
+<p>Which cuts both ways. A typo on the left-hand side makes a new entry instead
+of changing the one you meant:</p>
+<pre><code class="language-python">goblin = {&quot;health&quot;: 30}
+
+goblin[&quot;helth&quot;] = 10
+
+print(goblin)
+print(goblin[&quot;health&quot;])
+</code></pre>
+<pre><code>{'health': 30, 'helth': 10}
+30
+</code></pre>
+<p>No error, two keys, and a health value that never moves however many times you
+hurt the thing.</p>
+<h2 id="when-the-key-is-not-there">When the key is not there</h2>
+<p><em>Reading</em> a missing key is not so quiet:</p>
+<pre><code class="language-text">goblin = {&quot;name&quot;: &quot;Goblin&quot;, &quot;health&quot;: 30}
+
+print(goblin[&quot;armour&quot;])
+</code></pre>
+<pre><code class="language-text">KeyError: 'armour'
+</code></pre>
+<p><code>KeyError</code> is one of the friendlier errors — it tells you the exact key it
+could not find, and the fix is nearly always a spelling mistake or a key you
+have not set yet.</p>
+<p>Two ways to deal with it. Ask first, with <code>in</code>:</p>
+<pre><code class="language-python">goblin = {&quot;name&quot;: &quot;Goblin&quot;, &quot;health&quot;: 30}
+
+if &quot;armour&quot; in goblin:
+    print(&quot;Armoured&quot;)
+else:
+    print(&quot;No armour&quot;)
+
+print(&quot;health&quot; in goblin)
+</code></pre>
+<pre><code>No armour
+True
+</code></pre>
+<p>Or ask for it with a fallback, using <code>.get()</code>:</p>
+<pre><code class="language-python">goblin = {&quot;name&quot;: &quot;Goblin&quot;, &quot;health&quot;: 30}
+
+print(goblin.get(&quot;armour&quot;, 0))
+print(goblin.get(&quot;health&quot;, 0))
+print(goblin.get(&quot;armour&quot;))
+</code></pre>
+<pre><code>0
+30
+None
+</code></pre>
+<p><code>goblin.get("armour", 0)</code> means <em>give me armour, or 0 if there is no armour</em>.
+With no second value it hands back <code>None</code> — the same <code>None</code> a function with no
+<code>return</code> gives you, from <a href="../functions/">lesson 6</a>.</p>
+<p><code>.get()</code> is the right tool when a missing key is <strong>normal</strong> — some monsters
+have armour and some do not. Square brackets are right when a missing key is a
+<strong>bug</strong>, and you would rather be told.</p>
+<h2 id="going-through-one">Going through one</h2>
+<p>A <code>for</code> loop over a dictionary gives you the <strong>keys</strong>:</p>
+<pre><code class="language-python">goblin = {&quot;name&quot;: &quot;Goblin&quot;, &quot;health&quot;: 30, &quot;attack&quot;: 3}
+
+for key in goblin:
+    print(key)
+</code></pre>
+<pre><code>name
+health
+attack
+</code></pre>
+<p>They come out in the order they were put in, which is worth knowing: a
+dictionary is not sorted, it just remembers.</p>
+<p>Most of the time you want both halves, and <code>.items()</code> hands them over in
+pairs:</p>
+<pre><code class="language-python">goblin = {&quot;name&quot;: &quot;Goblin&quot;, &quot;health&quot;: 30, &quot;attack&quot;: 3}
+
+for key, value in goblin.items():
+    print(key, &quot;=&quot;, value)
+</code></pre>
+<pre><code>name = Goblin
+health = 30
+attack = 3
+</code></pre>
+<p>Two loop variables, because each thing the loop hands over is a pair. There is
+<code>.keys()</code> and <code>.values()</code> as well, for when you only want one side:</p>
+<pre><code class="language-python">prices = {&quot;sword&quot;: 40, &quot;shield&quot;: 25, &quot;potion&quot;: 5}
+
+print(len(prices))
+print(sum(prices.values()))
+
+for item in prices.keys():
+    print(item)
+</code></pre>
+<pre><code>3
+70
+sword
+shield
+potion
+</code></pre>
+<p><code>len()</code> and <code>sum()</code> are the same ones from <a href="../lists/">lesson 5</a>. A
+dictionary is a pile of things you can count and add up, like a list — it just
+has labels.</p>
+<h2 id="a-list-of-dictionaries">A list of dictionaries</h2>
+<p>Neither one on its own is the shape real game data takes. Together they are:</p>
+<pre><code class="language-python">monsters = [
+    {&quot;name&quot;: &quot;Goblin&quot;, &quot;health&quot;: 30, &quot;attack&quot;: 3},
+    {&quot;name&quot;: &quot;Skeleton&quot;, &quot;health&quot;: 40, &quot;attack&quot;: 4},
+    {&quot;name&quot;: &quot;Chort&quot;, &quot;health&quot;: 60, &quot;attack&quot;: 6},
+]
+
+for monster in monsters:
+    print(monster[&quot;name&quot;], &quot;-&quot;, monster[&quot;health&quot;], &quot;hp&quot;)
+
+print(&quot;Total health:&quot;, sum(m[&quot;health&quot;] for m in monsters))
+</code></pre>
+<pre><code>Goblin - 30 hp
+Skeleton - 40 hp
+Chort - 60 hp
+Total health: 130
+</code></pre>
+<p>A <strong>list</strong> of them, because the monsters are all the same kind of thing and
+there may be any number. A <strong>dictionary</strong> for each one, because a monster's
+name and its health are not the same kind of thing at all.</p>
+<p>That rule — list for many of the same, dictionary for one thing's parts — will
+see you through nearly every decision of this kind.</p>
+<p>Hurting one works exactly as you would hope, and this is the part that
+surprises people the first time:</p>
+<pre><code class="language-python">monsters = [
+    {&quot;name&quot;: &quot;Goblin&quot;, &quot;health&quot;: 30},
+    {&quot;name&quot;: &quot;Skeleton&quot;, &quot;health&quot;: 40},
+]
+
+
+def hurt(monster, amount):
+    monster[&quot;health&quot;] = monster[&quot;health&quot;] - amount
+
+
+hurt(monsters[0], 12)
+hurt(monsters[0], 12)
+
+print(monsters[0])
+print(monsters[1])
+</code></pre>
+<pre><code>{'name': 'Goblin', 'health': 6}
+{'name': 'Skeleton', 'health': 40}
+</code></pre>
+<p>No <code>global</code>, and no handing anything back. The function changed something
+<em>inside</em> the dictionary, and the dictionary in the list is the same dictionary
+the function was given. This is the same rule as <code>scores.append(30)</code> in
+<a href="../functions/">lesson 6</a>: changing what is inside something needs nothing
+special, and only rebinding the name needs <code>global</code>.</p>
+<h2 id="your-own-values-on-a-game-object">Your own values on a game object</h2>
+<p>Here is the first of the two shapes kaypy uses. Put a dictionary among the
+components and its keys become things the object remembers:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+bean = add([sprite(&quot;bean&quot;), pos(100, 300), area(), {&quot;hits&quot;: 0, &quot;way&quot;: 1}])
+
+bean.hits = bean.hits + 1
+bean.hits = bean.hits + 1
+
+print(&quot;hits:&quot;, bean.hits)
+print(&quot;way:&quot;, bean.way)
+</code></pre>
+<pre><code>hits: 2
+way: 1
+</code></pre>
+<p>Note the dot rather than the square brackets once it is on the object:
+<code>bean.hits</code>, not <code>bean["hits"]</code>. The dictionary is how you <em>set them up</em> — it
+puts a thing's own state in the same list as the rest of what it is, instead
+of three assignments underneath.</p>
+<p>kaypy will refuse a key that a component already owns. <code>{"pos": vec2(0, 0)}</code>
+next to <code>pos(100, 300)</code> is an error rather than a quiet overwrite, which
+matters: silently winning that argument would leave you with half a game
+object that breaks somewhere else entirely.</p>
+<h2 id="a-table-of-what-to-build">A table of what to build</h2>
+<p>The second shape, and the one that makes a level a picture you can edit:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+
+LAYOUT = [
+    &quot;########&quot;,
+    &quot;#o....o#&quot;,
+    &quot;#..gg..#&quot;,
+    &quot;########&quot;,
+]
+
+TILES = {
+    &quot;#&quot;: lambda: [rect(48, 48), color(90, 90, 110), area(), &quot;wall&quot;],
+    &quot;o&quot;: lambda: [circle(12), color(240, 200, 60), area(), &quot;coin&quot;],
+    &quot;g&quot;: lambda: [rect(32, 32), color(200, 60, 60), area(), &quot;goblin&quot;],
+}
+
+addLevel(LAYOUT, {&quot;tileWidth&quot;: 48, &quot;tileHeight&quot;: 48, &quot;tiles&quot;: TILES})
+
+print(&quot;walls:&quot;, len(get(&quot;wall&quot;)))
+print(&quot;coins:&quot;, len(get(&quot;coin&quot;)))
+print(&quot;goblins:&quot;, len(get(&quot;goblin&quot;)))
+</code></pre>
+<pre><code>walls: 20
+coins: 2
+goblins: 2
+</code></pre>
+<p>Two dictionaries are doing two different jobs there, and it is worth naming
+them separately.</p>
+<p><code>TILES</code> is a <strong>lookup table</strong>: <code>addLevel</code> walks the picture one character at a
+time and asks the dictionary what a <code>#</code> is. Every key is one character and
+every value is a function that builds one tile. (<code>lambda:</code> is a function
+written on one line — you met the idea in <a href="../functions/">lesson 6</a>, this is
+just a shorter way to write one that fits in a list.)</p>
+<p>The second dictionary — <code>{"tileWidth": 48, ...}</code> — is a <strong>settings sheet</strong>:
+named values handed to a function so the call does not become eight arguments
+in an order nobody can remember.</p>
+<p>And because the level is a picture, moving a coin means moving an <code>o</code>. Change
+one character in <code>LAYOUT</code>, run it again, and the level is different. That is
+the whole reason <a href="../../games/#dungeon-dash">Dungeon Dash</a> is built this way,
+and <a href="../../tutorials/dungeon-dash/">the tutorial</a> walks through it.</p>
+<h2 id="watch-for">Watch for</h2>
+<p><strong>Curly brackets to make one, square brackets to look one up.</strong></p>
+<p><strong>Assigning to a key that does not exist adds it.</strong> A typo on the left makes a
+new entry; a typo on the right is a <code>KeyError</code>.</p>
+<p><strong><code>.get(key, fallback)</code> when missing is normal</strong>, square brackets when missing
+is a bug.</p>
+<p><strong>A plain <code>for</code> gives you the keys.</strong> <code>.items()</code> gives you both, in pairs.</p>
+<p><strong>List for many of the same thing, dictionary for one thing's parts.</strong></p>
+<p><strong>Changing what is inside a dictionary needs no <code>global</code></strong> — only replacing
+the whole thing does.</p>
+<h2 id="classwork-1-the-inventory">Classwork 1 — The Inventory</h2>
+<p>Start here and press Run:</p>
+<pre><code class="language-python">prices = {&quot;sword&quot;: 40, &quot;shield&quot;: 25, &quot;potion&quot;: 5}
+
+print(prices[&quot;sword&quot;])
+</code></pre>
+<pre><code>40
+</code></pre>
+<p>Then, running after each step:</p>
+<ol>
+<li>Add a <code>bow</code> at 30 by assigning to a key that is not there yet. Print the
+   whole dictionary and check it arrived.</li>
+<li>Put the sword on sale: set its price to 30. Print the dictionary again —
+   the entry changed rather than a second one appearing, because the key
+   already existed.</li>
+<li>Print every item and its price on its own line, using <code>.items()</code>.</li>
+<li>Print the total cost of buying one of everything, with <code>sum()</code>.</li>
+<li>Ask the user what they want to buy with <code>input()</code> from
+   <a href="../input/">lesson 2</a>, and print the price. Use <code>.get()</code> so that a typo
+   says <code>We do not sell that</code> rather than crashing.</li>
+</ol>
+<p><strong>Stretch:</strong> add a second dictionary, <code>stock</code>, with the same keys and a count
+for each. Then write <code>buy(item)</code> that takes one off the stock and returns the
+price — or returns 0 and prints a message when there are none left. Two
+dictionaries sharing a set of keys is an extremely common shape.</p>
+<h2 id="classwork-2-draw-your-own-level">Classwork 2 — Draw Your Own Level</h2>
+<p>Take the level above and make it yours.</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+
+LAYOUT = [
+    &quot;########&quot;,
+    &quot;#o....o#&quot;,
+    &quot;#......#&quot;,
+    &quot;########&quot;,
+]
+
+TILES = {
+    &quot;#&quot;: lambda: [rect(48, 48), color(90, 90, 110), area(), &quot;wall&quot;],
+    &quot;o&quot;: lambda: [circle(12), color(240, 200, 60), area(), &quot;coin&quot;],
+}
+
+addLevel(LAYOUT, {&quot;tileWidth&quot;: 48, &quot;tileHeight&quot;: 48, &quot;tiles&quot;: TILES})
+</code></pre>
+<ol>
+<li>Move the coins by moving the <code>o</code> characters. Add four more.</li>
+<li>Make the level wider and taller. Every row must be the same length — count
+   the characters if a wall comes out in the wrong place.</li>
+<li>Add a third entry to <code>TILES</code>: a <code>^</code> that builds a red spike, and put some
+   in.</li>
+<li>Add a player with <code>loadSprite</code> and a <code>p</code> tile, then move it with the
+   <code>@onKeyDown</code> handlers from <a href="../decorators/">lesson 7</a>.</li>
+<li>Collect the coins: <code>@onCollide("player", "coin")</code>, <code>destroy</code> the coin, and
+   count them in a variable with <code>global</code>.</li>
+</ol>
+<p><strong>Stretch:</strong> put two layouts in a list and a <code>level_number</code> variable, so that
+<code>LAYOUTS[level_number]</code> picks which one to build. A list of pictures, each
+built through the same table — that is a whole game's worth of levels in about
+four lines.</p>
+<h2 id="check-yourself">Check yourself</h2>
+<p>What does this print?</p>
+<pre><code class="language-python">a = {&quot;score&quot;: 0}
+b = a
+
+b[&quot;score&quot;] = 50
+
+print(a[&quot;score&quot;])
+</code></pre>
+<pre><code>50
+</code></pre>
+<details>
+<summary>Why did changing <code>b</code> change <code>a</code>?</summary>
+<p>Compare it with the one at the end of <a href="../variables/">lesson 1</a>:</p>
+<pre><code class="language-python">a = 5
+b = a
+a = 12
+
+print(a, b)
+</code></pre>
+<pre><code>12 5
+</code></pre>
+<p>There, <code>b</code> kept its own 5. Here, <code>b</code> and <code>a</code> move together. Both are correct,
+and the rule behind them is the same one: <strong><code>b = a</code> copies what is in <code>a</code>,
+and what is in <code>a</code> is a way of getting to the dictionary, not the dictionary
+itself.</strong> So both names now reach the same one, and changing it through either
+name changes the thing both are looking at.</p>
+<p>The number example never showed this because <code>a = 12</code> is a <em>rebinding</em> — it
+points <code>a</code> at a different value and leaves <code>b</code> where it was. Do the same thing
+here and the two come apart again: <code>b = {"score": 99}</code> gives <code>b</code> a brand new
+dictionary and <code>a</code> keeps the old one.</p>
+<p>It is the same distinction as <code>global</code> in <a href="../functions/">lesson 6</a>, wearing
+different clothes. <strong>Changing what is inside</strong> is visible everywhere the thing
+is reachable from. <strong>Replacing the whole thing</strong> only affects the one name you
+replaced it on.</p>
+<p>Worth knowing because it is usually what you want: passing a monster's
+dictionary to <code>hurt()</code> and having the damage stick is this behaviour doing its
+job. It only bites when you meant to take a copy — and for that there is
+<code>b = dict(a)</code>.</p>
+</details>
+<hr />
+<hr />
+<p><a href="../decorators/">← Lesson 7 — Decorators</a> · <a href="../">All eight lessons</a></p>
+      </article>
+    </div>
+    <aside class="col-lg-4 col-xl-3 toc-col">
+      <nav class="toc" aria-label="On this page">
+        <p class="toc-head">On this page</p>
+      <a class="toc-link toc-d1" href="#lesson-8-dictionaries">Lesson 8 — Dictionaries</a>
+      <a class="toc-link toc-d2" href="#the-problem-with-slot-numbers">The problem with slot numbers</a>
+      <a class="toc-link toc-d2" href="#a-name-for-every-value">A name for every value</a>
+      <a class="toc-link toc-d2" href="#changing-and-adding">Changing and adding</a>
+      <a class="toc-link toc-d2" href="#when-the-key-is-not-there">When the key is not there</a>
+      <a class="toc-link toc-d2" href="#going-through-one">Going through one</a>
+      <a class="toc-link toc-d2" href="#a-list-of-dictionaries">A list of dictionaries</a>
+      <a class="toc-link toc-d2" href="#your-own-values-on-a-game-object">Your own values on a game object</a>
+      <a class="toc-link toc-d2" href="#a-table-of-what-to-build">A table of what to build</a>
+      <a class="toc-link toc-d2" href="#watch-for">Watch for</a>
+      <a class="toc-link toc-d2" href="#classwork-1-the-inventory">Classwork 1 — The Inventory</a>
+      <a class="toc-link toc-d2" href="#classwork-2-draw-your-own-level">Classwork 2 — Draw Your Own Level</a>
+      <a class="toc-link toc-d2" href="#check-yourself">Check yourself</a>
+      </nav>
+    </aside>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>

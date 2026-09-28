@@ -47,6 +47,13 @@ import pagecode
 HERE = pathlib.Path(__file__).resolve().parent
 SITE = HERE / "site"
 
+#: The two halves of highlight.js the pages load. Fetched below, because the
+#: thing that went wrong with them cannot be seen in the markup.
+HLJS_CORE = ("https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0"
+             "/highlight.min.js")
+HLJS_PYTHON = ("https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0"
+               "/languages/python.min.js")
+
 BOOTSTRAP_CSS = ("https://cdn.jsdelivr.net/npm/bootstrap@5.3.3"
                  "/dist/css/bootstrap.min.css")
 
@@ -64,6 +71,7 @@ PAGES = [
     "learn/lists/index.html",
     "learn/functions/index.html",
     "learn/decorators/index.html",
+    "learn/dictionaries/index.html",
     "guide/index.html",
     "api/index.html",
     "tutorials/index.html",
@@ -212,6 +220,22 @@ for rel, page in pages.items():
           and '<pre><code class="language-' in page)
     check("  and loads the python grammar, not just highlight.js's core",
           "languages/python.min.js" in page)
+    # THE BUILD, WHICH IS THE ONE THAT ACTUALLY BIT.
+    #
+    # highlight.js publishes two npm packages. `highlight.js` is for Node:
+    # every file under its lib/ ends in `module.exports = ...`, which in a
+    # browser throws ReferenceError before it can set window.hljs. The
+    # browser build is a separate package, @highlightjs/cdn-assets, and its
+    # own README opens by saying so.
+    #
+    # Loaded the wrong way the page still renders, still links, still passes
+    # every check above — and site.js, which asks `if (window.hljs)` before
+    # touching anything, quietly does nothing. The whole site was grey for
+    # weeks and nothing said a word.
+    check("  from the browser build, not the one meant for Node",
+          "@highlightjs/cdn-assets@" in page
+          and "npm/highlight.js@" not in page,
+          "npm/highlight.js@ is the server package; its lib/ is CommonJS")
     check("  and a dark code theme as well as a light one",
           "github-dark.min.css" in page and "github.min.css" in page)
     check("  chosen by media attribute, not by a script after first paint",
@@ -236,26 +260,26 @@ for rel, page in pages.items():
 #
 # The single Learn page had a twelve-hundred-line sidebar down its right, which
 # is what prompted the split. These check the split actually happened rather
-# than that seven files exist.
+# than that eight files exist.
 #
 #: The lessons in order. The order is the point: it is what the numbering, the
 #: hub cards and the prev/next rows all have to agree with, and a lesson that
 #: was renumbered everywhere except one of the three reads as a typo the
 #: author cannot see.
 LESSONS = ["variables", "input", "conditionals", "loops", "lists",
-           "functions", "decorators"]
+           "functions", "decorators", "dictionaries"]
 
 hub = pages["learn/index.html"]
 for number, slug in enumerate(LESSONS, 1):
     check("the hub links the %s lesson" % slug,
           'href="%s/"' % slug in hub)
     lesson = pages["learn/%s/index.html" % slug]
-    check("  and %s is one lesson, not all seven" % slug,
+    check("  and %s is one lesson, not all eight" % slug,
           len(re.findall(r"<h1[^>]*>", lesson)) == 1
           and lesson.count("Classwork") <= 4,
           "%d h1, %d mentions of Classwork"
           % (len(re.findall(r"<h1[^>]*>", lesson)), lesson.count("Classwork")))
-    check("  and the dropdown in its own header reaches the other six",
+    check("  and the dropdown in its own header reaches the other seven",
           all('href="../../learn/%s/"' % other in lesson
               for other in LESSONS),
           "the header dropdown is incomplete")
@@ -355,6 +379,60 @@ if theirs:
                     unstyled.setdefault(name, rel)
     check("every class the pages use has a rule somewhere", not unstyled,
           "; ".join("%s (%s)" % (k, v) for k, v in sorted(unstyled.items())[:4]))
+
+# ============================== and the browser build really is a browser build
+#
+# The check above reads the URL. This one reads what is at the end of it,
+# because "the right package name" and "a file that defines window.hljs" are
+# two different claims and only the second one matters.
+def fetch(label, url):
+    try:
+        with urllib.request.urlopen(url, timeout=15) as res:
+            return res.read().decode("utf-8", "replace")
+    except (urllib.error.URLError, TimeoutError, OSError) as err:
+        print("      (could not fetch highlight.js %s: %s — pass --offline "
+              "to skip this on purpose)" % (label, err))
+        return None
+
+
+#: What a file that works in a browser looks like. The browser build opens
+#: `var hljs=function(){...}` at the top level, which is what puts hljs on
+#: window; the Node build never assigns a global at all.
+#:
+#: ASKED THIS WAY ROUND ON PURPOSE. The obvious check — "it must not say
+#: module.exports" — is WRONG, and was written and run before being checked
+#: against the real file: the browser build ends with a UMD tail,
+#: `"object"==typeof exports&&...&&(module.exports=hljs)`, so that check
+#: fails the correct file and would have sent the next person back to the
+#: broken one. The question is not how the file exports, it is whether it
+#: defines a global.
+GLOBAL_HLJS = re.compile(r"(?:^|[;\s])var hljs\s*=|window\.hljs\s*=")
+
+
+def is_browser_build(label, js):
+    check("highlight.js %s was really read" % label, len(js) > 1000,
+          "%d KB" % (len(js) / 1024))
+    check("  and defines a global hljs, which is what site.js looks for",
+          GLOBAL_HLJS.search(js) is not None,
+          "no global assignment: this is the Node build, and window.hljs "
+          "stays undefined")
+
+
+if args.offline:
+    print("      (--offline: highlight.js itself was not fetched)")
+else:
+    core = fetch("core", HLJS_CORE)
+    if core is not None:
+        is_browser_build("core", core)
+    grammar = fetch("the python grammar", HLJS_PYTHON)
+    if grammar is not None:
+        check("highlight.js the python grammar was really read",
+              len(grammar) > 1000, "%d KB" % (len(grammar) / 1024))
+        # The grammar registers itself against a bare global `hljs`, which
+        # exists only if core put one there. That is the contract between the
+        # two files, and it is worth stating rather than assuming.
+        check("  and registers itself on the global hljs",
+              "hljs.registerLanguage" in grammar)
 
 # ====================================== Get started names real commands
 start = pages["start/index.html"]

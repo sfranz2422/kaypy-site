@@ -70,7 +70,7 @@ ASSETS = SITE / "assets"
 #: would silently pick up nothing at all if the folder were renamed, and
 #: "0 programs found" is a pass in a suite that only counts failures.
 LESSONS = ["variables", "input", "conditionals", "loops", "lists",
-           "functions", "decorators"]
+           "functions", "decorators", "dictionaries"]
 
 #: Prepended to any block that asks a question, so that a run here reads like
 #: a run in the playground.
@@ -267,11 +267,11 @@ check("and prints exactly what the page says it prints", not wrong,
 # concatenated blob, because a check on the union passes when one lesson has
 # all of it and another has none — which is exactly the state a newly split
 # page arrives in.
-#: Solutions folded away, counted across all seven lessons. It is a total and
+#: Solutions folded away, counted across all eight lessons. It is a total and
 #: not a per-page floor because the lessons are not the same shape: loops has
-#: three foldaways, the other six one each. A per-page floor of three fails
+#: three foldaways, the other seven one each. A per-page floor of three fails
 #: honest pages, and a floor of one passes a page that lost two.
-EXPECTED_DETAILS = 9
+EXPECTED_DETAILS = 10
 
 details = 0
 for name, path in pages:
