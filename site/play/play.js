@@ -251,7 +251,25 @@
     outputEl.scrollTop = outputEl.scrollHeight;
   }
 
-  function clearOutput() { outputEl.textContent = ""; }
+  /* The line a program blocked on input() types into, built into the output
+     pane so the question and the answer end up in the same transcript.
+
+     Declared here, above everything that calls into it: clearOutput() runs
+     during the Python boot, and a `var` hoisted from further down would still
+     be undefined at that moment. */
+  var consoleIO = window.PyIDERuntime.attachConsole({
+    outputEl: outputEl,
+    // Stop is the way out for someone who changes their mind mid-question.
+    onWaiting: function () { paintStop(); }
+  });
+
+  /* Clearing has to put the pending input line BACK. Without this, Clear
+     deletes the very element the program is waiting on and the run hangs on a
+     keystroke that can never arrive. */
+  function clearOutput() {
+    outputEl.textContent = "";
+    consoleIO.restore();
+  }
 
   function status(msg) { statusEl.textContent = msg || ""; }
 
@@ -259,6 +277,7 @@
 
   var pyodide = null;
   var running = false;
+  var runMode = null;          // "game" | "console" | null
   var canvas = $("canvas");
 
   (async function boot() {
@@ -274,7 +293,9 @@
         "import sys; '.'.join(str(v) for v in sys.version_info[:3])"
       );
       clearOutput();
-      write("Python " + version + " is ready. Press Run.\n", "dim");
+      write("Python " + version + " is ready. Press Run.\n" +
+            "A program that says `from kaypy import *` opens a game window;" +
+            " anything else runs here.\n", "dim");
       runBtn.disabled = false;
       runLabel.textContent = "Run";
     } catch (e) {
@@ -286,26 +307,45 @@
 
   // ------------------------------------------------------------ run/stop
 
-  function setBusy(on) {
+  /* A console program that is merely computing cannot be interrupted — there
+     is no loop to ask and no frame to notice. Its way out is the time limit.
+     So Stop is offered for a game, and for a program sitting on input(), and
+     at no other time; otherwise it is a button that does nothing. */
+  function paintStop() {
+    stopBtn.hidden = !(running && (runMode === "game" || consoleIO.isWaiting()));
+  }
+
+  function setBusy(on, mode) {
     running = on;
+    runMode = on ? mode : null;
     runBtn.hidden = on;
-    stopBtn.hidden = !on;
     exportBtn.disabled = on;
     resetBtn.disabled = on;
+    paintStop();
   }
+
+  /* Long enough for anything written in a lesson, short enough that a loop
+     with no end gives up while you are still looking at the tab. Thinking
+     time at an input() prompt does not count against it — see _pyide_input. */
+  var TIME_LIMIT_SECONDS = 15;
 
   async function run() {
     if (running || !pyodide) return;
     var source = editor.getValue();
 
+    /* TWO KINDS OF PROGRAM, and the import is what tells them apart.
+     *
+     * A kaypy program opens a window and runs frames until it is stopped. An
+     * ordinary Python program prints, asks and finishes. Both belong here:
+     * the first two lessons are plain Python, and turning them away because
+     * they do not say `from kaypy import *` would have sent a beginner off
+     * the site on day one. */
     if (!window.PyIDEGame.looksLikeGame(source)) {
-      clearOutput();
-      write("This playground runs kaypy games.\n", "err");
-      write('Your program needs `from kaypy import *` at the top.\n', "dim");
+      await runConsole(source);
       return;
     }
 
-    setBusy(true);
+    setBusy(true, "game");
     status("Starting the engine…");
     try {
       /* ensureReady hands back a NEW canvas each time and points SDL at it,
@@ -325,6 +365,10 @@
     clearOutput();
     write("Game running. Click the picture first so the keys reach it.\n", "dim");
     stage.hidden = false;
+    /* SDL takes the keyboard for the canvas while a game runs, so a text
+       field in the output pane would collect nothing. input() falls back to a
+       dialog box, which is the only thing that can still be typed into. */
+    consoleIO.setEnabled(false);
     canvas.focus();
 
     try {
@@ -349,8 +393,45 @@
     }
   }
 
+  /* An ordinary Python program: print, input, finish.
+   *
+   * runPythonAsync rather than calling _pyide_run directly, because that is
+   * what puts a suspender on the stack. Without one, input() has nothing to
+   * switch to and silently falls back to a dialog box — the program still
+   * works, so this is easy to break and hard to notice.
+   *
+   * The source goes through a global rather than being pasted into the
+   * snippet, so a program containing quotes or backslashes cannot corrupt the
+   * call that runs it. */
+  async function runConsole(source) {
+    setBusy(true, "console");
+    stage.hidden = true;
+    clearOutput();
+    consoleIO.setEnabled(true);
+    try {
+      pyodide.globals.set("_pyide_source", source);
+      var result = await pyodide.runPythonAsync(
+        "_pyide_run(_pyide_source, " + TIME_LIMIT_SECONDS + ")"
+      );
+      if (result === "ok") write("\n— finished —\n", "dim");
+    } catch (e) {
+      write(String(e) + "\n", "err");
+    } finally {
+      setBusy(false);
+      editor.focus();
+    }
+  }
+
   function stopRun() {
     if (!running) return;
+    /* A program blocked on input() is not executing, so there is no loop to
+       ask to stop — cancelling the read is what ends it, and Python turns a
+       cancelled read into the same "stopped" path. */
+    if (consoleIO.isWaiting()) {
+      consoleIO.cancel();
+      return;
+    }
+    if (runMode !== "game") return;
     /* Ask, don't tear down. Stop clears the engine's running flag; the loop
        notices on its next frame and returns, and the await in run() resolves
        — and ITS finally is what puts the toolbar back. Calling setBusy here

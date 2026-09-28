@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 1 — Variables · KayPy</title>
+<meta name="description" content="Learn Python with KayPy: lesson 1, variables.">
+<meta property="og:title" content="Lesson 1 — Variables · KayPy">
+<meta property="og:description" content="Learn Python with KayPy: lesson 1, variables.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All five lessons</a></li><li><a class="dropdown-item active" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../tutorials/">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row gx-xl-5">
+    <div class="col-lg-8 col-xl-9">
+      <article class="prose">
+<h1 id="lesson-1-variables">Lesson 1 — Variables</h1>
+<p><strong>By the end of this you can:</strong> put a value under a name, change what that
+name holds, tell a number from a piece of text, join text together, and print
+any of it.</p>
+<p>This first lesson is plain Python. No game, no sprites, nothing to import —
+just the <a href="../../play/">playground</a>, a few lines, and Run. The last
+section puts a variable on the screen, once there is something worth putting
+there.</p>
+<h2 id="a-name-for-a-value">A name for a value</h2>
+<p>A program has to remember things. This is how:</p>
+<pre><code class="language-python">score = 0
+print(score)
+</code></pre>
+<pre><code>0
+</code></pre>
+<p>Line 1 makes a <strong>variable</strong>. The name is <code>score</code>, and the value in it is
+<code>0</code>. Line 2 asks Python to print what is in there.</p>
+<p>Read the <code>=</code> as <strong>"put this in here"</strong>, right to left. It is not the equals
+sign from maths, and reading it as one will confuse you within about four
+minutes. <code>score = 0</code> is an instruction: <em>make a box called score and put 0 in
+it.</em></p>
+<p>You can put anything in a box, and print several at once:</p>
+<pre><code class="language-python">score = 0
+lives = 3
+name = &quot;Ada&quot;
+
+print(name, score, lives)
+</code></pre>
+<pre><code>Ada 0 3
+</code></pre>
+<p><code>print</code> takes as many values as you like, separated by commas, and puts a
+single space between them.</p>
+<h2 id="changing-what-a-name-holds">Changing what a name holds</h2>
+<p>A variable is not fixed. Give it a new value and the old one is gone:</p>
+<pre><code class="language-python">score = 0
+print(score)
+
+score = 50
+print(score)
+</code></pre>
+<pre><code>0
+50
+</code></pre>
+<p>Which leads to the line that stops everybody the first time they see it:</p>
+<pre><code class="language-python">score = 50
+score = score + 10
+print(score)
+</code></pre>
+<pre><code>60
+</code></pre>
+<p>As maths, <code>score = score + 10</code> is nonsense — no number is ten more than
+itself. As Python it is perfectly ordinary, because <code>=</code> is not equals. Python
+does the <strong>right-hand side first</strong>: <code>score + 10</code> is 60. <em>Then</em> it puts 60 into
+<code>score</code>. The old value was used to work out the new one and then thrown away.</p>
+<p>That one line is most of what a game does. Score goes up, health goes down,
+the player moves a bit further right — all of it is "take what is in there, do
+something to it, put the answer back".</p>
+<blockquote>
+<p><strong><code>+=</code> is the short way.</strong> <code>score += 10</code> means exactly <code>score = score + 10</code>,
+and there is <code>-=</code> too. Use whichever you find easier to read; they are the
+same instruction.</p>
+</blockquote>
+<h2 id="numbers-and-text">Numbers and text</h2>
+<p>Two kinds of value turn up constantly, and <strong>the quotes are what tell them
+apart</strong>:</p>
+<pre><code class="language-python">score = 10
+label = &quot;10&quot;
+
+print(score + 5)
+print(label + &quot;5&quot;)
+</code></pre>
+<pre><code>15
+105
+</code></pre>
+<p>Same <code>+</code>, two completely different answers. <code>10</code> is a <strong>number</strong>, so <code>+</code> adds.
+<code>"10"</code> is a <strong>string</strong> — a piece of text — so <code>+</code> sticks the two together end
+to end. <code>"10" + "5"</code> is <code>"105"</code> in the same way that <code>"cat" + "fish"</code> is
+<code>"catfish"</code>.</p>
+<p>Joining strings is how a game builds a label out of pieces:</p>
+<pre><code class="language-python">name = &quot;Ada&quot;
+print(&quot;Good luck, &quot; + name + &quot;!&quot;)
+</code></pre>
+<pre><code>Good luck, Ada!
+</code></pre>
+<p>Notice the space after the comma, inside the quotes. Python joins exactly what
+you give it and adds nothing, so a missing space is a missing space.</p>
+<h2 id="mixing-the-two">Mixing the two</h2>
+<p>Try to join a number onto a string and Python refuses:</p>
+<pre><code class="language-text">score = 10
+print(&quot;Score: &quot; + score)
+</code></pre>
+<pre><code class="language-text">TypeError: can only concatenate str (not &quot;int&quot;) to str
+</code></pre>
+<p>It is being careful rather than difficult. <code>+</code> means add for numbers and join
+for text, and with one of each it has no way to know which you meant. So you
+say, with <code>str()</code>, which turns a value into its text:</p>
+<pre><code class="language-python">score = 10
+print(&quot;Score: &quot; + str(score))
+</code></pre>
+<pre><code>Score: 10
+</code></pre>
+<p>Or sidestep it entirely with a comma, which is usually nicer:</p>
+<pre><code class="language-python">score = 10
+print(&quot;Score:&quot;, score)
+</code></pre>
+<pre><code>Score: 10
+</code></pre>
+<p><code>str()</code> has an opposite, <code>int()</code>, which turns text into a whole number:</p>
+<pre><code class="language-python">print(int(&quot;42&quot;) + 8)
+</code></pre>
+<pre><code>50
+</code></pre>
+<p>That looks pointless here — why write <code>"42"</code> when you could write <code>42</code>? It is
+the whole of the next lesson: everything a person types arrives as text, and
+<code>int()</code> is what makes it a number you can do sums with.</p>
+<h2 id="picking-names">Picking names</h2>
+<p>Python has a few rules and everybody else has one preference.</p>
+<p>The rules: a name is made of letters, digits and underscores, it cannot start
+with a digit, and it cannot have a space in it. <code>high_score</code> is fine.
+<code>high score</code> is two names Python does not understand, and <code>2nd_player</code> is an
+error.</p>
+<p>The preference: <strong>say what it holds</strong>. <code>lives_left</code> costs eight keystrokes more
+than <code>l</code> and saves you reading the whole program to remember what <code>l</code> was. Use
+lower case with underscores between the words — that is what Python code looks
+like everywhere.</p>
+<p>And a name is only a name, so a typo makes a different one:</p>
+<pre><code class="language-text">score = 10
+print(scoer)
+</code></pre>
+<pre><code class="language-text">NameError: name 'scoer' is not defined
+</code></pre>
+<p><code>NameError</code> nearly always means one of two things: a spelling mistake, or you
+used the name on a line above the one that created it. Python reads top to
+bottom and will not use a box you have not filled yet.</p>
+<h2 id="now-put-it-on-the-screen">Now put it on the screen</h2>
+<p>Everything above works the same in a game — the only difference is where the
+value ends up. Here it goes on a window instead of in the output pane:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+
+name = &quot;Ada&quot;
+score = 120
+lives = 3
+
+add([text(&quot;Player: &quot; + name, size=28), pos(40, 40)])
+add([text(&quot;Score: &quot; + str(score), size=28), pos(40, 90)])
+add([text(&quot;Lives: &quot; + str(lives), size=28), pos(40, 140)])
+</code></pre>
+<p>Press Run and a window opens with three labels in it. This one <em>does</em> need
+<code>from kaypy import *</code> at the top, which is how the playground knows to open a
+window rather than just print.</p>
+<p>Three things worth noticing, because all three are from this lesson:</p>
+<ul>
+<li><code>str(score)</code> — <code>text()</code> wants a string, and <code>score</code> is a number. Take the
+  <code>str()</code> off and you get the same <code>TypeError</code> as before.</li>
+<li>The labels are built by joining, exactly like <code>"Good luck, " + name</code>.</li>
+<li>Change <code>score</code> to 9999 and run it again. One number changed; the window
+  changed with it, and you did not touch the three <code>add</code> lines.</li>
+</ul>
+<h2 id="watch-for">Watch for</h2>
+<p><strong><code>=</code> puts a value in a box.</strong> It is not a claim that two things are equal.
+Read it right to left.</p>
+<p><strong>Quotes make text.</strong> <code>7</code> is a number, <code>"7"</code> is a string, and <code>+</code> does a
+different job to each.</p>
+<p><strong><code>"Score: " + score</code> is a <code>TypeError</code></strong> when <code>score</code> is a number. Either
+<code>str(score)</code> or a comma.</p>
+<p><strong><code>NameError</code> means Python has never heard that name</strong> — check the spelling,
+then check the order.</p>
+<p><strong>Name things after what they hold.</strong> You are the one who has to read it next
+week.</p>
+<h2 id="classwork-1-the-character-sheet">Classwork 1 — The Character Sheet</h2>
+<p>Start with this and press Run:</p>
+<pre><code class="language-python">name = &quot;Ada&quot;
+health = 100
+
+print(name)
+print(health)
+</code></pre>
+<pre><code>Ada
+100
+</code></pre>
+<p>Now change it, one step at a time, running after each:</p>
+<ol>
+<li>Add two more variables: <code>gold</code>, a number, and <code>weapon</code>, a piece of text.</li>
+<li>Replace the two <code>print</code> lines with one line that prints
+   <code>Ada the knight, 100 health, 40 gold</code> — with your values in it, built by
+   joining strings with <code>+</code>. You will need <code>str()</code> twice.</li>
+<li>Below that, take 30 off <code>health</code> using <code>health = health - 30</code>, and print the
+   line again. The same print code, a different number: copy the line rather
+   than retyping it.</li>
+<li>Double the gold with <code>gold = gold * 2</code> and print once more.</li>
+</ol>
+<p><strong>Stretch:</strong> write the whole line with commas instead of <code>+</code> and <code>str()</code>, and
+compare the two. One of them needs more punctuation; the other gives you less
+control over the spaces. Which would you rather read?</p>
+<h2 id="classwork-2-the-scoreboard">Classwork 2 — The Scoreboard</h2>
+<p>A window with numbers on it that you can change from one place.</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+
+coins = 7
+coin_value = 25
+
+add([text(&quot;Coins: &quot; + str(coins), size=28), pos(40, 40)])
+</code></pre>
+<ol>
+<li>Add a second label under the first, at <code>pos(40, 90)</code>, showing
+   <code>coins * coin_value</code> as the total. Work the total out into a variable of its
+   own first — <code>total = coins * coin_value</code> — and put that on the screen.</li>
+<li>Add a third label with a title of your own at the top, in a bigger size.</li>
+<li>Change <code>coins</code> to 40 and run it again. Both numbers should move. If only
+   one did, you typed a number where a variable should be.</li>
+</ol>
+<p><strong>Stretch:</strong> add <code>bonus = 100</code> and make the total <code>coins * coin_value + bonus</code>.
+Then set <code>bonus = 0</code> and check the screen agrees.</p>
+<h2 id="check-yourself">Check yourself</h2>
+<p>What does this print?</p>
+<pre><code class="language-python">a = 5
+b = a
+a = 12
+
+print(a, b)
+</code></pre>
+<pre><code>12 5
+</code></pre>
+<details>
+<summary>Why is <code>b</code> still 5?</summary>
+<p><code>b = a</code> copied the <strong>value that was in <code>a</code> at that moment</strong>, which was 5. It
+did not tie the two names together. When <code>a</code> was given 12 on the next line,
+nothing went looking for other names to update, because nothing was ever
+linked — <code>b</code> has held its own 5 since the line that put it there.</p>
+<p>This catches people because <code>b = a</code> looks like it says "b is a". It says
+"put what is in a into b", once, on the line where it is written.</p>
+</details>
+<hr />
+<hr />
+<p><a href="../">All five lessons</a> · <a href="../input/">Lesson 2 — Input →</a></p>
+      </article>
+    </div>
+    <aside class="col-lg-4 col-xl-3 toc-col">
+      <nav class="toc" aria-label="On this page">
+        <p class="toc-head">On this page</p>
+      <a class="toc-link toc-d1" href="#lesson-1-variables">Lesson 1 — Variables</a>
+      <a class="toc-link toc-d2" href="#a-name-for-a-value">A name for a value</a>
+      <a class="toc-link toc-d2" href="#changing-what-a-name-holds">Changing what a name holds</a>
+      <a class="toc-link toc-d2" href="#numbers-and-text">Numbers and text</a>
+      <a class="toc-link toc-d2" href="#mixing-the-two">Mixing the two</a>
+      <a class="toc-link toc-d2" href="#picking-names">Picking names</a>
+      <a class="toc-link toc-d2" href="#now-put-it-on-the-screen">Now put it on the screen</a>
+      <a class="toc-link toc-d2" href="#watch-for">Watch for</a>
+      <a class="toc-link toc-d2" href="#classwork-1-the-character-sheet">Classwork 1 — The Character Sheet</a>
+      <a class="toc-link toc-d2" href="#classwork-2-the-scoreboard">Classwork 2 — The Scoreboard</a>
+      <a class="toc-link toc-d2" href="#check-yourself">Check yourself</a>
+      </nav>
+    </aside>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>

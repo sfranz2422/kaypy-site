@@ -204,6 +204,59 @@ check("  and Start over refuses while it is still empty",
       re.search(r"if \(!STARTER\)", script) is not None,
       "pressing it early would blank the editor")
 
+# ================================================= it runs plain Python too
+#
+# The playground used to turn away anything that did not say
+# `from kaypy import *`, which made the first two lessons — variables and
+# input, both plain Python — impossible to do on the site they are published
+# on. It now runs those through the same console path PyIDE uses.
+#
+# EVERY PIECE BELOW IS LOAD-BEARING AND FAILS QUIETLY WITHOUT A CHECK. A
+# missing runPythonAsync leaves input() falling back to a dialog box; a
+# missing restore() makes Clear hang a program waiting on a question; a
+# missing setEnabled(false) puts a typing box on the page during a game where
+# SDL has already taken the keyboard, so it collects nothing. In all three the
+# playground still opens and still runs a game, which is why none of them
+# would be noticed by hand.
+check("the playground no longer turns plain Python away",
+      "This playground runs kaypy games" not in script,
+      "the refusal is still in play.js")
+check("  it has a console path for a program with no kaypy in it",
+      re.search(r"function runConsole\b", script) is not None)
+check("  reached when looksLikeGame says no",
+      re.search(r"if \(!window\.PyIDEGame\.looksLikeGame\(source\)\) \{\s*"
+                r"await runConsole\(source\);", script) is not None,
+      "the branch does not reach runConsole")
+check("  and run through runPythonAsync, so input() can block",
+      re.search(r"runPythonAsync\(\s*\"_pyide_run\(_pyide_source", script)
+      is not None,
+      "calling _pyide_run any other way makes input() a dialog box")
+check("  the source goes through a global, not into the snippet",
+      "_pyide_source" in script and '"_pyide_run(" + JSON' not in script)
+
+check("the input line is attached to the output pane",
+      "PyIDERuntime.attachConsole(" in script)
+check("  and Clear puts back the line a program is waiting on",
+      re.search(r"function clearOutput\(\)[^}]*consoleIO\.restore\(\)", script)
+      is not None,
+      "Clear would delete the field the program is blocked on")
+check("  Stop cancels a pending question",
+      re.search(r"consoleIO\.isWaiting\(\)\s*\)\s*\{\s*consoleIO\.cancel\(\)",
+                script) is not None)
+check("  and is switched off while a game has the keyboard",
+      "consoleIO.setEnabled(false)" in script,
+      "SDL owns the keys during a game; a field on the page collects nothing")
+check("  and back on for a console run",
+      "consoleIO.setEnabled(true)" in script)
+
+# The pane it types into is styled by the vendored stylesheet, not by play.css.
+# An unstyled input inside a <pre> renders as a boxed control in the browser's
+# own font, which looks like a bug on a page that is otherwise a terminal.
+play_css = (PLAY / "style.css").read_text()
+for rule in (".askline", "input.ask", ".output .typed"):
+    check("  %s is styled" % rule, rule in play_css,
+          "the input line would render as a raw form control")
+
 # ------------------------------------------- every sprite and sound it names
 named = re.findall(r'load(?:Sprite|Sound)\("[^"]+",\s*"([^"]+)"\)', starter)
 missing = [p for p in named if not (DIST / "assets" / p).is_file()]

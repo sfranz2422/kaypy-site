@@ -57,6 +57,8 @@ PAGES = [
     "index.html",
     "start/index.html",
     "learn/index.html",
+    "learn/variables/index.html",
+    "learn/input/index.html",
     "learn/conditionals/index.html",
     "learn/loops/index.html",
     "learn/lists/index.html",
@@ -232,21 +234,38 @@ for rel, page in pages.items():
 #
 # The single Learn page had a twelve-hundred-line sidebar down its right, which
 # is what prompted the split. These check the split actually happened rather
-# than that three files exist.
+# than that five files exist.
+#
+#: The lessons in order. The order is the point: it is what the numbering, the
+#: hub cards and the prev/next rows all have to agree with, and a lesson that
+#: was renumbered everywhere except one of the three reads as a typo the
+#: author cannot see.
+LESSONS = ["variables", "input", "conditionals", "loops", "lists"]
+
 hub = pages["learn/index.html"]
-for slug in ("conditionals", "loops", "lists"):
+for number, slug in enumerate(LESSONS, 1):
     check("the hub links the %s lesson" % slug,
           'href="%s/"' % slug in hub)
     lesson = pages["learn/%s/index.html" % slug]
-    check("  and %s is one lesson, not all three" % slug,
+    check("  and %s is one lesson, not all five" % slug,
           len(re.findall(r"<h1[^>]*>", lesson)) == 1
           and lesson.count("Classwork") <= 4,
           "%d h1, %d mentions of Classwork"
           % (len(re.findall(r"<h1[^>]*>", lesson)), lesson.count("Classwork")))
-    check("  and the dropdown in its own header reaches the other two",
+    check("  and the dropdown in its own header reaches the other four",
           all('href="../../learn/%s/"' % other in lesson
-              for other in ("conditionals", "loops", "lists")),
+              for other in LESSONS),
           "the header dropdown is incomplete")
+    # THE NUMBER, in the three places it is written down and can disagree.
+    # Inserting a lesson at the front renumbers every one after it, and the
+    # heading is the copy a reader believes — so a page titled "Lesson 1" that
+    # the hub calls lesson 3 is not a cosmetic slip.
+    heading = re.search(r"<h1[^>]*>(.*?)</h1>", lesson)
+    check("  and calls itself lesson %d, as the menu does" % number,
+          heading is not None
+          and heading.group(1).startswith("Lesson %d " % number)
+          and '>%d \u2014 %s<' % (number, slug.capitalize()) in lesson,
+          heading.group(1) if heading else "no h1")
 
 check("the hub is not still carrying the lessons itself",
       hub.count("Classwork") <= 1, "%d mentions" % hub.count("Classwork"))

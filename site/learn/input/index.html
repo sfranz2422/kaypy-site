@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 2 — Input · KayPy</title>
+<meta name="description" content="Learn Python with KayPy: lesson 2, input.">
+<meta property="og:title" content="Lesson 2 — Input · KayPy">
+<meta property="og:description" content="Learn Python with KayPy: lesson 2, input.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All five lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item active" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../tutorials/">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row gx-xl-5">
+    <div class="col-lg-8 col-xl-9">
+      <article class="prose">
+<h1 id="lesson-2-input">Lesson 2 — Input</h1>
+<p><strong>By the end of this you can:</strong> ask a question, keep the answer in a variable,
+turn a typed answer into a number you can do sums with, and know why that last
+step is not optional.</p>
+<p>Still plain Python. Everything here runs in the
+<a href="../../play/">playground</a>: press Run, and when the program asks a
+question a box appears in the output pane for you to type into. Press Enter to
+answer.</p>
+<h2 id="asking-a-question">Asking a question</h2>
+<p>One function does all of it:</p>
+<pre><code class="language-python" data-stdin="Ada">name = input(&quot;What is your name? &quot;)
+print(&quot;Hello, &quot; + name + &quot;!&quot;)
+</code></pre>
+<pre><code>What is your name? Ada
+Hello, Ada!
+</code></pre>
+<p>Run that and type your own name; the second line changes to match. Three
+things happen on line 1, in this order:</p>
+<ol>
+<li><code>What is your name?</code> is printed — that is the bit in the brackets, and it
+  is called the <strong>prompt</strong>.</li>
+<li>The program <strong>stops</strong> and waits. Nothing below runs yet.</li>
+<li>What you typed is handed back, and <code>=</code> puts it in <code>name</code>, exactly the way
+  lesson 1 put a 0 in <code>score</code>.</li>
+</ol>
+<p>Leave a space at the end of the prompt, inside the quotes:
+<code>"What is your name? "</code>. Without it you type right up against the question
+mark, which looks like a mistake because it is one.</p>
+<p>The prompt is optional. <code>input()</code> with empty brackets waits for a line without
+asking anything, which is nearly always worse — a program that sits there
+silently looks like a program that has crashed.</p>
+<h2 id="the-answer-is-always-text">The answer is always text</h2>
+<p>This is the one thing in the lesson that catches everybody, so here it is
+going wrong:</p>
+<pre><code class="language-text">age = input(&quot;How old are you? &quot;)
+print(age + 1)
+</code></pre>
+<pre><code class="language-text">How old are you? 12
+TypeError: can only concatenate str (not &quot;int&quot;) to str
+</code></pre>
+<p>You typed a number. You can see it on the screen. Python still says you tried
+to join text — because <strong><code>input()</code> always hands back a string</strong>, every time,
+whatever you typed into it. <code>12</code> arrived as <code>"12"</code>, and lesson 1 already
+showed what <code>+</code> does to a string.</p>
+<p>It is worth saying the rule to yourself as a sentence: <em>input gives me text,
+even when it looks like a number.</em> The error message will not tell you that —
+it talks about <code>str</code> and <code>int</code> and never mentions <code>input</code> at all.</p>
+<h2 id="turning-text-into-a-number">Turning text into a number</h2>
+<p><code>int()</code>, from the end of lesson 1:</p>
+<pre><code class="language-python" data-stdin="12">age = input(&quot;How old are you? &quot;)
+age = int(age)
+
+print(&quot;Next year you will be&quot;, age + 1)
+</code></pre>
+<pre><code>How old are you? 12
+Next year you will be 13
+</code></pre>
+<p>Line 2 takes the text out of <code>age</code>, makes a number of it, and puts the number
+back under the same name. Once that line has run, <code>age</code> is a number and behaves
+like one.</p>
+<p>You will usually see the two lines written as one, with <code>input</code> inside <code>int</code>:</p>
+<pre><code class="language-python" data-stdin="12">age = int(input(&quot;How old are you? &quot;))
+
+print(&quot;Next year you will be&quot;, age + 1)
+</code></pre>
+<pre><code>How old are you? 12
+Next year you will be 13
+</code></pre>
+<p>Read it from the inside out: <code>input</code> asks and gives back text, <code>int</code> turns that
+text into a number, <code>=</code> stores it. Both versions are fine. Write the two-line
+one until the one-liner reads easily.</p>
+<p>For a number with a decimal point, <code>int</code> is the wrong tool — it wants a whole
+number and nothing else. <code>float()</code> is the one that takes both:</p>
+<pre><code class="language-python" data-stdin="21.5">temp = float(input(&quot;Temperature in Celsius? &quot;))
+
+print(&quot;In Fahrenheit:&quot;, temp * 9 / 5 + 32)
+</code></pre>
+<pre><code>Temperature in Celsius? 21.5
+In Fahrenheit: 70.7
+</code></pre>
+<h2 id="when-the-answer-is-not-a-number">When the answer is not a number</h2>
+<p><code>int()</code> is strict, and a person typing at a keyboard is not:</p>
+<pre><code class="language-text">age = int(input(&quot;How old are you? &quot;))
+print(age)
+</code></pre>
+<pre><code class="language-text">How old are you? twelve
+ValueError: invalid literal for int() with base 10: 'twelve'
+</code></pre>
+<p><code>ValueError</code> means the value was the wrong <em>shape</em>: <code>int()</code> was given a string,
+which is what it wants, but the string was not a number. It happens with
+<code>twelve</code>, with <code>12 years</code>, with an empty answer, and — annoyingly — with
+<code>12.0</code>, because that is not a whole number. <code>float()</code> would take it.</p>
+<p>Handling that properly takes an <code>if</code>, which is the next lesson. For now,
+knowing what the message means is enough: the program did not break, the
+answer did not fit.</p>
+<h2 id="a-program-that-asks-more-than-once">A program that asks more than once</h2>
+<p>Each <code>input()</code> is its own question, and they happen in the order they are
+written:</p>
+<pre><code class="language-python" data-stdin="Ada|3|25">name = input(&quot;Name? &quot;)
+coins = int(input(&quot;How many coins? &quot;))
+value = int(input(&quot;Worth each? &quot;))
+
+total = coins * value
+
+print(name + &quot; has &quot; + str(total) + &quot; gold&quot;)
+</code></pre>
+<pre><code>Name? Ada
+How many coins? 3
+Worth each? 25
+Ada has 75 gold
+</code></pre>
+<p>Both of the last lesson's habits are in there: <code>int()</code> on the way in, because
+<code>coins * value</code> needs numbers, and <code>str()</code> on the way out, because
+<code>" has " + total</code> needs text. Getting those two the right way round is most of
+what input work is.</p>
+<h2 id="now-put-it-on-the-screen">Now put it on the screen</h2>
+<p>An answer can decide what a game window says. Ask <strong>before</strong> the window opens:</p>
+<pre><code class="language-python" data-stdin="Ada">from kaypy import *
+
+name = input(&quot;Who is playing? &quot;)
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+
+add([text(&quot;Good luck, &quot; + name, size=36), pos(40, 40)])
+add([text(&quot;Press Stop when you are done.&quot;, size=20), pos(40, 110)])
+</code></pre>
+<p>Press Run, answer the question, and the window opens with your name in it.</p>
+<blockquote>
+<p><strong>The question arrives in a pop-up box, not in the output pane.</strong> That is
+not a bug and it is worth knowing why: the moment <code>kaypy()</code> opens a window,
+the game takes the keyboard so that the arrow keys reach the game and not the
+page. A typing box in the output pane would collect nothing, so the browser
+asks in a dialog instead. In a plain program, with no window, you get the
+output pane.</p>
+</blockquote>
+<p>So <code>input()</code> is a way to <em>set a game up</em> — a name, a difficulty, how many
+rounds — rather than a way to play one. Playing means reacting to keys while
+the game is running, and that has its own tools later on.</p>
+<h2 id="watch-for">Watch for</h2>
+<p><strong><code>input()</code> always gives back a string.</strong> Always. Even <code>7</code>.</p>
+<p><strong>Wrap it in <code>int()</code> before doing arithmetic</strong>, or <code>float()</code> if the answer
+can have a decimal point.</p>
+<p><strong><code>TypeError</code> on a line with <code>+</code></strong> nearly always means a forgotten <code>int()</code>
+above it, or a forgotten <code>str()</code> on the line itself.</p>
+<p><strong><code>ValueError</code> means the typing did not fit</strong> — the answer was not a number
+at all.</p>
+<p><strong>Put a space at the end of the prompt</strong>, inside the quotes.</p>
+<p><strong>The program stops at every <code>input()</code>.</strong> If a program of yours seems to have
+frozen, look for a question it is waiting for an answer to.</p>
+<h2 id="classwork-1-the-greeter">Classwork 1 — The Greeter</h2>
+<p>Start here and press Run:</p>
+<pre><code class="language-python" data-stdin="Ada">name = input(&quot;What is your name? &quot;)
+
+print(&quot;Hello, &quot; + name)
+</code></pre>
+<pre><code>What is your name? Ada
+Hello, Ada
+</code></pre>
+<p>Then, running after each step:</p>
+<ol>
+<li>Ask a second question — a favourite colour — and print both answers in one
+   sentence.</li>
+<li>Ask for a number of years and store it with <code>int()</code> around the <code>input</code>.
+   Print how old they will be in ten years.</li>
+<li>Print the name, the colour and the age on three separate lines, with a
+   label on each: <code>Name: Ada</code>, and so on.</li>
+<li>Run it again and answer <code>ten</code> to the number question. Read the error, and
+   find the word in it that says what kind of thing went wrong.</li>
+</ol>
+<p><strong>Stretch:</strong> ask for a first name and a last name separately, then print them
+joined with a space between. Do it twice — once with <code>+</code> and once with commas
+in <code>print</code> — and see which gives you the spacing you wanted without thinking
+about it.</p>
+<h2 id="classwork-2-the-shop">Classwork 2 — The Shop</h2>
+<p>A till that works out a bill.</p>
+<pre><code class="language-python" data-stdin="sword|2">item = input(&quot;What are you buying? &quot;)
+how_many = int(input(&quot;How many? &quot;))
+
+print(&quot;You bought&quot;, how_many, item)
+</code></pre>
+<pre><code>What are you buying? sword
+How many? 2
+You bought 2 sword
+</code></pre>
+<ol>
+<li>Ask for the price of one, and store it with <code>float()</code> so that <code>4.5</code> works.</li>
+<li>Work out the total in a variable of its own and print it with a label.</li>
+<li>Add a delivery charge of 2.50 to the total, and print the two numbers on
+   separate lines — the goods, then the bill.</li>
+<li>Try answering <code>two</code> to the "how many" question, then <code>2</code>. Both errors are
+   in this lesson.</li>
+</ol>
+<p><strong>Stretch:</strong> ask whether the order is urgent and print the answer back. You
+cannot make the program <em>act</em> on it yet — that needs <code>if</code>, which is
+<a href="../conditionals/">lesson 3</a> — but you can store it and show it.</p>
+<h2 id="check-yourself">Check yourself</h2>
+<p>You run this and type <code>5</code>, then <code>3</code>. What does it print?</p>
+<pre><code class="language-python" data-stdin="5|3">first = input(&quot;First number? &quot;)
+second = input(&quot;Second number? &quot;)
+
+print(first + second)
+</code></pre>
+<pre><code>First number? 5
+Second number? 3
+53
+</code></pre>
+<details>
+<summary>Why 53 and not 8?</summary>
+<p>Neither answer was ever turned into a number. <code>first</code> holds the string
+<code>"5"</code> and <code>second</code> holds <code>"3"</code>, so <code>+</code> did what <code>+</code> does to two strings:
+stuck them together end to end.</p>
+<p>This is the nastiest version of the mistake, because <strong>nothing goes wrong</strong>.
+There is no <code>TypeError</code> to read — both sides are strings, so Python is happy
+and the answer is simply incorrect. A program that stops and complains is
+telling you where to look; this one just quietly says 53.</p>
+<p><code>int()</code> around both inputs fixes it.</p>
+</details>
+<hr />
+<hr />
+<p><a href="../variables/">← Lesson 1 — Variables</a> · <a href="../">All five lessons</a> · <a href="../conditionals/">Lesson 3 — Conditionals →</a></p>
+      </article>
+    </div>
+    <aside class="col-lg-4 col-xl-3 toc-col">
+      <nav class="toc" aria-label="On this page">
+        <p class="toc-head">On this page</p>
+      <a class="toc-link toc-d1" href="#lesson-2-input">Lesson 2 — Input</a>
+      <a class="toc-link toc-d2" href="#asking-a-question">Asking a question</a>
+      <a class="toc-link toc-d2" href="#the-answer-is-always-text">The answer is always text</a>
+      <a class="toc-link toc-d2" href="#turning-text-into-a-number">Turning text into a number</a>
+      <a class="toc-link toc-d2" href="#when-the-answer-is-not-a-number">When the answer is not a number</a>
+      <a class="toc-link toc-d2" href="#a-program-that-asks-more-than-once">A program that asks more than once</a>
+      <a class="toc-link toc-d2" href="#now-put-it-on-the-screen">Now put it on the screen</a>
+      <a class="toc-link toc-d2" href="#watch-for">Watch for</a>
+      <a class="toc-link toc-d2" href="#classwork-1-the-greeter">Classwork 1 — The Greeter</a>
+      <a class="toc-link toc-d2" href="#classwork-2-the-shop">Classwork 2 — The Shop</a>
+      <a class="toc-link toc-d2" href="#check-yourself">Check yourself</a>
+      </nav>
+    </aside>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>

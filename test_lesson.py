@@ -33,6 +33,23 @@ job with no output is a job somebody cancels twenty minutes later.
 Blocks marked with a `# DO NOT` comment are skipped, and the count of them
 is pinned below. A skip nobody notices is how a whole section stops being
 checked, so adding one has to be deliberate.
+
+THE BLOCKS THAT ASK A QUESTION
+
+Lesson 2 is about `input()`, and a program that waits for a line cannot be run
+by a test that has nobody sitting at it. Skipping them was the easy answer and
+the wrong one: input is the lesson where a transcript on the page is most
+likely to be wrong, because the page shows the answer typed in as well as what
+the program printed, and the two interleave.
+
+So the answers are written on the page instead, as data-stdin on the code
+element, and fed in on the program's standard input. `input()` is wrapped so
+that it echoes what it reads, which is exactly what the browser does — the
+question and the answer end up on one line — and that makes the page's
+transcript a claim like any other, compared line for line.
+
+A block that calls input() with no data-stdin fails rather than hanging: it
+reads end-of-file and raises.
 """
 from __future__ import annotations
 
@@ -52,7 +69,30 @@ ASSETS = SITE / "assets"
 #: The lessons, in order. Named rather than globbed: a glob over site/learn/
 #: would silently pick up nothing at all if the folder were renamed, and
 #: "0 programs found" is a pass in a suite that only counts failures.
-LESSONS = ["conditionals", "loops", "lists"]
+LESSONS = ["variables", "input", "conditionals", "loops", "lists"]
+
+#: Prepended to any block that asks a question, so that a run here reads like
+#: a run in the playground.
+#:
+#: The browser's input line writes the prompt AND what was typed into the
+#: output pane, so the transcript on the page has them on one line. Piping a
+#: file into python echoes nothing — the answer arrives down the pipe and
+#: never reaches stdout — so without this every claimed transcript would be
+#: missing the half the reader typed, and the page would look wrong when it
+#: was right. print(value) puts it back.
+ECHO_INPUT = """\
+import builtins as _builtins
+_ask = _builtins.input
+
+
+def _echoing_input(prompt=""):
+    value = _ask(prompt)
+    print(value)
+    return value
+
+
+_builtins.input = _echoing_input
+"""
 
 #: How many blocks are allowed to carry `# DO NOT` and be skipped. Pinned so
 #: that a second one cannot appear without this number being changed.
@@ -103,6 +143,7 @@ programs = []
 for name, path in pages:
     page = path.read_text()
     blocks = pagecode.blocks(page)
+    answers = pagecode.typed(page)
     found = 0
     for i, (lang, body, _start, end) in enumerate(blocks):
         if lang != "python":
@@ -111,7 +152,7 @@ for name, path in pages:
         if i + 1 < len(blocks) and blocks[i + 1][0] == "":
             if not pagecode.text_only(page[end:blocks[i + 1][2]]).strip():
                 claimed = blocks[i + 1][1]
-        programs.append((name, body, claimed))
+        programs.append((name, body, claimed, answers[i]))
         found += 1
     # Per page, not just in total: a lesson that lost all its code would
     # otherwise hide behind the other two.
@@ -120,11 +161,38 @@ for name, path in pages:
 check("the lessons have programs in them", len(programs) >= 10,
       "%d python blocks" % len(programs))
 check("and most of them state their output",
-      sum(1 for _, _, c in programs if c is not None) >= 6,
+      sum(1 for _, _, c, _a in programs if c is not None) >= 6,
       "%d of %d show output"
-      % (sum(1 for _, _, c in programs if c is not None), len(programs)))
+      % (sum(1 for _, _, c, _a in programs if c is not None), len(programs)))
 
-skipped = [b for _n, b, _c in programs if "# DO NOT" in b]
+# --------------------------------------------------- the questions line up
+#
+# Two ways for a block and its answers to drift apart, both of which produce a
+# result rather than an error and so have to be asked about directly.
+#
+# Too few answers and the program hits end-of-file: that one is loud, it
+# raises, and the run below catches it. Too many is silent — the extras are
+# never read and nothing anywhere notices. And a block that asks with no
+# data-stdin at all would read EOF on its first question, which is a confusing
+# way to be told that an attribute is missing.
+asking = [(n, b, a) for n, b, _c, a in programs if "input(" in b]
+unfed = [n for n, _b, a in asking if a is None]
+check("every block that asks a question says what is typed into it", not unfed,
+      "%d blocks ask" % len(asking) if not unfed
+      else "no data-stdin on a block in " + ", ".join(sorted(set(unfed))))
+
+mismatched = ["%s: %d input() calls, %d answers" % (n, b.count("input("), len(a))
+              for n, b, a in asking if a is not None
+              and b.count("input(") != len(a)]
+check("  and says exactly as many answers as it asks questions", not mismatched,
+      "; ".join(mismatched[:2]))
+
+fed = [a for _n, _b, _c, a in programs if a is not None]
+check("  and no block outside those carries answers it cannot use",
+      len(fed) == len(asking) - len(unfed),
+      "%d blocks carry data-stdin, %d ask" % (len(fed), len(asking)))
+
+skipped = [b for _n, b, _c, _a in programs if "# DO NOT" in b]
 check("exactly the expected number of blocks are skipped",
       len(skipped) == EXPECTED_SKIPS,
       "%d skipped, expected %d" % (len(skipped), EXPECTED_SKIPS))
@@ -141,13 +209,18 @@ env["PYTHONPATH"] = str(kaypy_root)
 crashed, wrong = [], []
 ran = 0
 
-for n, (name, body, claimed) in enumerate(programs, 1):
+for n, (name, body, claimed, answers) in enumerate(programs, 1):
     if "# DO NOT" in body:
         continue
     ran += 1
+    source = body if answers is None else ECHO_INPUT + body
+    # "" rather than None: with None the child inherits this terminal's stdin,
+    # and a program that asks a question would sit there waiting for a person
+    # who is not watching until the timeout.
+    stdin = "" if answers is None else "".join(a + "\n" for a in answers)
     try:
         proc = subprocess.run(
-            [sys.executable, "-c", body],
+            [sys.executable, "-c", source], input=stdin,
             cwd=ASSETS, env=env, capture_output=True, text=True, timeout=60)
     except subprocess.TimeoutExpired:
         crashed.append("%s block %d timed out" % (name, n))
@@ -183,7 +256,7 @@ check("every program runs without raising", not crashed,
       "; ".join(crashed[:2]) if crashed else "%d programs" % ran)
 check("and prints exactly what the page says it prints", not wrong,
       "; ".join(wrong[:2]) if wrong else
-      "%d outputs matched" % sum(1 for _, _, c in programs if c is not None))
+      "%d outputs matched" % sum(1 for _, _, c, _a in programs if c is not None))
 
 # ------------------------------------------------- the page is a lesson
 #
@@ -193,11 +266,11 @@ check("and prints exactly what the page says it prints", not wrong,
 # concatenated blob, because a check on the union passes when one lesson has
 # all of it and another has none — which is exactly the state a newly split
 # page arrives in.
-#: Solutions folded away, counted across all three lessons. It is a total and
+#: Solutions folded away, counted across all five lessons. It is a total and
 #: not a per-page floor because the lessons are not the same shape: loops has
-#: three foldaways, conditionals and lists one each. A per-page floor of three
-#: fails honest pages, and a floor of one passes a page that lost two.
-EXPECTED_DETAILS = 5
+#: three foldaways, the other four one each. A per-page floor of three fails
+#: honest pages, and a floor of one passes a page that lost two.
+EXPECTED_DETAILS = 7
 
 details = 0
 for name, path in pages:
@@ -218,7 +291,7 @@ for name, path in pages:
           ("found ../play/, which resolves to /learn/play/"
            if '"../play/"' in page else "no link to the playground at all"))
 
-check("the three lessons fold away %d solutions between them" % EXPECTED_DETAILS,
+check("the lessons fold away %d solutions between them" % EXPECTED_DETAILS,
       details == EXPECTED_DETAILS, "%d, expected %d" % (details, EXPECTED_DETAILS))
 
 done()

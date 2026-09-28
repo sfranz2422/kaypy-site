@@ -40,6 +40,20 @@ _BLOCK = re.compile(
 
 _LANG = re.compile(r'class="[^"]*\blanguage-([A-Za-z0-9_+-]+)')
 
+#: What a reader types into a program that calls input(), written on the code
+#: element as data-stdin="Ada|12" — pipe-separated, one answer per input() in
+#: document order.
+#:
+#: IT HAS TO LIVE ON THE PAGE, next to the program it belongs to, and it has
+#: to be independent of the output block underneath. A table of answers kept
+#: in the test file goes stale the moment a block is inserted above; taking
+#: the answers out of the claimed output instead would be circular — the test
+#: would type whatever the page says was typed, and then be delighted to find
+#: they match. A data attribute is neither: invisible to a reader, ignored by
+#: highlight.js, and wrong loudly if it stops matching the program.
+_STDIN = re.compile(r'\bdata-stdin="([^"]*)"')
+
+
 _HEADING = re.compile(r"<(h[1-6])\b[^>]*>(?P<text>.*?)</\1>", re.S)
 
 _TAG = re.compile(r"<[^>]+>")
@@ -62,6 +76,21 @@ def blocks(page: str):
             code += "\n"
         out.append((lang.group(1) if lang else "", code,
                     match.start(), match.end()))
+    return out
+
+
+def typed(page: str):
+    """For every block, the answers a reader types into it, in document order.
+
+    One entry per block returned by `blocks`, and the two lists line up index
+    for index — `None` where the block has no data-stdin, a list of strings
+    where it has one. An empty attribute gives `[""]`, which is a real answer:
+    pressing Enter without typing anything.
+    """
+    out = []
+    for match in _BLOCK.finditer(page):
+        found = _STDIN.search(match.group("attrs"))
+        out.append(html.unescape(found.group(1)).split("|") if found else None)
     return out
 
 
