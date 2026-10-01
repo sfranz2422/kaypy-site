@@ -249,6 +249,23 @@ check("  and is switched off while a game has the keyboard",
 check("  and back on for a console run",
       "consoleIO.setEnabled(true)" in script)
 
+# STOP HAS TO PUT THE TOOLBAR BACK ITSELF.
+#
+# Reproduced on the deployed PyIDE, which has the same shape: press Stop on
+# a kaypy game and the canvas freezes and "— stopped —" is printed, but the
+# await on `_pyide_drive_game()` never settles — so Run sat on "Running…"
+# with Stop showing until the page was reloaded. The engine had stopped;
+# only the button disagreed. Leaving the reset to the promise's finally is
+# leaving it to something that may never run.
+stop_fn = script[script.index("function stopRun"):]
+stop_fn = stop_fn[:stop_fn.index("\n  }")]
+check("Stop puts the toolbar back without waiting for the promise",
+      "setBusy(false" in stop_fn,
+      "the game stops but the button says Running… for ever")
+check("  and a stale run cannot reset a newer one",
+      "runToken" in script and "token === runToken" in script,
+      "an old finally would stop the game that is running now")
+
 # The pane it types into is styled by the vendored stylesheet, not by play.css.
 # An unstyled input inside a <pre> renders as a boxed control in the browser's
 # own font, which looks like a bug on a page that is otherwise a terminal.

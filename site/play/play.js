@@ -278,6 +278,11 @@
   var pyodide = null;
   var running = false;
   var runMode = null;          // "game" | "console" | null
+  /* Which run the game finally belongs to. Stop puts the toolbar back
+     itself, so a game can be stopped and another started while the first
+     run's promise is still pending — and if that old promise ever settles,
+     its finally must not stop the game running now. */
+  var runToken = 0;
   var canvas = $("canvas");
 
   (async function boot() {
@@ -345,6 +350,7 @@
       return;
     }
 
+    var token = ++runToken;
     setBusy(true, "game");
     status("Starting the engine…");
     try {
@@ -388,8 +394,11 @@
     } catch (e) {
       write(String(e) + "\n", "err");
     } finally {
-      window.PyIDEGame.stop(pyodide);
-      setBusy(false);
+      // Only if this is still the run the toolbar is showing. See runToken.
+      if (token === runToken) {
+        window.PyIDEGame.stop(pyodide);
+        setBusy(false);
+      }
     }
   }
 
@@ -432,13 +441,19 @@
       return;
     }
     if (runMode !== "game") return;
-    /* Ask, don't tear down. Stop clears the engine's running flag; the loop
-       notices on its next frame and returns, and the await in run() resolves
-       — and ITS finally is what puts the toolbar back. Calling setBusy here
-       as well would be a second, earlier answer to the same question, and the
-       two would disagree for a frame. */
+    /* Ask, don't tear down: Stop clears the engine's running flag and the
+       loop returns on its next frame.
+
+       THE TOOLBAR IS PUT BACK HERE, not by run()'s finally. Leaving it to
+       the finally is leaving it to something that may never run: measured on
+       the deployed PyIDE, which has the same shape, pressing Stop on a kaypy
+       game freezes the canvas and prints "— stopped —", and then the await
+       on `_pyide_drive_game()` stays pending for ever, so Run sits on
+       "Running…" with Stop showing until the page is reloaded. The engine
+       has stopped; only the button disagrees. */
     window.PyIDEGame.stop(pyodide);
     write("\n— stopped —\n", "dim");
+    setBusy(false);
     editor.focus();
   }
 
