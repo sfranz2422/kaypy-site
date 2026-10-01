@@ -1,0 +1,1681 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Coin Rush · KayPy</title>
+<meta name="description" content="How Coin Rush was built, a step at a time: a level drawn as a picture, Bean, coins, a clock, spikes and ghosts — in plain Python a student can copy.">
+<meta property="og:title" content="Building Coin Rush · KayPy">
+<meta property="og:description" content="How Coin Rush was built, a step at a time.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All eight lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li><li><a class="dropdown-item" href="../../learn/functions/">6 — Functions</a></li><li><a class="dropdown-item" href="../../learn/decorators/">7 — Decorators</a></li><li><a class="dropdown-item" href="../../learn/dictionaries/">8 — Dictionaries</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../../tutorials/" aria-current="page">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <article class="prose">
+<h1 id="building-coin-rush">Building Coin Rush</h1>
+
+<p><a href="../../static/games/coin_rush/">Play it first →</a> Bean has thirty
+seconds to grab every coin on the level. Get them all and the next level
+starts with more in the way: walls, then spikes, then ghosts, then a gazer
+that follows you through the walls.</p>
+
+<p>This is how it was built, a step at a time. Every numbered step below is a
+whole program: copy it into
+<a href="../../play/">the playground</a>, press Run, and it works. Each step
+is the one before it with something added, so you can build the game the way
+it was built. Then break something on purpose and see what changes. That
+teaches you more than reading does.</p>
+
+<p>There is nothing clever in it. No list comprehensions, no tricks, and every
+kaypy function it uses is on the <a href="../../api/">API page</a>.</p>
+
+<h2 id="the-one-big-idea">The one big idea: a level is a picture</h2>
+
+<p>A level has dozens of walls and coins in it. Typing a position for every
+one of them would take ages, and moving one would mean working out new
+numbers.</p>
+
+<p>So a level here is a <strong>picture made of letters</strong>. One letter is
+one tile:</p>
+
+<pre><code class="language-python">LEVEL_2 = [
+    "###############",
+    "#o    #      o#",
+    "#     #   o   #",
+    "#  o  #       #",
+    "#     ### ### #",
+    "#  o    P    o#",
+    "### ###   #   #",
+    "#       o #   #",
+    "#o        #  o#",
+    "###############",
+]</code></pre>
+
+<p><code>#</code> is a wall, <code>o</code> is a coin and <code>P</code> is where
+Bean starts. To move a coin, move an <code>o</code>. Nothing else in the game
+has to be told about it.</p>
+
+<h2 id="step-1-a-room">Step 1 — a room</h2>
+
+<p><code>addLevel()</code> reads the picture. Every time it meets a letter it
+looks it up in <code>tiles</code> and builds whatever it finds there. A letter
+that isn't listed is ignored, which is why a space does nothing.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 64          # one tile is 64 pixels square
+TOP = 56           # a strip at the top for the score and the clock
+
+kaypy(width=TILE * 15, height=TOP + TILE * 10, background=[118, 186, 120])
+setGravity(0)
+
+loadSprite(&quot;steel&quot;, &quot;images/steel.png&quot;)
+
+ROOM = [
+    &quot;###############&quot;,
+    &quot;#             #&quot;,
+    &quot;#             #&quot;,
+    &quot;#             #&quot;,
+    &quot;#             #&quot;,
+    &quot;#             #&quot;,
+    &quot;#             #&quot;,
+    &quot;#             #&quot;,
+    &quot;#             #&quot;,
+    &quot;###############&quot;,
+]
+
+addLevel(ROOM, {
+    &quot;tileWidth&quot;: TILE,
+    &quot;tileHeight&quot;: TILE,
+    &quot;pos&quot;: vec2(0, TOP),
+    &quot;tiles&quot;: {
+        &quot;#&quot;: lambda: [sprite(&quot;steel&quot;), area(), body(isStatic=True)],
+    },
+})</code></pre>
+
+<p>Run it and you get an empty room with steel walls.</p>
+
+<ul>
+<li><code>setGravity(0)</code>: we look down on Bean from above, so nothing
+should fall. 0 is already the setting when a game starts, so this line
+changes nothing; it's there to say what kind of game this is. A platform game,
+where things fall, sets it to about 2400.</li>
+<li><code>"pos": vec2(0, TOP)</code> starts the picture 56 pixels down,
+which leaves a strip across the top for the score and the clock.</li>
+<li><code>body(isStatic=True)</code> is what makes a wall solid. It never
+moves, and anything with a <code>body()</code> stops when it runs into it.</li>
+</ul>
+
+<p>Every row of the picture must be the same length, 15 letters here. If one
+row is shorter, there's no error message. The walls on the right just
+don't line up.</p>
+
+<h2 id="step-2-bean-runs">Step 2 — Bean runs</h2>
+
+<p>Bean is a tile too. Put a <code>P</code> in the picture and add it to
+<code>tiles</code>, and changing where Bean starts is just moving that
+letter. <code>get("player")</code> finds Bean again afterwards, using the
+<code>"player"</code> tag on the end of the list.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 64
+TOP = 56
+SPEED = 300
+
+kaypy(width=TILE * 15, height=TOP + TILE * 10, background=[118, 186, 120])
+setGravity(0)
+
+loadSprite(&quot;steel&quot;, &quot;images/steel.png&quot;)
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+ROOM = [
+    &quot;###############&quot;,
+    &quot;#             #&quot;,
+    &quot;#             #&quot;,
+    &quot;#    ###      #&quot;,
+    &quot;#             #&quot;,
+    &quot;#      P  #   #&quot;,
+    &quot;#         #   #&quot;,
+    &quot;#         #   #&quot;,
+    &quot;#             #&quot;,
+    &quot;###############&quot;,
+]
+
+addLevel(ROOM, {
+    &quot;tileWidth&quot;: TILE,
+    &quot;tileHeight&quot;: TILE,
+    &quot;pos&quot;: vec2(0, TOP),
+    &quot;tiles&quot;: {
+        &quot;#&quot;: lambda: [sprite(&quot;steel&quot;), area(), body(isStatic=True)],
+        &quot;P&quot;: lambda: [sprite(&quot;bean&quot;), scale(0.7), area(), body(), &quot;player&quot;],
+    },
+})
+
+bean = get(&quot;player&quot;)[0]
+
+# True while the arrow is held down.
+going_left = False
+going_right = False
+going_up = False
+going_down = False
+
+
+@onKeyPress(&quot;left&quot;)
+def press_left():
+    global going_left
+    going_left = True
+
+
+@onKeyRelease(&quot;left&quot;)
+def release_left():
+    global going_left
+    going_left = False
+
+
+@onKeyPress(&quot;right&quot;)
+def press_right():
+    global going_right
+    going_right = True
+
+
+@onKeyRelease(&quot;right&quot;)
+def release_right():
+    global going_right
+    going_right = False
+
+
+@onKeyPress(&quot;up&quot;)
+def press_up():
+    global going_up
+    going_up = True
+
+
+@onKeyRelease(&quot;up&quot;)
+def release_up():
+    global going_up
+    going_up = False
+
+
+@onKeyPress(&quot;down&quot;)
+def press_down():
+    global going_down
+    going_down = True
+
+
+@onKeyRelease(&quot;down&quot;)
+def release_down():
+    global going_down
+    going_down = False
+
+
+@onUpdate
+def each_frame():
+    if going_left:
+        bean.move(-SPEED, 0)
+        bean.flipX = True
+    if going_right:
+        bean.move(SPEED, 0)
+        bean.flipX = False
+    if going_up:
+        bean.move(0, -SPEED)
+    if going_down:
+        bean.move(0, SPEED)</code></pre>
+
+<p><code>scale(0.7)</code> is there because the bean picture is a whole tile
+wide. A Bean exactly as wide as a tile gets stuck in every one-tile gap.</p>
+
+<p>The arrow keys are the fiddly part. The obvious way is
+<code>onKeyDown</code>, which asks "is the right arrow held down <em>right
+now?</em>" every frame. That works until a message pauses the game, which
+happens in step 4. So the game keeps its own note instead: pressing an arrow
+sets its variable to <code>True</code>, letting go sets it back to
+<code>False</code>, and every frame Bean moves whichever ways are
+<code>True</code>.</p>
+
+<p><code>bean.move(-SPEED, 0)</code> moves Bean left at <code>SPEED</code>
+pixels per second. It is per second, not per frame, so Bean runs at the same
+speed on a fast computer and a slow one.</p>
+
+<div class="callout"><p><strong>Don't forget <code>global</code>.</strong>
+Without <code>global going_left</code>, the line
+<code>going_left = True</code> makes a <em>new</em> variable that only exists
+inside <code>press_left</code> and disappears when the function ends. There's
+no error message. The left arrow just does nothing, and it looks like a
+problem with the keys.</p></div>
+
+<h2 id="step-3-coins-and-a-counter">Step 3 — coins and a counter</h2>
+
+<p>A coin is a tile with an <code>area()</code> but no <code>body()</code>.
+An <code>area()</code> on its own is something you can touch but walk
+straight through, which is what a coin should be.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 64
+TOP = 56
+SPEED = 300
+
+kaypy(width=TILE * 15, height=TOP + TILE * 10, background=[118, 186, 120])
+setGravity(0)
+
+loadSprite(&quot;steel&quot;, &quot;images/steel.png&quot;)
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+
+loadSound(&quot;coin&quot;, &quot;sounds/small_beep.wav&quot;)
+
+ROOM = [
+    &quot;###############&quot;,
+    &quot;#o           o#&quot;,
+    &quot;#      o      #&quot;,
+    &quot;#    ###      #&quot;,
+    &quot;#  o          #&quot;,
+    &quot;#      P  #  o#&quot;,
+    &quot;#         #   #&quot;,
+    &quot;#   o     #   #&quot;,
+    &quot;#o           o#&quot;,
+    &quot;###############&quot;,
+]
+
+addLevel(ROOM, {
+    &quot;tileWidth&quot;: TILE,
+    &quot;tileHeight&quot;: TILE,
+    &quot;pos&quot;: vec2(0, TOP),
+    &quot;tiles&quot;: {
+        &quot;#&quot;: lambda: [sprite(&quot;steel&quot;), area(), body(isStatic=True)],
+        &quot;o&quot;: lambda: [sprite(&quot;coin&quot;), area(), &quot;coin&quot;],
+        &quot;P&quot;: lambda: [sprite(&quot;bean&quot;), scale(0.7), area(), body(), &quot;player&quot;],
+    },
+})
+
+bean = get(&quot;player&quot;)[0]
+total = len(get(&quot;coin&quot;))
+coins = 0
+
+label = add([text(&quot;Coins 0 / &quot; + str(total), size=26), pos(16, 14), fixed()])
+
+# True while the arrow is held down.
+going_left = False
+going_right = False
+going_up = False
+going_down = False
+
+
+@onKeyPress(&quot;left&quot;)
+def press_left():
+    global going_left
+    going_left = True
+
+
+@onKeyRelease(&quot;left&quot;)
+def release_left():
+    global going_left
+    going_left = False
+
+
+@onKeyPress(&quot;right&quot;)
+def press_right():
+    global going_right
+    going_right = True
+
+
+@onKeyRelease(&quot;right&quot;)
+def release_right():
+    global going_right
+    going_right = False
+
+
+@onKeyPress(&quot;up&quot;)
+def press_up():
+    global going_up
+    going_up = True
+
+
+@onKeyRelease(&quot;up&quot;)
+def release_up():
+    global going_up
+    going_up = False
+
+
+@onKeyPress(&quot;down&quot;)
+def press_down():
+    global going_down
+    going_down = True
+
+
+@onKeyRelease(&quot;down&quot;)
+def release_down():
+    global going_down
+    going_down = False
+
+
+@onUpdate
+def each_frame():
+    if going_left:
+        bean.move(-SPEED, 0)
+        bean.flipX = True
+    if going_right:
+        bean.move(SPEED, 0)
+        bean.flipX = False
+    if going_up:
+        bean.move(0, -SPEED)
+    if going_down:
+        bean.move(0, SPEED)
+
+
+@bean.onCollide(&quot;coin&quot;)
+def got_coin(coin):
+    global coins
+    coin.destroy()
+    coins = coins + 1
+    label.text = &quot;Coins &quot; + str(coins) + &quot; / &quot; + str(total)
+    play(&quot;coin&quot;)
+
+    if coins == total:
+        say(&quot;You got every coin!&quot;)</code></pre>
+
+<p><code>@bean.onCollide("coin")</code> runs the function every time Bean
+touches anything tagged <code>"coin"</code>, and hands it the coin that was
+touched, so <code>coin.destroy()</code> removes that one coin and no
+other.</p>
+
+<p><code>total = len(get("coin"))</code> counts the coins in the picture. Add
+an <code>o</code> to the room and the counter goes up by itself.</p>
+
+<p>The <code>str()</code> in the label matters. <code>"Coins " + coins</code>
+tries to add words to a number, and Python stops with
+<code>TypeError: can only concatenate str (not "int") to str</code>.
+<code>str(coins)</code> turns the number into words first.</p>
+
+<h2 id="step-4-more-than-one-level">Step 4 — more than one level</h2>
+
+<p>A game with levels needs a way to throw one level away and build the
+next. That is a <strong>scene</strong>. <code>@scene("level")</code> is the
+recipe for building a level, and <code>go("level", 1, 8)</code> clears the
+screen and follows the recipe again, this time for level 1 with a score of 8
+carried over.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 64
+TOP = 56
+SPEED = 300
+
+kaypy(width=TILE * 15, height=TOP + TILE * 10, background=[118, 186, 120])
+setGravity(0)
+
+loadSprite(&quot;steel&quot;, &quot;images/steel.png&quot;)
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+
+loadSound(&quot;coin&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;done&quot;, &quot;sounds/rising_beep.wav&quot;)
+
+LEVEL_1 = [
+    &quot;###############&quot;,
+    &quot;#             #&quot;,
+    &quot;#  o       o  #&quot;,
+    &quot;#      o      #&quot;,
+    &quot;#             #&quot;,
+    &quot;#   o     o   #&quot;,
+    &quot;#      P      #&quot;,
+    &quot;#  o       o  #&quot;,
+    &quot;#      o      #&quot;,
+    &quot;###############&quot;,
+]
+
+LEVEL_2 = [
+    &quot;###############&quot;,
+    &quot;#o    #      o#&quot;,
+    &quot;#     #   o   #&quot;,
+    &quot;#  o  #       #&quot;,
+    &quot;#     ### ### #&quot;,
+    &quot;#  o    P    o#&quot;,
+    &quot;### ###   #   #&quot;,
+    &quot;#       o #   #&quot;,
+    &quot;#o        #  o#&quot;,
+    &quot;###############&quot;,
+]
+
+LEVELS = [LEVEL_1, LEVEL_2]
+
+TILES = {
+    &quot;#&quot;: lambda: [sprite(&quot;steel&quot;), area(), body(isStatic=True)],
+    &quot;o&quot;: lambda: [sprite(&quot;coin&quot;), area(), &quot;coin&quot;],
+    &quot;P&quot;: lambda: [sprite(&quot;bean&quot;), scale(0.7), area(), body(), &quot;player&quot;],
+}
+
+going_left = False
+going_right = False
+going_up = False
+going_down = False
+
+coins = 0
+level_over = False
+
+
+@scene(&quot;level&quot;)
+def build_level(number, score):
+    global going_left, going_right, going_up, going_down
+    global coins, level_over
+
+    addLevel(LEVELS[number], {
+        &quot;tileWidth&quot;: TILE,
+        &quot;tileHeight&quot;: TILE,
+        &quot;pos&quot;: vec2(0, TOP),
+        &quot;tiles&quot;: TILES,
+    })
+
+    bean = get(&quot;player&quot;)[0]
+    total = len(get(&quot;coin&quot;))
+
+    # A new level, so everything starts again.
+    going_left = False
+    going_right = False
+    going_up = False
+    going_down = False
+    coins = 0
+    level_over = False
+
+    @onKeyPress(&quot;left&quot;)
+    def press_left():
+        global going_left
+        going_left = True
+
+    @onKeyRelease(&quot;left&quot;)
+    def release_left():
+        global going_left
+        going_left = False
+
+    @onKeyPress(&quot;right&quot;)
+    def press_right():
+        global going_right
+        going_right = True
+
+    @onKeyRelease(&quot;right&quot;)
+    def release_right():
+        global going_right
+        going_right = False
+
+    @onKeyPress(&quot;up&quot;)
+    def press_up():
+        global going_up
+        going_up = True
+
+    @onKeyRelease(&quot;up&quot;)
+    def release_up():
+        global going_up
+        going_up = False
+
+    @onKeyPress(&quot;down&quot;)
+    def press_down():
+        global going_down
+        going_down = True
+
+    @onKeyRelease(&quot;down&quot;)
+    def release_down():
+        global going_down
+        going_down = False
+
+    label = add([text(&quot;&quot;, size=26), pos(16, 14), fixed()])
+
+    def show_score():
+        label.text = (&quot;Level &quot; + str(number + 1)
+                      + &quot;     Coins &quot; + str(coins) + &quot; / &quot; + str(total)
+                      + &quot;     Score &quot; + str(score + coins))
+
+    @onUpdate
+    def each_frame():
+        if level_over:
+            return
+        if going_left:
+            bean.move(-SPEED, 0)
+            bean.flipX = True
+        if going_right:
+            bean.move(SPEED, 0)
+            bean.flipX = False
+        if going_up:
+            bean.move(0, -SPEED)
+        if going_down:
+            bean.move(0, SPEED)
+
+    @bean.onCollide(&quot;coin&quot;)
+    def got_coin(coin):
+        global coins, level_over
+
+        coin.destroy()
+        coins = coins + 1
+        play(&quot;coin&quot;)
+        show_score()
+
+        if coins == total:
+            level_over = True
+            play(&quot;done&quot;)
+            new_score = score + coins
+
+            if number + 1 &lt; len(LEVELS):
+                @say(&quot;Level &quot; + str(number + 1) + &quot; done!&quot;)
+                def next_level():
+                    go(&quot;level&quot;, number + 1, new_score)
+            else:
+                @say(&quot;You beat every level!\n\nScore: &quot; + str(new_score))
+                def start_again():
+                    go(&quot;level&quot;, 0, 0)
+
+    show_score()
+
+
+go(&quot;level&quot;, 0, 0)</code></pre>
+
+<p>Almost everything from step 3 has moved inside <code>build_level</code>.
+That is because <code>go()</code> throws away <em>everything</em> from the
+old scene: the objects, and also the key handlers and the
+<code>onUpdate</code>. Anything that should exist in every level has to be
+set up again each time the scene is built.</p>
+
+<p>For the same reason the variables go back to the start at the top of
+<code>build_level</code>. This is where the arrow keys from step 2 pay off.
+If you are holding an arrow when you grab the last coin, the "Level done!"
+message pauses the game. If you let go while the message is up, the game
+never sees you let go. Setting all four back to <code>False</code> means the
+next level starts with Bean standing still.</p>
+
+<p><code>@say(...)</code> puts a message up, and the function underneath runs
+when the player presses OK. Anything that should happen <em>after</em> the
+message goes inside that function. A line written underneath
+<code>say()</code> runs straight away, while the message is still on the
+screen.</p>
+
+<p><code>level_over</code> stops Bean moving once the level is won, so Bean
+can't wander off behind the message.</p>
+
+<div class="callout"><p><strong>Careful with the name.</strong> The scene is
+called <code>"level"</code>, but the function is <code>build_level</code>,
+not <code>play</code>. kaypy already has a <code>play()</code>, the one that
+makes sounds. Name your function <code>play</code> and it replaces that one,
+so the first coin you touch runs <code>play("coin")</code>, which now
+means "build a level" instead of "make a sound". The game crashes with
+<code>TypeError: play() missing 1 required positional argument: 'score'</code>,
+which makes no sense if you think <code>play</code> plays sounds.</p></div>
+
+<h2 id="step-5-the-clock">Step 5 — the clock</h2>
+
+<p>The clock is a number of seconds that goes down every frame.
+<code>dt()</code> is how long the last frame took, a sixtieth of a second or
+so, and taking it away every frame counts down in real seconds.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 64
+TOP = 56
+SPEED = 300
+TIME_LIMIT = 30      # seconds for each level
+BEST_KEY = &quot;coin_rush_best&quot;
+
+kaypy(width=TILE * 15, height=TOP + TILE * 10, background=[118, 186, 120])
+setGravity(0)
+
+loadSprite(&quot;steel&quot;, &quot;images/steel.png&quot;)
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+
+loadSound(&quot;coin&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;done&quot;, &quot;sounds/rising_beep.wav&quot;)
+loadSound(&quot;ouch&quot;, &quot;sounds/thump.wav&quot;)
+
+LEVEL_1 = [
+    &quot;###############&quot;,
+    &quot;#             #&quot;,
+    &quot;#  o       o  #&quot;,
+    &quot;#      o      #&quot;,
+    &quot;#             #&quot;,
+    &quot;#   o     o   #&quot;,
+    &quot;#      P      #&quot;,
+    &quot;#  o       o  #&quot;,
+    &quot;#      o      #&quot;,
+    &quot;###############&quot;,
+]
+
+LEVEL_2 = [
+    &quot;###############&quot;,
+    &quot;#o    #      o#&quot;,
+    &quot;#     #   o   #&quot;,
+    &quot;#  o  #       #&quot;,
+    &quot;#     ### ### #&quot;,
+    &quot;#  o    P    o#&quot;,
+    &quot;### ###   #   #&quot;,
+    &quot;#       o #   #&quot;,
+    &quot;#o        #  o#&quot;,
+    &quot;###############&quot;,
+]
+
+LEVELS = [LEVEL_1, LEVEL_2]
+
+TILES = {
+    &quot;#&quot;: lambda: [sprite(&quot;steel&quot;), area(), body(isStatic=True)],
+    &quot;o&quot;: lambda: [sprite(&quot;coin&quot;), area(), &quot;coin&quot;],
+    &quot;P&quot;: lambda: [sprite(&quot;bean&quot;), scale(0.7), area(), body(), &quot;player&quot;],
+}
+
+going_left = False
+going_right = False
+going_up = False
+going_down = False
+
+time_left = 0
+coins = 0
+level_over = False
+
+
+@scene(&quot;level&quot;)
+def build_level(number, score):
+    global going_left, going_right, going_up, going_down
+    global time_left, coins, level_over
+
+    addLevel(LEVELS[number], {
+        &quot;tileWidth&quot;: TILE,
+        &quot;tileHeight&quot;: TILE,
+        &quot;pos&quot;: vec2(0, TOP),
+        &quot;tiles&quot;: TILES,
+    })
+
+    bean = get(&quot;player&quot;)[0]
+    total = len(get(&quot;coin&quot;))
+
+    # A new level, so everything starts again.
+    going_left = False
+    going_right = False
+    going_up = False
+    going_down = False
+    time_left = TIME_LIMIT
+    coins = 0
+    level_over = False
+
+    @onKeyPress(&quot;left&quot;)
+    def press_left():
+        global going_left
+        going_left = True
+
+    @onKeyRelease(&quot;left&quot;)
+    def release_left():
+        global going_left
+        going_left = False
+
+    @onKeyPress(&quot;right&quot;)
+    def press_right():
+        global going_right
+        going_right = True
+
+    @onKeyRelease(&quot;right&quot;)
+    def release_right():
+        global going_right
+        going_right = False
+
+    @onKeyPress(&quot;up&quot;)
+    def press_up():
+        global going_up
+        going_up = True
+
+    @onKeyRelease(&quot;up&quot;)
+    def release_up():
+        global going_up
+        going_up = False
+
+    @onKeyPress(&quot;down&quot;)
+    def press_down():
+        global going_down
+        going_down = True
+
+    @onKeyRelease(&quot;down&quot;)
+    def release_down():
+        global going_down
+        going_down = False
+
+    label = add([text(&quot;&quot;, size=26), pos(16, 14), fixed()])
+    clock = add([text(&quot;&quot;, size=26), pos(width() - 130, 14), fixed()])
+
+    def show_score():
+        label.text = (&quot;Level &quot; + str(number + 1)
+                      + &quot;     Coins &quot; + str(coins) + &quot; / &quot; + str(total)
+                      + &quot;     Score &quot; + str(score + coins))
+        clock.text = &quot;Time &quot; + str(int(time_left))
+
+    @onUpdate
+    def each_frame():
+        global time_left
+
+        if level_over:
+            return
+        if going_left:
+            bean.move(-SPEED, 0)
+            bean.flipX = True
+        if going_right:
+            bean.move(SPEED, 0)
+            bean.flipX = False
+        if going_up:
+            bean.move(0, -SPEED)
+        if going_down:
+            bean.move(0, SPEED)
+
+        time_left = time_left - dt()
+        if time_left &lt;= 0:
+            time_left = 0
+            times_up()
+
+        show_score()
+
+    @bean.onCollide(&quot;coin&quot;)
+    def got_coin(coin):
+        global coins, level_over
+
+        coin.destroy()
+        coins = coins + 1
+        play(&quot;coin&quot;)
+        show_score()
+
+        if coins == total:
+            level_over = True
+            play(&quot;done&quot;)
+            new_score = score + coins
+
+            if number + 1 &lt; len(LEVELS):
+                @say(&quot;Level &quot; + str(number + 1) + &quot; done!&quot;)
+                def next_level():
+                    go(&quot;level&quot;, number + 1, new_score)
+            else:
+                @say(&quot;You beat every level!\n\nScore: &quot; + str(new_score))
+                def start_again():
+                    go(&quot;level&quot;, 0, 0)
+
+    def times_up():
+        global level_over
+
+        level_over = True
+        final = score + coins
+        best = getData(BEST_KEY, 0)
+
+        if final &gt; best:
+            setData(BEST_KEY, final)
+            message = &quot;New best score: &quot; + str(final) + &quot;!&quot;
+        else:
+            message = &quot;Score: &quot; + str(final) + &quot;\nBest: &quot; + str(best)
+
+        play(&quot;ouch&quot;)
+
+        @say(&quot;Time&#x27;s up!\n\n&quot; + message, button=&quot;Play again&quot;)
+        def play_again():
+            go(&quot;level&quot;, 0, 0)
+
+    show_score()
+    say(&quot;Level &quot; + str(number + 1), button=&quot;Go!&quot;)
+
+
+go(&quot;level&quot;, 0, 0)</code></pre>
+
+<p>A countdown is easier to change than a deadline. In step 6, touching a
+spike costs three seconds, and that is just
+<code>time_left = time_left - PENALTY</code>.</p>
+
+<p><code>int(time_left)</code> drops everything after the decimal point, so
+the clock shows <code>Time 7</code> instead of
+<code>Time 7.316666666</code>.</p>
+
+<p>The <code>say(..., button="Go!")</code> at the end of
+<code>build_level</code> doesn't only say which level it is. A message pauses
+the game, and <code>onUpdate</code> doesn't run while the game is paused, so
+the clock doesn't start until the player presses Go.</p>
+
+<p><code>getData</code> and <code>setData</code> remember the best score
+after the page is closed. The key is <code>"coin_rush_best"</code> rather
+than just <code>"best"</code> because every game on a website shares the same
+storage. Another game saving its own <code>"best"</code> would overwrite
+yours.</p>
+
+<h2 id="step-6-spikes-and-ghosts">Step 6 — spikes and ghosts</h2>
+
+<p>Two new levels, three new letters. Everything that hurts is tagged
+<code>"danger"</code>, so <em>one</em> <code>onCollide</code> handles spikes
+and ghosts both. Each ghost also gets a second tag, <code>"across"</code> or
+<code>"updown"</code>, which decides how it moves.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 64
+TOP = 56
+SPEED = 300
+TIME_LIMIT = 30      # seconds for each level
+PENALTY = 3          # seconds lost for touching a spike or a ghost
+GHOST_SPEED = 100
+BEST_KEY = &quot;coin_rush_best&quot;
+
+kaypy(width=TILE * 15, height=TOP + TILE * 10, background=[118, 186, 120])
+setGravity(0)
+
+loadSprite(&quot;steel&quot;, &quot;images/steel.png&quot;)
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSprite(&quot;spike&quot;, &quot;images/spike.png&quot;)
+loadSprite(&quot;ghosty&quot;, &quot;images/ghosty.png&quot;)
+
+loadSound(&quot;coin&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;done&quot;, &quot;sounds/rising_beep.wav&quot;)
+loadSound(&quot;ouch&quot;, &quot;sounds/thump.wav&quot;)
+
+LEVEL_1 = [
+    &quot;###############&quot;,
+    &quot;#             #&quot;,
+    &quot;#  o       o  #&quot;,
+    &quot;#      o      #&quot;,
+    &quot;#             #&quot;,
+    &quot;#   o     o   #&quot;,
+    &quot;#      P      #&quot;,
+    &quot;#  o       o  #&quot;,
+    &quot;#      o      #&quot;,
+    &quot;###############&quot;,
+]
+
+LEVEL_2 = [
+    &quot;###############&quot;,
+    &quot;#o    #      o#&quot;,
+    &quot;#     #   o   #&quot;,
+    &quot;#  o  #       #&quot;,
+    &quot;#     ### ### #&quot;,
+    &quot;#  o    P    o#&quot;,
+    &quot;### ###   #   #&quot;,
+    &quot;#       o #   #&quot;,
+    &quot;#o        #  o#&quot;,
+    &quot;###############&quot;,
+]
+
+LEVEL_3 = [
+    &quot;###############&quot;,
+    &quot;#o   ^   ^   o#&quot;,
+    &quot;# ##   o   ## #&quot;,
+    &quot;#  #  ^ ^  #  #&quot;,
+    &quot;#o    #P#    o#&quot;,
+    &quot;#  ^  # #  ^  #&quot;,
+    &quot;# ### # # ### #&quot;,
+    &quot;#  o  ^ ^  o  #&quot;,
+    &quot;#o           o#&quot;,
+    &quot;###############&quot;,
+]
+
+LEVEL_4 = [
+    &quot;###############&quot;,
+    &quot;#o   h       o#&quot;,
+    &quot;#  ###   ###  #&quot;,
+    &quot;#  #o  ^  o#  #&quot;,
+    &quot;#v #   P   # v#&quot;,
+    &quot;#  #o     o#  #&quot;,
+    &quot;#  ###   ###  #&quot;,
+    &quot;#o     h     o#&quot;,
+    &quot;#      ^      #&quot;,
+    &quot;###############&quot;,
+]
+
+LEVELS = [LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4]
+
+TILES = {
+    &quot;#&quot;: lambda: [sprite(&quot;steel&quot;), area(), body(isStatic=True)],
+    &quot;o&quot;: lambda: [sprite(&quot;coin&quot;), area(), &quot;coin&quot;],
+    &quot;^&quot;: lambda: [sprite(&quot;spike&quot;), area(), &quot;danger&quot;],
+    &quot;h&quot;: lambda: [sprite(&quot;ghosty&quot;), scale(0.6), area(), z(10),
+                  &quot;danger&quot;, &quot;across&quot;],
+    &quot;v&quot;: lambda: [sprite(&quot;ghosty&quot;), scale(0.6), area(), z(10),
+                  &quot;danger&quot;, &quot;updown&quot;],
+    &quot;P&quot;: lambda: [sprite(&quot;bean&quot;), scale(0.7), area(), body(), &quot;player&quot;],
+}
+
+going_left = False
+going_right = False
+going_up = False
+going_down = False
+
+time_left = 0
+coins = 0
+level_over = False
+
+
+@scene(&quot;level&quot;)
+def build_level(number, score):
+    global going_left, going_right, going_up, going_down
+    global time_left, coins, level_over
+
+    addLevel(LEVELS[number], {
+        &quot;tileWidth&quot;: TILE,
+        &quot;tileHeight&quot;: TILE,
+        &quot;pos&quot;: vec2(0, TOP),
+        &quot;tiles&quot;: TILES,
+    })
+
+    bean = get(&quot;player&quot;)[0]
+    start = vec2(bean.pos.x, bean.pos.y)
+    total = len(get(&quot;coin&quot;))
+
+    # A new level, so everything starts again.
+    going_left = False
+    going_right = False
+    going_up = False
+    going_down = False
+    time_left = TIME_LIMIT
+    coins = 0
+    level_over = False
+
+    @onKeyPress(&quot;left&quot;)
+    def press_left():
+        global going_left
+        going_left = True
+
+    @onKeyRelease(&quot;left&quot;)
+    def release_left():
+        global going_left
+        going_left = False
+
+    @onKeyPress(&quot;right&quot;)
+    def press_right():
+        global going_right
+        going_right = True
+
+    @onKeyRelease(&quot;right&quot;)
+    def release_right():
+        global going_right
+        going_right = False
+
+    @onKeyPress(&quot;up&quot;)
+    def press_up():
+        global going_up
+        going_up = True
+
+    @onKeyRelease(&quot;up&quot;)
+    def release_up():
+        global going_up
+        going_up = False
+
+    @onKeyPress(&quot;down&quot;)
+    def press_down():
+        global going_down
+        going_down = True
+
+    @onKeyRelease(&quot;down&quot;)
+    def release_down():
+        global going_down
+        going_down = False
+
+    label = add([text(&quot;&quot;, size=26), pos(16, 14), fixed()])
+    clock = add([text(&quot;&quot;, size=26), pos(width() - 130, 14), fixed()])
+
+    def show_score():
+        label.text = (&quot;Level &quot; + str(number + 1)
+                      + &quot;     Coins &quot; + str(coins) + &quot; / &quot; + str(total)
+                      + &quot;     Score &quot; + str(score + coins))
+        clock.text = &quot;Time &quot; + str(int(time_left))
+
+    @onUpdate
+    def each_frame():
+        global time_left
+
+        if level_over:
+            return
+        if going_left:
+            bean.move(-SPEED, 0)
+            bean.flipX = True
+        if going_right:
+            bean.move(SPEED, 0)
+            bean.flipX = False
+        if going_up:
+            bean.move(0, -SPEED)
+        if going_down:
+            bean.move(0, SPEED)
+
+        time_left = time_left - dt()
+        if time_left &lt;= 0:
+            time_left = 0
+            times_up()
+
+        show_score()
+
+    @bean.onCollide(&quot;coin&quot;)
+    def got_coin(coin):
+        global coins, level_over
+
+        coin.destroy()
+        coins = coins + 1
+        play(&quot;coin&quot;)
+        show_score()
+
+        if coins == total:
+            level_over = True
+            play(&quot;done&quot;)
+            new_score = score + coins
+
+            if number + 1 &lt; len(LEVELS):
+                @say(&quot;Level &quot; + str(number + 1) + &quot; done!&quot;)
+                def next_level():
+                    go(&quot;level&quot;, number + 1, new_score)
+            else:
+                @say(&quot;You beat every level!\n\nScore: &quot; + str(new_score))
+                def start_again():
+                    go(&quot;level&quot;, 0, 0)
+
+    @bean.onCollide(&quot;danger&quot;)
+    def ouch(thing):
+        global time_left
+
+        if level_over:
+            return
+        time_left = time_left - PENALTY
+        bean.pos = vec2(start.x, start.y)
+        shake(10)
+        play(&quot;ouch&quot;)
+
+    @onUpdate(&quot;across&quot;)
+    def float_across(ghost):
+        ghost.move(wave(-GHOST_SPEED, GHOST_SPEED, time() * 1.5), 0)
+
+    @onUpdate(&quot;updown&quot;)
+    def float_updown(ghost):
+        ghost.move(0, wave(-GHOST_SPEED, GHOST_SPEED, time() * 1.5))
+
+    def times_up():
+        global level_over
+
+        level_over = True
+        final = score + coins
+        best = getData(BEST_KEY, 0)
+
+        if final &gt; best:
+            setData(BEST_KEY, final)
+            message = &quot;New best score: &quot; + str(final) + &quot;!&quot;
+        else:
+            message = &quot;Score: &quot; + str(final) + &quot;\nBest: &quot; + str(best)
+
+        play(&quot;ouch&quot;)
+
+        @say(&quot;Time&#x27;s up!\n\n&quot; + message, button=&quot;Play again&quot;)
+        def play_again():
+            go(&quot;level&quot;, 0, 0)
+
+    show_score()
+    say(&quot;Level &quot; + str(number + 1), button=&quot;Go!&quot;)
+
+
+go(&quot;level&quot;, 0, 0)</code></pre>
+
+<p><code>@onUpdate("across")</code> runs once per frame <em>for each</em>
+object tagged <code>"across"</code>, and passes that object in as
+<code>ghost</code>. Two ghosts, two calls, each moving its own ghost.</p>
+
+<p><code>wave(low, high, angle)</code> swings smoothly between two numbers
+forever. Here it is used as a <em>speed</em>: the ghost floats one way, slows
+down, stops, and floats back again. Change the <code>1.5</code> and the
+ghosts swing faster or slower; change <code>GHOST_SPEED</code> and they
+travel further.</p>
+
+<p><code>start</code> remembers where Bean began, so that touching a danger
+can put Bean back there.</p>
+
+<h2 id="step-7-the-whole-game">Step 7 — the whole game</h2>
+
+<p>This is the game exactly as it is on the <a href="../../games/">games
+page</a>. It adds three things to step 6:</p>
+
+<ul>
+<li><strong>Level 5 and the gazer.</strong> The <code>G</code> letter has no
+<code>body()</code>, so walls don't stop it, and
+<code>gazer.moveTo(bean.pos, CHASE_SPEED)</code> heads it straight at Bean
+every frame.</li>
+<li><strong>Laps.</strong> After level 5, <code>go("level", 0, new_score,
+lap + 1)</code> starts again with the score kept and five seconds less on the
+clock, down to a minimum of <code>SHORTEST</code>. The game ends only when
+the clock runs out.</li>
+<li><strong>A tip for each level</strong>, in the <code>TIPS</code> list,
+shown in the Go! message.</li>
+</ul>
+
+<p>It also has all the numbers worth changing in one settings block near the
+top, and comments that explain why each part is there.</p>
+
+<pre><code class="language-python">&quot;&quot;&quot;Coin Rush -- grab every coin before the clock runs out.
+
+    arrow keys   run
+
+Bean has 30 seconds to collect every coin on the level. Get them all and the
+next level starts, with more in the way: first walls, then spikes, then
+ghosts, then a gazer that comes after you. Touch a spike or a ghost and you
+lose 3 seconds and go back to where you started.
+
+Every coin counts towards your score, and the score carries on from level to
+level. Finish all five and they start again with less time on the clock, so
+the game only ends when the clock beats you. Your best score is remembered.
+
+HOW THIS FILE IS PUT TOGETHER
+
+    1. the window, the pictures and the sounds
+    2. the settings
+    3. the levels
+    4. what each letter turns into
+    5. the level scene: Bean, the keys, the clock, the coins
+    6. start the game
+
+The levels are pictures made of letters. Move an &#x27;o&#x27; and you have moved a
+coin -- you never have to touch the code to change a level.
+&quot;&quot;&quot;
+
+from kaypy import *
+
+# ----------------------------------------------------------------- 1. setup
+
+TILE = 64          # one tile is 64 pixels square
+ACROSS = 15        # tiles across
+DOWN = 10          # tiles down
+TOP = 56           # a strip at the top for the score and the clock
+
+kaypy(width=TILE * ACROSS, height=TOP + TILE * DOWN,
+      background=[118, 186, 120])
+
+# We look down on Bean from above, so nothing falls. 0 is already the
+# setting when a game starts, so this line changes nothing -- it is here to
+# say what kind of game this is. A platform game sets it to about 2400.
+setGravity(0)
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSprite(&quot;steel&quot;, &quot;images/steel.png&quot;)
+loadSprite(&quot;spike&quot;, &quot;images/spike.png&quot;)
+loadSprite(&quot;ghosty&quot;, &quot;images/ghosty.png&quot;)
+loadSprite(&quot;gazer&quot;, &quot;images/gazer.png&quot;)
+
+loadSound(&quot;coin&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;ouch&quot;, &quot;sounds/thump.wav&quot;)
+loadSound(&quot;done&quot;, &quot;sounds/rising_beep.wav&quot;)
+
+
+# -------------------------------------------------------------- 2. settings
+#
+# Every number worth changing is here.
+
+SPEED = 300           # how fast Bean runs, in pixels per second
+TIME_LIMIT = 30       # seconds on the clock for each level
+FASTER_EACH_LAP = 5   # seconds fewer each time round all five levels
+SHORTEST = 10         # ...but never fewer than this
+PENALTY = 3           # seconds lost for touching a spike, ghost or gazer
+GHOST_SPEED = 100     # how fast a ghost floats
+CHASE_SPEED = 60      # how fast the gazer follows you
+
+# The name the best score is saved under. Every game on a website shares
+# the same storage, so the game&#x27;s own name goes in it -- a plain &quot;best&quot;
+# would be overwritten by the next game that saved one.
+BEST_KEY = &quot;coin_rush_best&quot;
+
+
+# ---------------------------------------------------------------- 3. levels
+#
+# One letter is one tile.
+#
+#   #  wall       o  coin       P  Bean starts here
+#   ^  spike      h  ghost that floats side to side
+#                 v  ghost that floats up and down
+#                 G  gazer, which chases you straight through walls
+#
+# A space is empty floor. Every row has to be 15 letters long.
+
+LEVEL_1 = [
+    &quot;###############&quot;,
+    &quot;#             #&quot;,
+    &quot;#  o       o  #&quot;,
+    &quot;#      o      #&quot;,
+    &quot;#             #&quot;,
+    &quot;#   o     o   #&quot;,
+    &quot;#      P      #&quot;,
+    &quot;#  o       o  #&quot;,
+    &quot;#      o      #&quot;,
+    &quot;###############&quot;,
+]
+
+LEVEL_2 = [
+    &quot;###############&quot;,
+    &quot;#o    #      o#&quot;,
+    &quot;#     #   o   #&quot;,
+    &quot;#  o  #       #&quot;,
+    &quot;#     ### ### #&quot;,
+    &quot;#  o    P    o#&quot;,
+    &quot;### ###   #   #&quot;,
+    &quot;#       o #   #&quot;,
+    &quot;#o        #  o#&quot;,
+    &quot;###############&quot;,
+]
+
+LEVEL_3 = [
+    &quot;###############&quot;,
+    &quot;#o   ^   ^   o#&quot;,
+    &quot;# ##   o   ## #&quot;,
+    &quot;#  #  ^ ^  #  #&quot;,
+    &quot;#o    #P#    o#&quot;,
+    &quot;#  ^  # #  ^  #&quot;,
+    &quot;# ### # # ### #&quot;,
+    &quot;#  o  ^ ^  o  #&quot;,
+    &quot;#o           o#&quot;,
+    &quot;###############&quot;,
+]
+
+LEVEL_4 = [
+    &quot;###############&quot;,
+    &quot;#o   h       o#&quot;,
+    &quot;#  ###   ###  #&quot;,
+    &quot;#  #o  ^  o#  #&quot;,
+    &quot;#v #   P   # v#&quot;,
+    &quot;#  #o     o#  #&quot;,
+    &quot;#  ###   ###  #&quot;,
+    &quot;#o     h     o#&quot;,
+    &quot;#      ^      #&quot;,
+    &quot;###############&quot;,
+]
+
+LEVEL_5 = [
+    &quot;###############&quot;,
+    &quot;#o   #   #   o#&quot;,
+    &quot;# ## # ^ # ## #&quot;,
+    &quot;#  o   h     o#&quot;,
+    &quot;#v ##  P  ## v#&quot;,
+    &quot;#     ^ ^     #&quot;,
+    &quot;# ##o## ##o## #&quot;,
+    &quot;#o    h      o#&quot;,
+    &quot;#  ^       ^ G#&quot;,
+    &quot;###############&quot;,
+]
+
+LEVELS = [LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5]
+
+# What to tell the player before each level.
+TIPS = [
+    &quot;Grab every coin before the clock runs out!&quot;,
+    &quot;Walls! Find a way round them.&quot;,
+    &quot;Spikes! Touch one and you lose 3 seconds.&quot;,
+    &quot;Ghosts! Watch how they float, then slip past.&quot;,
+    &quot;The gazer follows you, even through walls. Keep moving!&quot;,
+]
+
+
+# ----------------------------------------------- 4. what each letter becomes
+#
+# addLevel() reads the picture. Each time it finds a letter it looks it up
+# here and builds an object from the list. The `lambda:` means &quot;build a new
+# one every time you find this letter&quot;, so every coin is its own coin.
+#
+# Everything that hurts Bean is tagged &quot;danger&quot;. The ghosts and the gazer
+# have a second tag too -- &quot;across&quot;, &quot;updown&quot; or &quot;chaser&quot; -- which is what
+# makes each of them move the way it does. A spike is only &quot;danger&quot;.
+
+TILES = {
+    &quot;#&quot;: lambda: [sprite(&quot;steel&quot;), area(), body(isStatic=True), &quot;wall&quot;],
+    &quot;o&quot;: lambda: [sprite(&quot;coin&quot;), area(), &quot;coin&quot;],
+    &quot;^&quot;: lambda: [sprite(&quot;spike&quot;), area(), &quot;danger&quot;],
+    &quot;h&quot;: lambda: [sprite(&quot;ghosty&quot;), scale(0.6), area(), z(10),
+                  &quot;danger&quot;, &quot;across&quot;],
+    &quot;v&quot;: lambda: [sprite(&quot;ghosty&quot;), scale(0.6), area(), z(10),
+                  &quot;danger&quot;, &quot;updown&quot;],
+    &quot;G&quot;: lambda: [sprite(&quot;gazer&quot;), scale(0.4), area(), z(10),
+                  &quot;danger&quot;, &quot;chaser&quot;],
+
+    # Bean is a tile like everything else, so moving the &#x27;P&#x27; moves where you
+    # start. scale(0.7) because the picture is a whole tile wide, and a Bean
+    # that fills a tile gets stuck in every gap.
+    &quot;P&quot;: lambda: [sprite(&quot;bean&quot;), scale(0.7), area(), body(), z(20),
+                  &quot;player&quot;],
+}
+
+
+# -------------------------------------------- what the game has to remember
+#
+# These change while you play. A function that CHANGES one has to say
+# `global` first, which means &quot;the one up here, not a new one of my own&quot;.
+
+going_left = False
+going_right = False
+going_up = False
+going_down = False
+
+time_left = 0          # seconds left on the clock
+coins = 0              # coins collected on this level
+level_over = False
+
+
+# ------------------------------------------------------- 5. the level scene
+#
+# The scene is CALLED &quot;level&quot;. The function is NOT called play(), because
+# kaypy already has a play() for sounds -- name your function play() and
+# every play(&quot;coin&quot;) would start a level instead of making a noise.
+#
+# number is which level (0 is the first), score is the coins from earlier
+# levels, and lap is how many times you have been through all five.
+
+@scene(&quot;level&quot;)
+def build_level(number, score, lap):
+    global going_left, going_right, going_up, going_down
+    global time_left, coins, level_over
+
+    addLevel(LEVELS[number], {
+        &quot;tileWidth&quot;: TILE,
+        &quot;tileHeight&quot;: TILE,
+        &quot;pos&quot;: vec2(0, TOP),
+        &quot;tiles&quot;: TILES,
+    })
+
+    bean = get(&quot;player&quot;)[0]
+    start = vec2(bean.pos.x, bean.pos.y)
+    total = len(get(&quot;coin&quot;))
+
+    # A new level, so everything starts again.
+    going_left = False
+    going_right = False
+    going_up = False
+    going_down = False
+    coins = 0
+    level_over = False
+
+    time_left = TIME_LIMIT - lap * FASTER_EACH_LAP
+    if time_left &lt; SHORTEST:
+        time_left = SHORTEST
+
+    # -------------------------------------------------------------- the keys
+    #
+    # WHY NOT JUST onKeyDown?
+    #
+    # onKeyDown asks &quot;is the key down right now?&quot; every frame. But a message
+    # on the screen pauses the game, and if you let go of an arrow while it
+    # is up, the let-go can be missed. Then the game thinks the arrow is
+    # still held, and on the next level Bean runs off by itself.
+    #
+    # So the game keeps its own note: True when a key is pressed, False when
+    # it is let go, and all four go back to False at the start of a level.
+
+    @onKeyPress(&quot;left&quot;)
+    def press_left():
+        global going_left
+        going_left = True
+
+    @onKeyRelease(&quot;left&quot;)
+    def release_left():
+        global going_left
+        going_left = False
+
+    @onKeyPress(&quot;right&quot;)
+    def press_right():
+        global going_right
+        going_right = True
+
+    @onKeyRelease(&quot;right&quot;)
+    def release_right():
+        global going_right
+        going_right = False
+
+    @onKeyPress(&quot;up&quot;)
+    def press_up():
+        global going_up
+        going_up = True
+
+    @onKeyRelease(&quot;up&quot;)
+    def release_up():
+        global going_up
+        going_up = False
+
+    @onKeyPress(&quot;down&quot;)
+    def press_down():
+        global going_down
+        going_down = True
+
+    @onKeyRelease(&quot;down&quot;)
+    def release_down():
+        global going_down
+        going_down = False
+
+    # ------------------------------------------------- the words at the top
+
+    label = add([text(&quot;&quot;, size=26), pos(16, 14), fixed(), z(100)])
+    clock = add([text(&quot;&quot;, size=26), pos(width() - 130, 14), fixed(), z(100)])
+
+    def show_score():
+        label.text = (&quot;Level &quot; + str(number + 1)
+                      + &quot;     Coins &quot; + str(coins) + &quot; / &quot; + str(total)
+                      + &quot;     Score &quot; + str(score + coins))
+        # int() drops the part after the decimal point: 7.8 becomes 7.
+        clock.text = &quot;Time &quot; + str(int(time_left))
+
+    # ------------------------------------------------------- every frame
+
+    @onUpdate
+    def each_frame():
+        global time_left
+
+        if level_over:
+            return
+
+        if going_left:
+            bean.move(-SPEED, 0)
+            bean.flipX = True
+        if going_right:
+            bean.move(SPEED, 0)
+            bean.flipX = False
+        if going_up:
+            bean.move(0, -SPEED)
+        if going_down:
+            bean.move(0, SPEED)
+
+        # The clock. dt() is how long this frame took, so taking it away
+        # every frame counts down in real seconds.
+        time_left = time_left - dt()
+        if time_left &lt;= 0:
+            time_left = 0
+            times_up()
+
+        show_score()
+
+    # ----------------------------------------------------------- the coins
+
+    @bean.onCollide(&quot;coin&quot;)
+    def got_coin(coin):
+        global coins, level_over
+
+        coin.destroy()
+        coins = coins + 1
+        play(&quot;coin&quot;)
+        show_score()
+
+        if coins == total:
+            level_over = True
+            play(&quot;done&quot;)
+            new_score = score + coins
+
+            if number + 1 &lt; len(LEVELS):
+                @say(&quot;Level &quot; + str(number + 1) + &quot; done!\n\n&quot;
+                     + &quot;Score: &quot; + str(new_score))
+                def next_level():
+                    go(&quot;level&quot;, number + 1, new_score, lap)
+            else:
+                # Back to level 1, one lap further on, less time.
+                @say(&quot;You beat all five levels!\n\n&quot;
+                     + &quot;Score: &quot; + str(new_score) + &quot;\n\n&quot;
+                     + &quot;Again -- with less time!&quot;)
+                def next_lap():
+                    go(&quot;level&quot;, 0, new_score, lap + 1)
+
+    # -------------------------------------------------- spikes and ghosts
+
+    @bean.onCollide(&quot;danger&quot;)
+    def ouch(thing):
+        global time_left
+
+        if level_over:
+            return
+        time_left = time_left - PENALTY
+        bean.pos = vec2(start.x, start.y)
+        shake(10)
+        play(&quot;ouch&quot;)
+
+    # wave() swings between two numbers for ever. Used as a SPEED, it makes
+    # a ghost float one way, slow down, and float back again.
+    @onUpdate(&quot;across&quot;)
+    def float_across(ghost):
+        ghost.move(wave(-GHOST_SPEED, GHOST_SPEED, time() * 1.5), 0)
+
+    @onUpdate(&quot;updown&quot;)
+    def float_updown(ghost):
+        ghost.move(0, wave(-GHOST_SPEED, GHOST_SPEED, time() * 1.5))
+
+    # moveTo() heads towards a point. The gazer has no body(), so walls do
+    # not stop it.
+    @onUpdate(&quot;chaser&quot;)
+    def chase(gazer):
+        gazer.moveTo(bean.pos, CHASE_SPEED)
+
+    # ------------------------------------------------------------ time&#x27;s up
+
+    def times_up():
+        global level_over
+
+        level_over = True
+        final = score + coins
+        best = getData(BEST_KEY, 0)
+
+        if final &gt; best:
+            setData(BEST_KEY, final)
+            message = &quot;New best score: &quot; + str(final) + &quot;!&quot;
+        else:
+            message = &quot;Score: &quot; + str(final) + &quot;\nBest: &quot; + str(best)
+
+        shake(8)
+        play(&quot;ouch&quot;)
+
+        @say(&quot;Time&#x27;s up!\n\n&quot; + message, button=&quot;Play again&quot;)
+        def play_again():
+            go(&quot;level&quot;, 0, 0, 0)
+
+    # The message pauses the game, so the clock does not start until you
+    # close it.
+    show_score()
+    say(&quot;Level &quot; + str(number + 1) + &quot;\n\n&quot; + TIPS[number], button=&quot;Go!&quot;)
+
+
+# ------------------------------------------------------- 6. start the game
+
+go(&quot;level&quot;, 0, 0, 0)</code></pre>
+
+<h2 id="make-it-yours">Make it yours</h2>
+
+<ul>
+<li><strong>Change the numbers.</strong> <code>SPEED</code>,
+<code>TIME_LIMIT</code>, <code>PENALTY</code>, <code>GHOST_SPEED</code>. A
+game you find too hard is one number away from being too easy.</li>
+<li><strong>Draw level 6.</strong> Copy <code>LEVEL_5</code>, change the
+letters, and add it to <code>LEVELS</code>. You also need a sixth line in
+<code>TIPS</code>. Without it, reaching level 6 crashes with
+<code>IndexError: list index out of range</code>, because there are only five
+tips to choose from.</li>
+<li><strong>Add a new letter.</strong> A <code>+</code> that gives you five
+more seconds: a tile tagged <code>"bonus"</code> using the
+<code>heart</code> picture, and a <code>@bean.onCollide("bonus")</code> that
+destroys it and adds to <code>time_left</code>. Don't forget to
+<code>loadSprite</code> the heart.</li>
+<li><strong>Use WASD as well.</strong> Copy the arrow-key handlers and change
+<code>"left"</code> to <code>"a"</code>, and so on. They can set the same
+variables.</li>
+</ul>
+
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>
