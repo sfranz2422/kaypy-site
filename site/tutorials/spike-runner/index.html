@@ -1,0 +1,1737 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Spike Runner · KayPy</title>
+<meta name="description" content="How Spike Runner was built, a step at a time: a level made of sections, a cube that runs by itself, spikes, blocks, gaps and jump orbs — in plain Python a student can copy.">
+<meta property="og:title" content="Building Spike Runner · KayPy">
+<meta property="og:description" content="How Spike Runner was built, a step at a time.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All eight lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li><li><a class="dropdown-item" href="../../learn/functions/">6 — Functions</a></li><li><a class="dropdown-item" href="../../learn/decorators/">7 — Decorators</a></li><li><a class="dropdown-item" href="../../learn/dictionaries/">8 — Dictionaries</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../../tutorials/" aria-current="page">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <article class="prose">
+<h1 id="building-spike-runner">Building Spike Runner</h1>
+
+<p><a href="../../static/games/spike_runner/">Play it first →</a> The cube
+runs by itself; all you do is jump. Over spikes, onto blocks, across gaps,
+and off yellow orbs in mid-air. One touch of anything and you're back at the
+start, with the attempt count going up. It plays like <em>Geometry
+Dash</em>.</p>
+
+<p>This is how it was built, a step at a time. Every numbered step below is a
+whole program: copy it into
+<a href="../../play/">the playground</a>, press Run, and it works. Each step
+is the one before it with something added, so you can build the game the way
+it was built. Then break something on purpose and see what changes. That
+teaches you more than reading does.</p>
+
+<p>There is nothing clever in it. No list comprehensions, no tricks, and every
+kaypy function it uses is on the <a href="../../api/">API page</a>. Steps 1
+to 5 use a short level, a few sections long. Step 6 is the whole game.</p>
+
+<h2 id="the-one-big-idea">The one big idea: a level made of sections</h2>
+
+<p>The level is long: nearly 380 tiles. Drawn as one picture, every row would
+be a line of text 380 letters wide, which is no fun to edit.</p>
+
+<p>So it is drawn in <strong>sections</strong>: short pictures, each one an
+obstacle. This is one spike:</p>
+
+<pre><code class="language-python">ONE_SPIKE = [
+    "              ",
+    "              ",
+    "              ",
+    "              ",
+    "              ",
+    "              ",
+    "              ",
+    "      ^       ",
+    "##############",
+]</code></pre>
+
+<p>The bottom row is the floor. <code>SECTIONS</code> lists them in order, and
+<code>join_sections()</code> glues them together side by side into one long
+level. A new obstacle is a new section; a harder level is the same sections in
+a different order.</p>
+
+<h2 id="step-1-the-cube-runs">Step 1 — the cube runs</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 40          # one tile is 40 pixels square
+SPEED = 420        # how fast the cube runs, in pixels per second
+
+kaypy(width=960, height=560, background=[40, 90, 200])
+setGravity(5000)
+
+START = [
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;  @       &quot;,
+    &quot;##########&quot;,
+]
+
+ONE_SPIKE = [
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;      ^       &quot;,
+    &quot;##############&quot;,
+]
+
+STEPS = [
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                 ##     &quot;,
+    &quot;            ##   ##     &quot;,
+    &quot;       ##   ##   ##^^^  &quot;,
+    &quot;########################&quot;,
+]
+
+SECTIONS = [START, ONE_SPIKE, STEPS]
+
+
+def join_sections(sections):
+    &quot;&quot;&quot;Glue the sections together, side by side, into one long level.
+
+    Row 0 of the level is row 0 of every section, one after another, and
+    the same for every other row.
+    &quot;&quot;&quot;
+    # Every row of a section has to be the same width. If one is a letter
+    # short, everything after it on that row slides one tile to the left,
+    # and nothing says so -- so check, and say which section it is.
+    for number in range(len(sections)):
+        section = sections[number]
+        for line in section:
+            if len(line) != len(section[0]):
+                print(&quot;Section&quot;, number + 1, &quot;in SECTIONS has rows of&quot;,
+                      &quot;different widths. Count the letters on each row.&quot;)
+
+    level = []
+    for row in range(len(sections[0])):
+        line = &quot;&quot;
+        for section in sections:
+            line = line + section[row]
+        level.append(line)
+    return level
+
+
+LEVEL = join_sections(SECTIONS)
+TOP = TILE * 4     # the level starts 4 rows down, leaving sky above it
+
+TILES = {
+    &quot;#&quot;: lambda: [rect(TILE, TILE), color(20, 30, 70),
+                  outline(2, (120, 200, 255)), area(),
+                  body(isStatic=True), &quot;block&quot;],
+    &quot;@&quot;: lambda: [rect(36, 36), color(255, 210, 40), outline(3, (0, 0, 0)),
+                  anchor(&quot;center&quot;), rotate(0), area(), body(), z(10),
+                  &quot;player&quot;],
+}
+
+addLevel(LEVEL, {
+    &quot;tileWidth&quot;: TILE,
+    &quot;tileHeight&quot;: TILE,
+    &quot;pos&quot;: vec2(0, TOP),
+    &quot;tiles&quot;: TILES,
+})
+
+cube = get(&quot;player&quot;)[0]
+
+
+@onUpdate
+def each_frame():
+    cube.move(SPEED, 0)
+
+    # The camera keeps the cube a quarter of the way across the window, so
+    # you can see what is coming.
+    setCamPos(vec2(cube.pos.x + width() / 4, height() / 2))</code></pre>
+
+<p>Run it and the cube runs to the right on its own, until it reaches the
+first block and stops dead against it. Jumping is step 2.</p>
+
+<p><strong>Joining the sections.</strong> <code>join_sections</code> builds
+the level one row at a time. Row 0 of the level is row 0 of every section,
+one after another, then the same for row 1, and so on. That only works if
+every row of a section is the same width. If one row is a letter short,
+everything after it on that row slides a tile to the left. So before joining,
+it checks every section, and if a row is the wrong width it prints which
+section, like <code>Section 3 in SECTIONS has rows of different widths. Count
+the letters on each row.</code></p>
+
+<p><strong>Running.</strong> <code>cube.move(SPEED, 0)</code> every frame, and
+nothing else. The cube has a <code>body()</code>, so gravity holds it on the
+floor while it moves.</p>
+
+<p><strong>The camera.</strong> It puts the cube a quarter of the way across
+the window, not in the middle. <code>setCamPos()</code> says what point
+should be in the middle of the window; aim it a quarter of a window
+<em>ahead</em> of the cube, and the cube sits a quarter from the left, with
+three quarters of the window showing what's coming.</p>
+
+<p>The spike in <code>ONE_SPIKE</code> doesn't appear yet, because
+<code>^</code> isn't in <code>TILES</code>. A letter <code>addLevel</code> has
+no tile for is simply skipped.</p>
+
+<h2 id="step-2-jumping-and-spinning">Step 2 — jumping and spinning</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 40          # one tile is 40 pixels square
+SPEED = 420        # how fast the cube runs, in pixels per second
+JUMP = 1000        # how hard a jump is: two and a half tiles high
+SPIN = 520         # how fast the cube turns in the air, degrees a second
+
+kaypy(width=960, height=560, background=[40, 90, 200])
+setGravity(5000)
+
+START = [
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;  @       &quot;,
+    &quot;##########&quot;,
+]
+
+ONE_SPIKE = [
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;      ^       &quot;,
+    &quot;##############&quot;,
+]
+
+STEPS = [
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                 ##     &quot;,
+    &quot;            ##   ##     &quot;,
+    &quot;       ##   ##   ##^^^  &quot;,
+    &quot;########################&quot;,
+]
+
+SECTIONS = [START, ONE_SPIKE, STEPS]
+
+
+def join_sections(sections):
+    &quot;&quot;&quot;Glue the sections together, side by side, into one long level.
+
+    Row 0 of the level is row 0 of every section, one after another, and
+    the same for every other row.
+    &quot;&quot;&quot;
+    # Every row of a section has to be the same width. If one is a letter
+    # short, everything after it on that row slides one tile to the left,
+    # and nothing says so -- so check, and say which section it is.
+    for number in range(len(sections)):
+        section = sections[number]
+        for line in section:
+            if len(line) != len(section[0]):
+                print(&quot;Section&quot;, number + 1, &quot;in SECTIONS has rows of&quot;,
+                      &quot;different widths. Count the letters on each row.&quot;)
+
+    level = []
+    for row in range(len(sections[0])):
+        line = &quot;&quot;
+        for section in sections:
+            line = line + section[row]
+        level.append(line)
+    return level
+
+
+LEVEL = join_sections(SECTIONS)
+TOP = TILE * 4     # the level starts 4 rows down, leaving sky above it
+
+TILES = {
+    &quot;#&quot;: lambda: [rect(TILE, TILE), color(20, 30, 70),
+                  outline(2, (120, 200, 255)), area(),
+                  body(isStatic=True), &quot;block&quot;],
+    &quot;@&quot;: lambda: [rect(36, 36), color(255, 210, 40), outline(3, (0, 0, 0)),
+                  anchor(&quot;center&quot;), rotate(0), area(), body(), z(10),
+                  &quot;player&quot;],
+}
+
+addLevel(LEVEL, {
+    &quot;tileWidth&quot;: TILE,
+    &quot;tileHeight&quot;: TILE,
+    &quot;pos&quot;: vec2(0, TOP),
+    &quot;tiles&quot;: TILES,
+})
+
+cube = get(&quot;player&quot;)[0]
+
+
+# Holding the key jumps again the moment the cube lands -- that is why this
+# is asked every frame, rather than waiting for a key press.
+def holding_jump():
+    return isKeyDown(&quot;space&quot;) or isKeyDown(&quot;up&quot;) or isMouseDown()
+
+
+@onUpdate
+def each_frame():
+    cube.move(SPEED, 0)
+
+    if cube.isGrounded():
+        # Land square: turn to the nearest quarter turn.
+        cube.angle = round(cube.angle / 90) * 90
+        if holding_jump():
+            cube.jump(JUMP)
+    else:
+        cube.angle = cube.angle + SPIN * dt()
+
+    # The camera keeps the cube a quarter of the way across the window, so
+    # you can see what is coming.
+    setCamPos(vec2(cube.pos.x + width() / 4, height() / 2))</code></pre>
+
+<p>Hold <strong>space</strong>, <strong>up</strong> or the mouse button and
+the cube keeps jumping, each time it lands. That's why
+<code>holding_jump()</code> asks every frame whether the key is <em>down</em>,
+rather than waiting for a key to be <em>pressed</em>: holding is how the
+game is played.</p>
+
+<p><strong>Spinning.</strong> In the air, the cube turns <code>SPIN</code>
+degrees a second. It needs <code>rotate(0)</code> in its list to turn at all,
+and <code>anchor("center")</code> so it turns about its middle instead of
+swinging round its corner.</p>
+
+<p><strong>Landing square.</strong> A jump doesn't last an exact number of
+quarter turns, so the cube would usually land tilted.
+<code>round(cube.angle / 90) * 90</code> snaps it to the nearest quarter turn
+as soon as it's on the ground. Landing at 170 degrees: <code>170 / 90</code>
+is about 1.9, <code>round</code> makes it 2, and <code>2 * 90</code> is 180.</p>
+
+<h2 id="step-3-spikes-and-starting-again">Step 3 — spikes, and starting again</h2>
+
+<p>Touch a spike and the attempt is over. To start again from nothing, the
+game moves into a <strong>scene</strong>: everything from <code>addLevel</code>
+down goes inside <code>@scene("run")</code>, one step further in.
+<code>go("run", attempt + 1)</code> throws everything away and builds it
+fresh, one attempt further on.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 40          # one tile is 40 pixels square
+SPEED = 420        # how fast the cube runs, in pixels per second
+JUMP = 1000        # how hard a jump is: two and a half tiles high
+SPIN = 520         # how fast the cube turns in the air, degrees a second
+SPIKE_REACH = 22   # how close to a spike&#x27;s middle counts as touching it
+
+kaypy(width=960, height=560, background=[40, 90, 200])
+setGravity(5000)
+
+loadSprite(&quot;spike&quot;, &quot;images/triangle.png&quot;)
+loadSound(&quot;crash&quot;, &quot;sounds/small_boom.wav&quot;)
+
+START = [
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;  @       &quot;,
+    &quot;##########&quot;,
+]
+
+ONE_SPIKE = [
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;      ^       &quot;,
+    &quot;##############&quot;,
+]
+
+TWO_SPIKES = [
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;      ^^      &quot;,
+    &quot;##############&quot;,
+]
+
+THREE_SPIKES = [
+    &quot;                &quot;,
+    &quot;                &quot;,
+    &quot;                &quot;,
+    &quot;                &quot;,
+    &quot;                &quot;,
+    &quot;                &quot;,
+    &quot;                &quot;,
+    &quot;       ^^^      &quot;,
+    &quot;################&quot;,
+]
+
+FINISH = [
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;####################&quot;,
+]
+
+SECTIONS = [START, ONE_SPIKE, TWO_SPIKES, THREE_SPIKES, FINISH]
+
+
+def join_sections(sections):
+    &quot;&quot;&quot;Glue the sections together, side by side, into one long level.
+
+    Row 0 of the level is row 0 of every section, one after another, and
+    the same for every other row.
+    &quot;&quot;&quot;
+    # Every row of a section has to be the same width. If one is a letter
+    # short, everything after it on that row slides one tile to the left,
+    # and nothing says so -- so check, and say which section it is.
+    for number in range(len(sections)):
+        section = sections[number]
+        for line in section:
+            if len(line) != len(section[0]):
+                print(&quot;Section&quot;, number + 1, &quot;in SECTIONS has rows of&quot;,
+                      &quot;different widths. Count the letters on each row.&quot;)
+
+    level = []
+    for row in range(len(sections[0])):
+        line = &quot;&quot;
+        for section in sections:
+            line = line + section[row]
+        level.append(line)
+    return level
+
+
+LEVEL = join_sections(SECTIONS)
+TOP = TILE * 4     # the level starts 4 rows down, leaving sky above it
+
+TILES = {
+    &quot;#&quot;: lambda: [rect(TILE, TILE), color(20, 30, 70),
+                  outline(2, (120, 200, 255)), area(),
+                  body(isStatic=True), &quot;block&quot;],
+    &quot;^&quot;: lambda: [sprite(&quot;spike&quot;), scale(TILE / 48, TILE / 39), &quot;spike&quot;],
+    &quot;@&quot;: lambda: [rect(36, 36), color(255, 210, 40), outline(3, (0, 0, 0)),
+                  anchor(&quot;center&quot;), rotate(0), area(), body(), z(10),
+                  &quot;player&quot;],
+}
+
+attempt = 1
+crashed = False
+
+
+@scene(&quot;run&quot;)
+def run(number):
+    global attempt, crashed
+
+    attempt = number
+    crashed = False
+
+    addLevel(LEVEL, {
+        &quot;tileWidth&quot;: TILE,
+        &quot;tileHeight&quot;: TILE,
+        &quot;pos&quot;: vec2(0, TOP),
+        &quot;tiles&quot;: TILES,
+    })
+
+    cube = get(&quot;player&quot;)[0]
+
+    # Written into the level at the start, so it scrolls away as you go.
+    add([text(&quot;Attempt &quot; + str(attempt), size=44),
+         pos(cube.pos.x + 60, TOP + TILE * 2)])
+
+    def holding_jump():
+        return isKeyDown(&quot;space&quot;) or isKeyDown(&quot;up&quot;) or isMouseDown()
+
+    @onUpdate
+    def each_frame():
+        if crashed:
+            return
+
+        cube.move(SPEED, 0)
+
+        if cube.isGrounded():
+            cube.angle = round(cube.angle / 90) * 90
+            if holding_jump():
+                cube.jump(JUMP)
+        else:
+            cube.angle = cube.angle + SPIN * dt()
+
+        if crashed_into_spike():
+            crash()
+            return
+
+        setCamPos(vec2(cube.pos.x + width() / 4, height() / 2))
+
+    # A spike is a triangle, but a collision box is a rectangle. So measure
+    # how far the cube is from the solid middle of the spike instead.
+    def crashed_into_spike():
+        for spike in get(&quot;spike&quot;):
+            middle = vec2(spike.pos.x + TILE / 2, spike.pos.y + TILE * 0.65)
+            if cube.pos.dist(middle) &lt; SPIKE_REACH:
+                return True
+        return False
+
+    def crash():
+        global crashed
+
+        if crashed:
+            return
+        crashed = True
+
+        play(&quot;crash&quot;)
+        shake(10)
+        cube.destroy()
+
+        # Start again, one attempt further on.
+        @wait(0.7)
+        def again():
+            go(&quot;run&quot;, attempt + 1)
+
+
+go(&quot;run&quot;, 1)</code></pre>
+
+<p><strong>The spike picture.</strong> <code>addLevel</code> puts a tile's
+top-left corner at the corner of its square. The triangle picture is 48 by
+39 pixels, so at that size it would hang from the top of its square. Scaling
+it by <code>TILE / 48</code> across and <code>TILE / 39</code> down makes it
+exactly one tile, so it stands on the floor.</p>
+
+<p><strong>Touching a spike.</strong> A spike is a triangle, but every
+<code>area()</code> is a rectangle. A rectangle round a spike would kill you
+for clipping the empty corner beside the point, which feels like cheating.
+So spikes have no <code>area()</code> at all, and
+<code>crashed_into_spike()</code> measures how far the cube is from the
+spike's solid middle, a little below its centre. Only closer than
+<code>SPIKE_REACH</code>, 22 pixels, counts.</p>
+
+<p><strong>Attempts.</strong> <code>"Attempt 2"</code> is an ordinary text
+object in the level, not stuck to the screen, so it scrolls away as you
+run. <code>crashed</code> stops everything moving while the next attempt is
+on its way, and stops <code>crash()</code> happening twice.</p>
+
+<p>There's no floor after the end of the level yet. Get that far and the cube
+falls off the end, for ever. The next step fixes that.</p>
+
+<div class="callout"><p><strong>Don't forget <code>global</code>.</strong>
+Take out <code>global crashed</code> in <code>crash()</code> and the first
+spike stops the game with <code>UnboundLocalError: cannot access local
+variable 'crashed' where it is not associated with a value</code>. Without
+<code>global</code>, Python thinks <code>crashed</code> in
+<code>crash()</code> is a new variable of its own, and
+<code>if crashed:</code> asks about it before it has a value.</p></div>
+
+<h2 id="step-4-blocks-and-gaps">Step 4 — blocks and gaps</h2>
+
+<p>In step 1 the cube stopped dead against a block and stayed there. Now
+running into the side of a block is a crash, and so is falling into a gap
+in the floor.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 40          # one tile is 40 pixels square
+SPEED = 420        # how fast the cube runs, in pixels per second
+JUMP = 1000        # how hard a jump is: two and a half tiles high
+SPIN = 520         # how fast the cube turns in the air, degrees a second
+SPIKE_REACH = 22   # how close to a spike&#x27;s middle counts as touching it
+
+kaypy(width=960, height=560, background=[40, 90, 200])
+setGravity(5000)
+
+loadSprite(&quot;spike&quot;, &quot;images/triangle.png&quot;)
+loadSound(&quot;crash&quot;, &quot;sounds/small_boom.wav&quot;)
+
+START = [
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;  @       &quot;,
+    &quot;##########&quot;,
+]
+
+ONE_SPIKE = [
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;      ^       &quot;,
+    &quot;##############&quot;,
+]
+
+TWO_SPIKES = [
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;      ^^      &quot;,
+    &quot;##############&quot;,
+]
+
+STEPS = [
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                 ##     &quot;,
+    &quot;            ##   ##     &quot;,
+    &quot;       ##   ##   ##^^^  &quot;,
+    &quot;########################&quot;,
+]
+
+GAP = [
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;#####   ######&quot;,
+]
+
+THREE_SPIKES = [
+    &quot;                &quot;,
+    &quot;                &quot;,
+    &quot;                &quot;,
+    &quot;                &quot;,
+    &quot;                &quot;,
+    &quot;                &quot;,
+    &quot;                &quot;,
+    &quot;       ^^^      &quot;,
+    &quot;################&quot;,
+]
+
+FINISH = [
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;####################&quot;,
+]
+
+SECTIONS = [START, ONE_SPIKE, TWO_SPIKES, STEPS, GAP, THREE_SPIKES, FINISH]
+
+
+def join_sections(sections):
+    &quot;&quot;&quot;Glue the sections together, side by side, into one long level.
+
+    Row 0 of the level is row 0 of every section, one after another, and
+    the same for every other row.
+    &quot;&quot;&quot;
+    # Every row of a section has to be the same width. If one is a letter
+    # short, everything after it on that row slides one tile to the left,
+    # and nothing says so -- so check, and say which section it is.
+    for number in range(len(sections)):
+        section = sections[number]
+        for line in section:
+            if len(line) != len(section[0]):
+                print(&quot;Section&quot;, number + 1, &quot;in SECTIONS has rows of&quot;,
+                      &quot;different widths. Count the letters on each row.&quot;)
+
+    level = []
+    for row in range(len(sections[0])):
+        line = &quot;&quot;
+        for section in sections:
+            line = line + section[row]
+        level.append(line)
+    return level
+
+
+LEVEL = join_sections(SECTIONS)
+TOP = TILE * 4     # the level starts 4 rows down, leaving sky above it
+
+TILES = {
+    &quot;#&quot;: lambda: [rect(TILE, TILE), color(20, 30, 70),
+                  outline(2, (120, 200, 255)), area(),
+                  body(isStatic=True), &quot;block&quot;],
+    &quot;^&quot;: lambda: [sprite(&quot;spike&quot;), scale(TILE / 48, TILE / 39), &quot;spike&quot;],
+    &quot;@&quot;: lambda: [rect(36, 36), color(255, 210, 40), outline(3, (0, 0, 0)),
+                  anchor(&quot;center&quot;), rotate(0), area(), body(), z(10),
+                  &quot;player&quot;],
+}
+
+attempt = 1
+crashed = False
+last_x = 0          # where the cube was last frame
+expected = 0        # how far it was told to move last frame
+
+
+@scene(&quot;run&quot;)
+def run(number):
+    global attempt, crashed, last_x, expected
+
+    attempt = number
+    crashed = False
+    expected = 0
+
+    addLevel(LEVEL, {
+        &quot;tileWidth&quot;: TILE,
+        &quot;tileHeight&quot;: TILE,
+        &quot;pos&quot;: vec2(0, TOP),
+        &quot;tiles&quot;: TILES,
+    })
+
+    cube = get(&quot;player&quot;)[0]
+    last_x = cube.pos.x
+
+    # Written into the level at the start, so it scrolls away as you go.
+    add([text(&quot;Attempt &quot; + str(attempt), size=44),
+         pos(cube.pos.x + 60, TOP + TILE * 2)])
+
+    def holding_jump():
+        return isKeyDown(&quot;space&quot;) or isKeyDown(&quot;up&quot;) or isMouseDown()
+
+    @onUpdate
+    def each_frame():
+        global last_x, expected
+
+        if crashed:
+            return
+
+        # Ran into the side of a block? Then it got less than half as far
+        # as it was told to go last frame.
+        if cube.pos.x - last_x &lt; expected * 0.5:
+            crash()
+            return
+        last_x = cube.pos.x
+        expected = SPEED * dt()
+
+        cube.move(SPEED, 0)
+
+        if cube.isGrounded():
+            cube.angle = round(cube.angle / 90) * 90
+            if holding_jump():
+                cube.jump(JUMP)
+        else:
+            cube.angle = cube.angle + SPIN * dt()
+
+        if crashed_into_spike():
+            crash()
+            return
+
+        # Fell into a gap.
+        if cube.pos.y &gt; height() + 50:
+            crash()
+            return
+
+        setCamPos(vec2(cube.pos.x + width() / 4, height() / 2))
+
+    # A spike is a triangle, but a collision box is a rectangle. So measure
+    # how far the cube is from the solid middle of the spike instead.
+    def crashed_into_spike():
+        for spike in get(&quot;spike&quot;):
+            middle = vec2(spike.pos.x + TILE / 2, spike.pos.y + TILE * 0.65)
+            if cube.pos.dist(middle) &lt; SPIKE_REACH:
+                return True
+        return False
+
+    def crash():
+        global crashed
+
+        if crashed:
+            return
+        crashed = True
+
+        play(&quot;crash&quot;)
+        shake(10)
+        cube.destroy()
+
+        # Start again, one attempt further on.
+        @wait(0.7)
+        def again():
+            go(&quot;run&quot;, attempt + 1)
+
+
+go(&quot;run&quot;, 1)</code></pre>
+
+<p><strong>Running into a block.</strong> Nothing tells the game the cube hit
+something. A block's <code>body(isStatic=True)</code> just pushes the cube
+back out, every frame. So the game measures instead: <code>expected</code> is
+how far the cube was told to move last frame, and <code>last_x</code> is
+where it was. If it got less than half as far as it was told to, something
+stopped it.</p>
+
+<p>It has to be <em>last</em> frame's distance, not this frame's. Frames
+aren't all the same length, especially in a browser. A long frame straight
+after a short one would ask "did you move as far as this long frame says?",
+get "no", and call it a crash when nothing happened.</p>
+
+<p>Landing <em>on top</em> of a block doesn't stop the cube going forward, so
+that isn't a crash. Only hitting the side is.</p>
+
+<p><strong>Gaps.</strong> A gap is just a space in the floor row. Fall
+through one and the cube drops below the window, and
+<code>cube.pos.y &gt; height() + 50</code> catches it. That also catches
+running off the end of the level, so for now the end counts as a crash and
+starts you again. Step 6 adds a finish.</p>
+
+<h2 id="step-5-orbs">Step 5 — orbs</h2>
+
+<p>Some gaps are too wide to jump. A yellow orb in mid-air gives you a second
+jump: hold jump as you go through it.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 40          # one tile is 40 pixels square
+SPEED = 420        # how fast the cube runs, in pixels per second
+JUMP = 1000        # how hard a jump is: two and a half tiles high
+ORB_JUMP = 1150    # how hard an orb throws you, a little more
+SPIN = 520         # how fast the cube turns in the air, degrees a second
+SPIKE_REACH = 22   # how close to a spike&#x27;s middle counts as touching it
+
+kaypy(width=960, height=560, background=[40, 90, 200])
+setGravity(5000)
+
+loadSprite(&quot;spike&quot;, &quot;images/triangle.png&quot;)
+loadSound(&quot;crash&quot;, &quot;sounds/small_boom.wav&quot;)
+
+START = [
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;  @       &quot;,
+    &quot;##########&quot;,
+]
+
+ONE_SPIKE = [
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;      ^       &quot;,
+    &quot;##############&quot;,
+]
+
+STEPS = [
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                 ##     &quot;,
+    &quot;            ##   ##     &quot;,
+    &quot;       ##   ##   ##^^^  &quot;,
+    &quot;########################&quot;,
+]
+
+GAP = [
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;#####   ######&quot;,
+]
+
+ORB_GAP = [
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;       o            &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;#####       ########&quot;,
+]
+
+ORB_CHAIN = [
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;       o   o            &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;#####          #########&quot;,
+]
+
+FINISH = [
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;####################&quot;,
+]
+
+SECTIONS = [START, ONE_SPIKE, STEPS, GAP, ORB_GAP, ORB_CHAIN, FINISH]
+
+
+def join_sections(sections):
+    &quot;&quot;&quot;Glue the sections together, side by side, into one long level.
+
+    Row 0 of the level is row 0 of every section, one after another, and
+    the same for every other row.
+    &quot;&quot;&quot;
+    # Every row of a section has to be the same width. If one is a letter
+    # short, everything after it on that row slides one tile to the left,
+    # and nothing says so -- so check, and say which section it is.
+    for number in range(len(sections)):
+        section = sections[number]
+        for line in section:
+            if len(line) != len(section[0]):
+                print(&quot;Section&quot;, number + 1, &quot;in SECTIONS has rows of&quot;,
+                      &quot;different widths. Count the letters on each row.&quot;)
+
+    level = []
+    for row in range(len(sections[0])):
+        line = &quot;&quot;
+        for section in sections:
+            line = line + section[row]
+        level.append(line)
+    return level
+
+
+LEVEL = join_sections(SECTIONS)
+TOP = TILE * 4     # the level starts 4 rows down, leaving sky above it
+
+TILES = {
+    &quot;#&quot;: lambda: [rect(TILE, TILE), color(20, 30, 70),
+                  outline(2, (120, 200, 255)), area(),
+                  body(isStatic=True), &quot;block&quot;],
+    &quot;^&quot;: lambda: [sprite(&quot;spike&quot;), scale(TILE / 48, TILE / 39), &quot;spike&quot;],
+    &quot;o&quot;: lambda: [circle(14), color(255, 220, 60), outline(3, (255, 255, 255)),
+                  opacity(1), &quot;orb&quot;, {&quot;used&quot;: False}],
+    &quot;@&quot;: lambda: [rect(36, 36), color(255, 210, 40), outline(3, (0, 0, 0)),
+                  anchor(&quot;center&quot;), rotate(0), area(), body(), z(10),
+                  &quot;player&quot;],
+}
+
+attempt = 1
+crashed = False
+last_x = 0          # where the cube was last frame
+expected = 0        # how far it was told to move last frame
+
+
+@scene(&quot;run&quot;)
+def run(number):
+    global attempt, crashed, last_x, expected
+
+    attempt = number
+    crashed = False
+    expected = 0
+
+    addLevel(LEVEL, {
+        &quot;tileWidth&quot;: TILE,
+        &quot;tileHeight&quot;: TILE,
+        &quot;pos&quot;: vec2(0, TOP),
+        &quot;tiles&quot;: TILES,
+    })
+
+    cube = get(&quot;player&quot;)[0]
+    last_x = cube.pos.x
+
+    # Written into the level at the start, so it scrolls away as you go.
+    add([text(&quot;Attempt &quot; + str(attempt), size=44),
+         pos(cube.pos.x + 60, TOP + TILE * 2)])
+
+    def holding_jump():
+        return isKeyDown(&quot;space&quot;) or isKeyDown(&quot;up&quot;) or isMouseDown()
+
+    # An orb fires if jump is held while the cube touches it, and only once.
+    def use_orbs():
+        for orb in get(&quot;orb&quot;):
+            # A circle&#x27;s pos is its top-left corner; its middle is one
+            # radius (14) in from there.
+            middle = vec2(orb.pos.x + 14, orb.pos.y + 14)
+            if not orb.used and cube.pos.dist(middle) &lt; 40:
+                orb.used = True
+                orb.opacity = 0.3
+                cube.jump(ORB_JUMP)
+
+    # A sign over the first orb, because nothing else says what they do.
+    orbs = get(&quot;orb&quot;)
+    if len(orbs) &gt; 0:
+        first = orbs[0]
+        add([text(&quot;hold jump through the orb!&quot;, size=22),
+             pos(first.pos.x - 130, first.pos.y - 60)])
+
+    @onUpdate
+    def each_frame():
+        global last_x, expected
+
+        if crashed:
+            return
+
+        # Ran into the side of a block? Then it got less than half as far
+        # as it was told to go last frame.
+        if cube.pos.x - last_x &lt; expected * 0.5:
+            crash()
+            return
+        last_x = cube.pos.x
+        expected = SPEED * dt()
+
+        cube.move(SPEED, 0)
+
+        if cube.isGrounded():
+            cube.angle = round(cube.angle / 90) * 90
+            if holding_jump():
+                cube.jump(JUMP)
+        else:
+            cube.angle = cube.angle + SPIN * dt()
+            if holding_jump():
+                use_orbs()
+
+        if crashed_into_spike():
+            crash()
+            return
+
+        # Fell into a gap.
+        if cube.pos.y &gt; height() + 50:
+            crash()
+            return
+
+        setCamPos(vec2(cube.pos.x + width() / 4, height() / 2))
+
+    # A spike is a triangle, but a collision box is a rectangle. So measure
+    # how far the cube is from the solid middle of the spike instead.
+    def crashed_into_spike():
+        for spike in get(&quot;spike&quot;):
+            middle = vec2(spike.pos.x + TILE / 2, spike.pos.y + TILE * 0.65)
+            if cube.pos.dist(middle) &lt; SPIKE_REACH:
+                return True
+        return False
+
+    def crash():
+        global crashed
+
+        if crashed:
+            return
+        crashed = True
+
+        play(&quot;crash&quot;)
+        shake(10)
+        cube.destroy()
+
+        # Start again, one attempt further on.
+        @wait(0.7)
+        def again():
+            go(&quot;run&quot;, attempt + 1)
+
+
+go(&quot;run&quot;, 1)</code></pre>
+
+<p><strong>Held, not pressed.</strong> The cube is only touching an orb for
+about a tenth of a second, too short to hit with a fresh press. So the game
+asks whether jump is <em>held</em> while the cube is touching an orb.
+Holding the key through the orb is how it's meant to be played, which is
+what the sign above the first one says.</p>
+
+<p><strong>Once each.</strong> Holding means the cube would fire the orb
+again on every frame it was touching it, each time starting the throw over.
+The cube would go higher than <code>ORB_JUMP</code> says, by however long you
+happened to be touching the orb, so the same jump would land in a different
+place each time. So each orb carries its own <code>{"used": False}</code>,
+set to <code>True</code> the first time.</p>
+
+<p><code>orb.opacity = 0.3</code> dims a used orb, so you can see it has gone.
+That needs <code>opacity(1)</code> in the orb's list. Leave it out and the
+line still runs, with no error, but the orb never dims.</p>
+
+<p><strong>Where the orb is.</strong> A <code>circle()</code>'s
+<code>pos</code> is the top-left corner of the box around it, not its middle.
+The middle is one radius, 14 pixels, in from there, which is why
+<code>use_orbs</code> adds 14 before measuring.</p>
+
+<h2 id="step-6-the-whole-game">Step 6 — the whole game</h2>
+
+<p>This is the game exactly as it is on the <a href="../../games/">games
+page</a>. It adds:</p>
+
+<ul>
+<li><strong>The whole level</strong>: every section, in order.</li>
+<li><strong>A progress bar.</strong> <code>@onDraw</code> draws it fresh every
+frame with <code>drawRect</code> and <code>drawText</code>, with
+<code>fixed=True</code> so it stays put while the level scrolls. How far
+along you are is the cube's <code>x</code> divided by where the finish is,
+and <code>clamp(..., 0, 1)</code> keeps that between 0 and 1. The green
+part is that fraction of the bar's 400 pixels.</li>
+<li><strong>A best.</strong> Each crash saves your percentage if it is more
+than your best, with <code>setData</code>.</li>
+<li><strong>A finish.</strong> Six tiles before the end of the level,
+<code>finish()</code> stops the run and <code>say()</code> puts up "Level
+complete", with how many attempts it took.</li>
+<li><strong>Pieces.</strong> The cube breaks into twelve little squares when
+it crashes, each flying off in its own direction and fading away.</li>
+<li><strong>Music, switched off.</strong> The playground's music track is
+2.4 MB, which would make the game slow to load for a whole class at once. To
+switch it on, take the <code>#</code> off the <code>loadSound("music",
+...)</code> line and set <code>MUSIC = True</code>.</li>
+</ul>
+
+<p>It also has every number worth changing in one settings block near the
+top, and comments that explain why each part is there.</p>
+
+<pre><code class="language-python">&quot;&quot;&quot;Spike Runner -- the cube runs by itself. You just jump.
+
+    space, up or click   jump (hold it to keep jumping)
+
+The cube never stops running. Jump over the spikes, onto the blocks and
+across the gaps. In mid-air, a yellow orb gives you a second jump: hold
+jump as you go through it. Touch a spike, run into the side of a
+block or fall into a gap, and you start again from the beginning. The bar
+at the top shows how far you got, and your best is remembered.
+
+HOW THIS FILE IS PUT TOGETHER
+
+    1. the window, the pictures and the sounds
+    2. the settings
+    3. the level, in sections
+    4. what each letter turns into
+    5. the run: the cube, jumping, crashing, the camera, the progress bar
+    6. start the game
+
+The level is a row of short sections, each a picture made of letters. Add
+a section, swap two round, or draw a new one -- you never have to touch the
+code to change the level.
+&quot;&quot;&quot;
+
+from kaypy import *
+
+# ----------------------------------------------------------------- 1. setup
+
+TILE = 40          # one tile is 40 pixels square
+
+kaypy(width=960, height=560, background=[40, 90, 200])
+
+# Strong gravity and a hard jump make short, snappy hops.
+setGravity(5000)
+
+loadSprite(&quot;spike&quot;, &quot;images/triangle.png&quot;)
+
+loadSound(&quot;crash&quot;, &quot;sounds/small_boom.wav&quot;)
+loadSound(&quot;win&quot;, &quot;sounds/rising_beep.wav&quot;)
+
+# Music is switched off, because the track is 2.4 MB and would make the
+# game slow to load. To switch it on: take the # off the line below, and set
+# MUSIC = True in the settings.
+# loadSound(&quot;music&quot;, &quot;sounds/background.wav&quot;)
+
+
+# -------------------------------------------------------------- 2. settings
+#
+# Every number worth changing is here.
+
+SPEED = 420           # how fast the cube runs, in pixels per second
+JUMP = 1000           # how hard a jump is: two and a half tiles high
+ORB_JUMP = 1150       # how hard an orb throws you, a little more
+SPIN = 520            # how fast the cube turns in the air, degrees a second
+SPIKE_REACH = 22      # how close to a spike&#x27;s middle counts as touching it
+MUSIC = False         # True plays music -- see the loadSound line above
+
+# The name the best score is saved under. Every game on a website shares
+# the same storage, so the game&#x27;s own name goes in it.
+BEST_KEY = &quot;spike_runner_best&quot;
+
+
+# --------------------------------------------------------- 3. the level
+#
+# One letter is one tile.
+#
+#   #  block        ^  spike        o  jump orb
+#   @  the cube starts here
+#
+# A space is empty. The bottom row is the floor: leave a gap in it and the
+# cube can fall through.
+#
+# The level is a row of SECTIONS, joined end to end. Every section has to
+# have the same number of rows -- 9 -- but each can be as wide as you like.
+
+START = [
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;          &quot;,
+    &quot;  @       &quot;,
+    &quot;##########&quot;,
+]
+
+ONE_SPIKE = [
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;      ^       &quot;,
+    &quot;##############&quot;,
+]
+
+TWO_SPIKES = [
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;      ^^      &quot;,
+    &quot;##############&quot;,
+]
+
+STEPS = [
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                 ##     &quot;,
+    &quot;            ##   ##     &quot;,
+    &quot;       ##   ##   ##^^^  &quot;,
+    &quot;########################&quot;,
+]
+
+GAP = [
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;              &quot;,
+    &quot;#####   ######&quot;,
+]
+
+THREE_SPIKES = [
+    &quot;                &quot;,
+    &quot;                &quot;,
+    &quot;                &quot;,
+    &quot;                &quot;,
+    &quot;                &quot;,
+    &quot;                &quot;,
+    &quot;                &quot;,
+    &quot;       ^^^      &quot;,
+    &quot;################&quot;,
+]
+
+PLATFORMS = [
+    &quot;                              &quot;,
+    &quot;                              &quot;,
+    &quot;                              &quot;,
+    &quot;                              &quot;,
+    &quot;              ####            &quot;,
+    &quot;                              &quot;,
+    &quot;         ###                  &quot;,
+    &quot;    ^          ^^^^^^^        &quot;,
+    &quot;##############################&quot;,
+]
+
+ORB_GAP = [
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;       o            &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;#####       ########&quot;,
+]
+
+TUNNEL = [
+    &quot;                          &quot;,
+    &quot;                          &quot;,
+    &quot;                          &quot;,
+    &quot;                          &quot;,
+    &quot;      ##############      &quot;,
+    &quot;                          &quot;,
+    &quot;                          &quot;,
+    &quot;          ^    ^          &quot;,
+    &quot;##########################&quot;,
+]
+
+STAIRS_UP = [
+    &quot;                          &quot;,
+    &quot;                          &quot;,
+    &quot;                          &quot;,
+    &quot;                     ##   &quot;,
+    &quot;                ##   ##   &quot;,
+    &quot;           ##   ##   ##   &quot;,
+    &quot;      ##   ##   ##   ##   &quot;,
+    &quot;      ##^^^##^^^##^^^##^^^&quot;,
+    &quot;##########################&quot;,
+]
+
+ORB_CHAIN = [
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;       o   o            &quot;,
+    &quot;                        &quot;,
+    &quot;                        &quot;,
+    &quot;#####          #########&quot;,
+]
+
+FINISH = [
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;                    &quot;,
+    &quot;####################&quot;,
+]
+
+SECTIONS = [
+    START, ONE_SPIKE, ONE_SPIKE, TWO_SPIKES, STEPS, GAP, THREE_SPIKES,
+    PLATFORMS, ORB_GAP, TWO_SPIKES, TUNNEL, GAP, STAIRS_UP, ORB_CHAIN,
+    THREE_SPIKES, PLATFORMS, ORB_GAP, STEPS, FINISH,
+]
+
+
+def join_sections(sections):
+    &quot;&quot;&quot;Glue the sections together, side by side, into one long level.
+
+    Row 0 of the level is row 0 of every section, one after another, and
+    the same for every other row.
+    &quot;&quot;&quot;
+    # Every row of a section has to be the same width. If one is a letter
+    # short, everything after it on that row slides one tile to the left,
+    # and nothing says so -- so check, and say which section it is.
+    for number in range(len(sections)):
+        section = sections[number]
+        for line in section:
+            if len(line) != len(section[0]):
+                print(&quot;Section&quot;, number + 1, &quot;in SECTIONS has rows of&quot;,
+                      &quot;different widths. Count the letters on each row.&quot;)
+
+    level = []
+    for row in range(len(sections[0])):
+        line = &quot;&quot;
+        for section in sections:
+            line = line + section[row]
+        level.append(line)
+    return level
+
+
+LEVEL = join_sections(SECTIONS)
+LEVEL_WIDTH = len(LEVEL[0]) * TILE
+
+# The level is 9 rows tall and the window is 14. Starting the level 4 rows
+# down leaves sky above it and puts the floor near the bottom.
+TOP = TILE * 4
+
+
+# ----------------------------------------------- 4. what each letter becomes
+
+TILES = {
+    &quot;#&quot;: lambda: [rect(TILE, TILE), color(20, 30, 70),
+                  outline(2, (120, 200, 255)), area(),
+                  body(isStatic=True), &quot;block&quot;],
+
+    # The triangle picture is 48 x 39. Scaling it to exactly one tile means
+    # it sits on the floor of its square instead of hovering at the top.
+    # It has no area(): touching a spike is worked out by distance instead.
+    # See crashed_into_spike() below for why.
+    &quot;^&quot;: lambda: [sprite(&quot;spike&quot;), scale(TILE / 48, TILE / 39), &quot;spike&quot;],
+
+    # An orb works once per attempt. &quot;used&quot; says whether it has been.
+    &quot;o&quot;: lambda: [circle(14), color(255, 220, 60), outline(3, (255, 255, 255)),
+                  opacity(1), &quot;orb&quot;, {&quot;used&quot;: False}],
+
+    # The cube. anchor(&quot;center&quot;) so that it turns about its middle.
+    &quot;@&quot;: lambda: [rect(36, 36), color(255, 210, 40), outline(3, (0, 0, 0)),
+                  anchor(&quot;center&quot;), rotate(0), area(), body(), z(10),
+                  &quot;player&quot;],
+}
+
+
+# ---------------------------------------------- what the game has to remember
+#
+# These change while you play. A function that CHANGES one has to say
+# `global` first, which means &quot;the one up here, not a new one of my own&quot;.
+
+attempt = 1
+crashed = False
+finished = False
+last_x = 0          # where the cube was last frame
+expected = 0        # how far it was told to move last frame
+music = None
+
+
+# ------------------------------------------------------------- 5. the run
+#
+# The scene is CALLED &quot;run&quot;. A new attempt is the same scene built again,
+# so everything starts from the beginning. The function is not called
+# play(), because kaypy already has a play() for sounds.
+
+@scene(&quot;run&quot;)
+def run(number):
+    global attempt, crashed, finished, last_x, expected, music
+
+    attempt = number
+    crashed = False
+    finished = False
+    expected = 0
+
+    addLevel(LEVEL, {
+        &quot;tileWidth&quot;: TILE,
+        &quot;tileHeight&quot;: TILE,
+        &quot;pos&quot;: vec2(0, TOP),
+        &quot;tiles&quot;: TILES,
+    })
+
+    cube = get(&quot;player&quot;)[0]
+    last_x = cube.pos.x
+    best = getData(BEST_KEY, 0)
+
+    # Written into the level at the start, so it scrolls away as you go.
+    add([text(&quot;Attempt &quot; + str(attempt), size=44),
+         pos(cube.pos.x + 60, TOP + TILE * 2)])
+
+    # The music starts again with every attempt. The old one is stopped
+    # first, or each attempt would add another copy playing on top.
+    if music is not None:
+        music.paused = True
+    if MUSIC:
+        music = play(&quot;music&quot;, loop=True, volume=0.5)
+
+    # --------------------------------------------------------- jumping
+    #
+    # Holding the key jumps again the moment the cube lands -- that is why
+    # this asks every frame rather than waiting for a key press.
+
+    def holding_jump():
+        return isKeyDown(&quot;space&quot;) or isKeyDown(&quot;up&quot;) or isMouseDown()
+
+    # An orb fires if jump is held while the cube touches it -- held, not
+    # just pressed at that moment. The cube is only touching an orb for a
+    # tenth of a second, far too short to hit with a fresh press; holding
+    # the key as you go in is how it is meant to be played.
+    #
+    # Each orb fires once, then dims. Without &quot;used&quot;, holding the key would
+    # fire it again on every frame the cube was touching it.
+    def use_orbs():
+        for orb in get(&quot;orb&quot;):
+            # A circle&#x27;s pos is its top-left corner; its middle is one
+            # radius (14) in from there.
+            middle = vec2(orb.pos.x + 14, orb.pos.y + 14)
+            if not orb.used and cube.pos.dist(middle) &lt; 40:
+                orb.used = True
+                orb.opacity = 0.3
+                cube.jump(ORB_JUMP)
+
+    # A sign over the first orb, because nothing else says what they do.
+    orbs = get(&quot;orb&quot;)
+    if len(orbs) &gt; 0:
+        first = orbs[0]
+        add([text(&quot;hold jump through the orb!&quot;, size=22),
+             pos(first.pos.x - 130, first.pos.y - 60)])
+
+    # ------------------------------------------------------ every frame
+
+    @onUpdate
+    def each_frame():
+        global last_x, expected
+
+        if crashed or finished:
+            return
+
+        # Ran into the side of a block? Then the block stopped the cube, and
+        # it got less than half as far as it was told to go last frame. That
+        # is &quot;last frame&quot;, not this one: frames are not all the same length,
+        # and comparing against this frame&#x27;s would call a long frame after a
+        # short one a crash.
+        if cube.pos.x - last_x &lt; expected * 0.5:
+            crash()
+            return
+        last_x = cube.pos.x
+        expected = SPEED * dt()
+
+        cube.move(SPEED, 0)
+
+        if cube.isGrounded():
+            # Land square: turn to the nearest quarter turn.
+            cube.angle = round(cube.angle / 90) * 90
+            if holding_jump():
+                cube.jump(JUMP)
+        else:
+            cube.angle = cube.angle + SPIN * dt()
+            if holding_jump():
+                use_orbs()
+
+        if crashed_into_spike():
+            crash()
+            return
+
+        # Fell into a gap.
+        if cube.pos.y &gt; height() + 50:
+            crash()
+            return
+
+        if cube.pos.x &gt; LEVEL_WIDTH - TILE * 6:
+            finish()
+
+        # The camera keeps the cube a quarter of the way across the window,
+        # so you can see what is coming.
+        setCamPos(vec2(cube.pos.x + width() / 4, height() / 2))
+
+    # A spike is a triangle, but a collision box is a rectangle. A box would
+    # kill you for clipping the empty corner beside the point. So instead,
+    # measure how far the cube is from the solid middle of the spike, a
+    # little below its centre, and only count it if that is close.
+    def crashed_into_spike():
+        for spike in get(&quot;spike&quot;):
+            middle = vec2(spike.pos.x + TILE / 2, spike.pos.y + TILE * 0.65)
+            if cube.pos.dist(middle) &lt; SPIKE_REACH:
+                return True
+        return False
+
+    # ------------------------------------------------- the progress bar
+
+    @onDraw
+    def progress_bar():
+        done = clamp(cube.pos.x / (LEVEL_WIDTH - TILE * 6), 0, 1)
+        drawRect(pos=vec2(280, 18), width=400, height=14,
+                 color=(20, 30, 70), fixed=True)
+        drawRect(pos=vec2(280, 18), width=400 * done, height=14,
+                 color=(120, 255, 140), fixed=True)
+        drawText(text=str(int(done * 100)) + &quot;%&quot;, pos=vec2(692, 12),
+                 size=22, fixed=True)
+        drawText(text=&quot;best &quot; + str(best) + &quot;%&quot;, pos=vec2(16, 12),
+                 size=20, fixed=True)
+
+    # ------------------------------------------------- crashing, winning
+
+    def percent():
+        return int(clamp(cube.pos.x / (LEVEL_WIDTH - TILE * 6), 0, 1) * 100)
+
+    def save_best(score):
+        if score &gt; best:
+            setData(BEST_KEY, score)
+
+    def crash():
+        global crashed
+
+        if crashed:
+            return
+        crashed = True
+
+        if music is not None:
+            music.paused = True
+        play(&quot;crash&quot;)
+        shake(10)
+        save_best(percent())
+
+        # The cube breaks into pieces that fly off and fade.
+        for i in range(12):
+            add([rect(10, 10), pos(cube.pos.x, cube.pos.y),
+                 color(255, 210, 40), opacity(1),
+                 move(vec2(rand(-1, 1), rand(-1, 1)), rand(100, 400)),
+                 lifespan(0.6, fade=0.4)])
+        cube.destroy()
+
+        @wait(0.7)
+        def again():
+            go(&quot;run&quot;, attempt + 1)
+
+    def finish():
+        global finished
+
+        finished = True
+        if music is not None:
+            music.paused = True
+        play(&quot;win&quot;)
+        save_best(100)
+
+        if attempt == 1:
+            tries = &quot;on your first attempt!&quot;
+        else:
+            tries = &quot;in &quot; + str(attempt) + &quot; attempts.&quot;
+
+        @say(&quot;Level complete, &quot; + tries, button=&quot;Play again&quot;)
+        def play_again():
+            go(&quot;run&quot;, 1)
+
+
+# ------------------------------------------------------- 6. start the game
+
+go(&quot;run&quot;, 1)</code></pre>
+
+<h2 id="make-it-yours">Make it yours</h2>
+
+<p><a href="../../play/?game=spike_runner">Open the whole game in the playground →</a>
+It goes straight into the editor, ready to change and run.</p>
+
+<ul>
+<li><strong>Draw a section.</strong> Nine rows, every row the same width, the
+floor along the bottom. Add its name to <code>SECTIONS</code> wherever you
+want it. Play it yourself before calling it done: a gap too wide or a wall
+too tall is easy to draw and impossible to beat.</li>
+<li><strong>Change the speed.</strong> <code>SPEED</code> makes the whole
+level faster, but every jump also covers more ground, so obstacles that were
+easy can become impossible, and the other way round.</li>
+<li><strong>Change the cube.</strong> Its colour is the
+<code>color(255, 210, 40)</code> in the <code>@</code> line, and the pieces
+it breaks into are coloured in <code>crash()</code>.</li>
+<li><strong>Switch the music on.</strong> One line and one setting; see step
+6.</li>
+</ul>
+
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>
