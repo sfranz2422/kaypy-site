@@ -412,22 +412,10 @@ def build_level(number, so_far):
         else:
             enemy.move(0, enemy.way * ENEMY_SPEED)
 
-    # A red block that touches the ground turns away from it. "Away" rather
-    # than just "the other way": a block can touch two tiles of a wall at
-    # the same moment, and turning round twice would leave it going the
-    # same way, into the wall.
+    # A red block that touches the ground turns round.
     @onCollide("enemy", "ground")
     def turn_round(enemy, tile):
-        if enemy.across == 1:
-            if tile.pos.x > enemy.pos.x:
-                enemy.way = -1
-            else:
-                enemy.way = 1
-        else:
-            if tile.pos.y > enemy.pos.y:
-                enemy.way = -1
-            else:
-                enemy.way = 1
+        enemy.way = -enemy.way
 
     @bean.onCollide("danger")
     def ouch(thing):

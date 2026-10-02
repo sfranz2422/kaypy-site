@@ -1,0 +1,1422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Dark Blue · KayPy</title>
+<meta name="description" content="How Dark Blue was built, a step at a time: levels wider than the window and a camera that follows, jumping higher by holding the key, coins, lava and moving red blocks — in plain Python a student can copy.">
+<meta property="og:title" content="Building Dark Blue · KayPy">
+<meta property="og:description" content="How Dark Blue was built, a step at a time.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All eight lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li><li><a class="dropdown-item" href="../../learn/functions/">6 — Functions</a></li><li><a class="dropdown-item" href="../../learn/decorators/">7 — Decorators</a></li><li><a class="dropdown-item" href="../../learn/dictionaries/">8 — Dictionaries</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../../tutorials/" aria-current="page">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <article class="prose">
+<h1 id="building-dark-blue">Building Dark Blue</h1>
+
+<p><a href="../../static/games/dark_blue/">Play it first →</a> Five levels of
+running, jumping and collecting coins. Get every coin on a level to move on.
+Touch anything red, or fall off the bottom, and the level starts again. The
+game counts how many times you died.</p>
+
+<p>This is how it was built, a step at a time. Every numbered step below is a
+whole program: copy it into
+<a href="../../play/">the playground</a>, press Run, and it works. Each step
+is the one before it with something added, so you can build the game the way
+it was built. Then break something on purpose and see what changes. That
+teaches you more than reading does.</p>
+
+<p>There is nothing clever in it. No list comprehensions, no tricks, and every
+kaypy function it uses is on the <a href="../../api/">API page</a>. It is
+based on <em>Dark Blue</em> by Thomas Palef.</p>
+
+<p>The levels are big, so steps 1 to 5 only use the first one or two of them.
+Step 6 is the whole game, with all five.</p>
+
+<h2 id="the-one-big-idea">The one big idea: the level is wider than the window</h2>
+
+<p>Each level is a picture made of letters, like the ones in
+<a href="../coin-rush/">Coin Rush</a> and <a href="../coin-dash/">Coin
+Dash</a>. The difference is size. The window is 30 tiles across, and a level
+is about 100. So the game needs a <strong>camera</strong>: as Bean runs to
+the right, the camera moves right with it, and the level slides past.</p>
+
+<p>The level is exactly 20 tiles tall, the same as the window, so the camera
+only ever has to move sideways.</p>
+
+<h2 id="step-1-a-level">Step 1 — a level</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 30          # one tile is 30 pixels square
+
+kaypy(width=TILE * 30, height=TILE * 20, background=[67, 117, 210])
+setGravity(1350)
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;steel&quot;, &quot;images/steel.png&quot;)
+
+LEVEL_1 = [
+    &quot;                                                                                                #&quot;,
+    &quot;                                                                                                #&quot;,
+    &quot;####                                                                                            #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #            $                                                                               #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #           ####                                                                             #&quot;,
+    &quot;   #           #  #            $        $$                                                      #&quot;,
+    &quot;   #           #  #                                                                             #&quot;,
+    &quot;   #           #  #          ####     #####     ####                                            #&quot;,
+    &quot;   ####  $$    #  #          #  #               #  #                                         ####&quot;,
+    &quot;      #        #  #   $$     #  #               #  #                                         #   &quot;,
+    &quot;      #    @   #  #          #  #               #  #   $                                     #   &quot;,
+    &quot;      ##########  ############  #################  ##########           ######################   &quot;,
+    &quot;                                                            #===========#                        &quot;,
+    &quot;                                                            #############                        &quot;,
+]
+
+TILES = {
+    &quot;#&quot;: lambda: [sprite(&quot;steel&quot;), scale(TILE / 64), area(),
+                  body(isStatic=True), &quot;ground&quot;],
+    &quot;@&quot;: lambda: [sprite(&quot;bean&quot;), scale(0.4), area(), body(), &quot;player&quot;],
+}
+
+addLevel(LEVEL_1, {
+    &quot;tileWidth&quot;: TILE,
+    &quot;tileHeight&quot;: TILE,
+    &quot;tiles&quot;: TILES,
+})</code></pre>
+
+<p>Run it and Bean drops onto the ground at the start of level 1. You can
+only see the first 30 columns; the rest is off to the right, waiting for
+the camera.</p>
+
+<ul>
+<li><code>TILE * 30</code> wide and <code>TILE * 20</code> tall makes the
+window exactly 30 tiles by 20.</li>
+<li>The steel picture is 64 pixels square and a tile is 30, so
+<code>scale(TILE / 64)</code> shrinks it to fit. Change <code>TILE</code> and
+the walls still fit.</li>
+<li>Bean is a tile too: the <code>@</code> in the picture. Moving the
+<code>@</code> moves where Bean starts. <code>scale(0.4)</code> makes Bean a
+little smaller than a tile, so it fits through a gap one tile wide.</li>
+</ul>
+
+<p>The picture also has <code>$</code> and <code>=</code> in it, for coins and
+lava, but nothing appears there yet. A letter that isn't in
+<code>TILES</code> is simply ignored. They get added in later steps.</p>
+
+<h2 id="step-2-bean-runs-and-the-camera-follows">Step 2 — Bean runs, and the camera follows</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 30          # one tile is 30 pixels square
+RUN_SPEED = 375    # how fast Bean runs, in pixels per second
+
+kaypy(width=TILE * 30, height=TILE * 20, background=[67, 117, 210])
+setGravity(1350)
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;steel&quot;, &quot;images/steel.png&quot;)
+
+LEVEL_1 = [
+    &quot;                                                                                                #&quot;,
+    &quot;                                                                                                #&quot;,
+    &quot;####                                                                                            #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #            $                                                                               #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #           ####                                                                             #&quot;,
+    &quot;   #           #  #            $        $$                                                      #&quot;,
+    &quot;   #           #  #                                                                             #&quot;,
+    &quot;   #           #  #          ####     #####     ####                                            #&quot;,
+    &quot;   ####  $$    #  #          #  #               #  #                                         ####&quot;,
+    &quot;      #        #  #   $$     #  #               #  #                                         #   &quot;,
+    &quot;      #    @   #  #          #  #               #  #   $                                     #   &quot;,
+    &quot;      ##########  ############  #################  ##########           ######################   &quot;,
+    &quot;                                                            #===========#                        &quot;,
+    &quot;                                                            #############                        &quot;,
+]
+
+TILES = {
+    &quot;#&quot;: lambda: [sprite(&quot;steel&quot;), scale(TILE / 64), area(),
+                  body(isStatic=True), &quot;ground&quot;],
+    &quot;@&quot;: lambda: [sprite(&quot;bean&quot;), scale(0.4), area(), body(), &quot;player&quot;],
+}
+
+addLevel(LEVEL_1, {
+    &quot;tileWidth&quot;: TILE,
+    &quot;tileHeight&quot;: TILE,
+    &quot;tiles&quot;: TILES,
+})
+
+bean = get(&quot;player&quot;)[0]
+level_width = len(LEVEL_1[0]) * TILE
+
+
+@onUpdate
+def each_frame():
+    if isKeyDown(&quot;left&quot;):
+        bean.move(-RUN_SPEED, 0)
+    if isKeyDown(&quot;right&quot;):
+        bean.move(RUN_SPEED, 0)
+
+    # The camera follows Bean from side to side, but stops at the ends of
+    # the level.
+    x = clamp(bean.pos.x, width() / 2, level_width - width() / 2)
+    setCamPos(vec2(x, height() / 2))</code></pre>
+
+<p>Bean starts in a dip and can't get out of it without jumping, which is
+step 3. Until then the camera has nowhere to go: Bean never gets more than
+half a window from the start, and the camera doesn't move until it does.</p>
+
+<p><strong>The camera.</strong> <code>setCamPos()</code> says which point of
+the level should be in the middle of the window. Put it where Bean is, and
+Bean stays in the middle as the level slides past.</p>
+
+<p>But not right at the ends. If Bean walks to the very left edge and the
+camera follows, half the window shows nothing past the end of the level. So
+<code>clamp()</code> keeps the camera's <code>x</code> between two limits:
+never less than half a window from the start, never less than half a window
+from the end. <code>level_width</code> is how wide the level is, in pixels:
+the length of a row, times the size of a tile.</p>
+
+<p>The <code>y</code> is always <code>height() / 2</code>, the middle of the
+window, because the level is exactly one window tall.</p>
+
+<div class="callout"><p><strong><code>setCamPos</code> takes one
+<code>vec2</code>, not two numbers.</strong> <code>setCamPos(x, 300)</code>
+stops the game with <code>TypeError: setCamPos() takes 1 positional argument
+but 2 were given</code>. Wrap the two numbers up as one point:
+<code>setCamPos(vec2(x, 300))</code>.</p></div>
+
+<h2 id="step-3-jumping-and-jumping-higher">Step 3 — jumping, and jumping higher</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 30          # one tile is 30 pixels square
+RUN_SPEED = 375    # how fast Bean runs on the ground, pixels per second
+AIR_SPEED = 300    # ...and in the air, a little slower
+JUMP = 712         # how hard Bean jumps
+JUMP_HOLD = 0.2    # how long holding up keeps pushing Bean higher
+
+kaypy(width=TILE * 30, height=TILE * 20, background=[67, 117, 210])
+setGravity(1350)
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;steel&quot;, &quot;images/steel.png&quot;)
+
+LEVEL_1 = [
+    &quot;                                                                                                #&quot;,
+    &quot;                                                                                                #&quot;,
+    &quot;####                                                                                            #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #            $                                                                               #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #           ####                                                                             #&quot;,
+    &quot;   #           #  #            $        $$                                                      #&quot;,
+    &quot;   #           #  #                                                                             #&quot;,
+    &quot;   #           #  #          ####     #####     ####                                            #&quot;,
+    &quot;   ####  $$    #  #          #  #               #  #                                         ####&quot;,
+    &quot;      #        #  #   $$     #  #               #  #                                         #   &quot;,
+    &quot;      #    @   #  #          #  #               #  #   $                                     #   &quot;,
+    &quot;      ##########  ############  #################  ##########           ######################   &quot;,
+    &quot;                                                            #===========#                        &quot;,
+    &quot;                                                            #############                        &quot;,
+]
+
+TILES = {
+    &quot;#&quot;: lambda: [sprite(&quot;steel&quot;), scale(TILE / 64), area(),
+                  body(isStatic=True), &quot;ground&quot;],
+    &quot;@&quot;: lambda: [sprite(&quot;bean&quot;), scale(0.4), area(), body(), &quot;player&quot;],
+}
+
+addLevel(LEVEL_1, {
+    &quot;tileWidth&quot;: TILE,
+    &quot;tileHeight&quot;: TILE,
+    &quot;tiles&quot;: TILES,
+})
+
+bean = get(&quot;player&quot;)[0]
+level_width = len(LEVEL_1[0]) * TILE
+hold = 0           # seconds of jump-holding left
+
+
+@onUpdate
+def each_frame():
+    global hold
+
+    speed = AIR_SPEED
+    if bean.isGrounded():
+        speed = RUN_SPEED
+
+    if isKeyDown(&quot;left&quot;):
+        bean.move(-speed, 0)
+    if isKeyDown(&quot;right&quot;):
+        bean.move(speed, 0)
+
+    # A tap is a small jump. Keep holding up and Bean keeps being pushed
+    # upward for JUMP_HOLD seconds, so it goes higher.
+    if isKeyDown(&quot;up&quot;):
+        if bean.isGrounded():
+            bean.jump(JUMP)
+            hold = JUMP_HOLD
+        elif hold &gt; 0:
+            hold = hold - dt()
+            bean.jump(JUMP)
+    else:
+        hold = 0
+
+    # The camera follows Bean from side to side, but stops at the ends of
+    # the level.
+    x = clamp(bean.pos.x, width() / 2, level_width - width() / 2)
+    setCamPos(vec2(x, height() / 2))</code></pre>
+
+<p>Tap <strong>up</strong> for a small jump, about 6 tiles high. Hold it for
+a big one, about 11.</p>
+
+<p><strong>How holding works.</strong> When Bean jumps,
+<code>hold</code> is set to <code>JUMP_HOLD</code>, a fifth of a second.
+While up is still held and there is hold left, every frame takes a little
+off <code>hold</code> and calls <code>bean.jump(JUMP)</code> again, which
+keeps throwing Bean upward at full speed. Let go, or run out of hold, and
+gravity takes over. Letting go also sets <code>hold</code> to 0, so you
+can't let go and press again in mid-air for another push.</p>
+
+<p>Bean also runs a little slower in the air than on the ground. It makes a
+jump easier to aim.</p>
+
+<div class="callout"><p><strong>Don't forget <code>global</code>.</strong>
+Take out <code>global hold</code> and the game crashes the first time you
+hold up in mid-air, with <code>UnboundLocalError: cannot access local
+variable 'hold' where it is not associated with a value</code>. Without
+<code>global</code>, Python thinks the <code>hold</code> in
+<code>each_frame</code> is a new variable of its own, and that one has no
+value yet when <code>hold &gt; 0</code> asks about it.</p></div>
+
+<h2 id="step-4-coins-and-a-second-level">Step 4 — coins, and a second level</h2>
+
+<p>Collect every coin on a level and the next level starts. To build a level
+again from nothing, the game moves into a <strong>scene</strong>:
+everything from <code>addLevel</code> down goes inside
+<code>@scene("level")</code>, one step further in. <code>number</code> says
+which level to build, and <code>go("level", 1)</code> throws the current one
+away and builds level 2.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 30          # one tile is 30 pixels square
+RUN_SPEED = 375    # how fast Bean runs on the ground, pixels per second
+AIR_SPEED = 300    # ...and in the air, a little slower
+JUMP = 712         # how hard Bean jumps
+JUMP_HOLD = 0.2    # how long holding up keeps pushing Bean higher
+
+kaypy(width=TILE * 30, height=TILE * 20, background=[67, 117, 210])
+setGravity(1350)
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSprite(&quot;steel&quot;, &quot;images/steel.png&quot;)
+
+loadSound(&quot;coin&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;done&quot;, &quot;sounds/rising_beep.wav&quot;)
+
+LEVEL_1 = [
+    &quot;                                                                                                #&quot;,
+    &quot;                                                                                                #&quot;,
+    &quot;####                                                                                            #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #            $                                                                               #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #           ####                                                                             #&quot;,
+    &quot;   #           #  #            $        $$                                                      #&quot;,
+    &quot;   #           #  #                                                                             #&quot;,
+    &quot;   #           #  #          ####     #####     ####                                            #&quot;,
+    &quot;   ####  $$    #  #          #  #               #  #                                         ####&quot;,
+    &quot;      #        #  #   $$     #  #               #  #                                         #   &quot;,
+    &quot;      #    @   #  #          #  #               #  #   $                                     #   &quot;,
+    &quot;      ##########  ############  #################  ##########           ######################   &quot;,
+    &quot;                                                            #===========#                        &quot;,
+    &quot;                                                            #############                        &quot;,
+]
+
+LEVEL_2 = [
+    &quot;   #                           #      #                                                             &quot;,
+    &quot;   #                           #      #                                                             &quot;,
+    &quot;   #                           #      #                                                             &quot;,
+    &quot;   #                           #      #                                                         ####&quot;,
+    &quot;   #        #  &gt;  #            #      #                                                         #   &quot;,
+    &quot;   #                           #      #                                                         #   &quot;,
+    &quot;   #                           #======#                                                         #   &quot;,
+    &quot;   #                           #======#              ####                                       #   &quot;,
+    &quot;   #                           #======#              #  #       $                               #   &quot;,
+    &quot;   #                           ########            ###  #                                       #   &quot;,
+    &quot;   #        @                                      #    #      ###                              #   &quot;,
+    &quot;   #                                             ###    #                                    $  #   &quot;,
+    &quot;   #                            v    v           #      #                                       #   &quot;,
+    &quot;   #         $ $ $                             ###      #                    #  $   $  #        #   &quot;,
+    &quot;   #                                           #        #                    #  &gt;      #        #   &quot;,
+    &quot;   #############################################        #               #########################   &quot;,
+    &quot;                                                        #===============#                           &quot;,
+    &quot;                                                        #################                           &quot;,
+    &quot;                                                                                                    &quot;,
+    &quot;                                                                                                    &quot;,
+]
+
+LEVELS = [LEVEL_1, LEVEL_2]
+
+TILES = {
+    &quot;#&quot;: lambda: [sprite(&quot;steel&quot;), scale(TILE / 64), area(),
+                  body(isStatic=True), &quot;ground&quot;],
+    &quot;$&quot;: lambda: [sprite(&quot;coin&quot;), scale(0.5), area(), &quot;coin&quot;,
+                  {&quot;home_y&quot;: 0}],
+    &quot;@&quot;: lambda: [sprite(&quot;bean&quot;), scale(0.4), area(), body(), rotate(0),
+                  z(10), &quot;player&quot;],
+}
+
+coins = 0
+hold = 0
+level_over = False
+
+
+@scene(&quot;level&quot;)
+def build_level(number):
+    global coins, hold, level_over
+
+    coins = 0
+    hold = 0
+    level_over = False
+
+    level = LEVELS[number]
+    level_width = len(level[0]) * TILE
+
+    addLevel(level, {
+        &quot;tileWidth&quot;: TILE,
+        &quot;tileHeight&quot;: TILE,
+        &quot;tiles&quot;: TILES,
+    })
+
+    bean = get(&quot;player&quot;)[0]
+    total = len(get(&quot;coin&quot;))
+
+    for coin in get(&quot;coin&quot;):
+        coin.home_y = coin.pos.y
+
+    label = add([text(&quot;&quot;, size=24), pos(16, 12), fixed(), z(100)])
+
+    def show_score():
+        label.text = (&quot;Level &quot; + str(number + 1)
+                      + &quot;     Coins &quot; + str(coins) + &quot; / &quot; + str(total))
+
+    show_score()
+
+    @onUpdate
+    def each_frame():
+        global hold
+
+        if level_over:
+            return
+
+        speed = AIR_SPEED
+        if bean.isGrounded():
+            speed = RUN_SPEED
+
+        if isKeyDown(&quot;left&quot;):
+            bean.move(-speed, 0)
+        if isKeyDown(&quot;right&quot;):
+            bean.move(speed, 0)
+
+        if isKeyDown(&quot;up&quot;):
+            if bean.isGrounded():
+                bean.jump(JUMP)
+                hold = JUMP_HOLD
+            elif hold &gt; 0:
+                hold = hold - dt()
+                bean.jump(JUMP)
+        else:
+            hold = 0
+
+        x = clamp(bean.pos.x, width() / 2, level_width - width() / 2)
+        setCamPos(vec2(x, height() / 2))
+
+    @onUpdate(&quot;coin&quot;)
+    def bob(coin):
+        coin.pos.y = coin.home_y + wave(-3, 3, time() * 5)
+
+    @bean.onCollide(&quot;coin&quot;)
+    def got_coin(coin):
+        global coins
+
+        if level_over:
+            return
+
+        coin.destroy()
+        coins = coins + 1
+        play(&quot;coin&quot;)
+        show_score()
+
+        if coins == total:
+            finish()
+
+    def finish():
+        global level_over
+
+        level_over = True
+        play(&quot;done&quot;)
+
+        def spin(angle):
+            bean.angle = angle
+
+        tween(0, 360, 0.6, spin)
+
+        @wait(0.7)
+        def next_level():
+            if number + 1 &lt; len(LEVELS):
+                go(&quot;level&quot;, number + 1)
+            else:
+                go(&quot;level&quot;, 0)
+
+
+go(&quot;level&quot;, 0)</code></pre>
+
+<p><strong>How many coins.</strong> <code>total = len(get("coin"))</code>
+counts the coins straight after the level is built, so a level can have as
+many as you like. Add a <code>$</code> to the picture and the count is right
+without changing anything else.</p>
+
+<p><strong>Bobbing.</strong> Each coin swings up and down around where the
+level put it, so each one needs to remember that height. The
+<code>{"home_y": 0}</code> in its list gives every coin a value of its own,
+and the loop after <code>addLevel</code> sets it to where the coin really
+is. <code>wave(-3, 3, time() * 5)</code> then swings between 3 pixels above
+and 3 below.</p>
+
+<p><strong>The spin.</strong> When the last coin is taken,
+<code>tween(0, 360, 0.6, spin)</code> turns Bean all the way round in 0.6
+seconds, then <code>@wait(0.7)</code> starts the next level. Bean needs
+<code>rotate(0)</code> in its list to be able to turn at all. After the last
+level, it goes back to level 1 for now.</p>
+
+<p><code>level_over</code> stops Bean moving and stops more coins counting
+while it spins.</p>
+
+<p>Level 2 has lava pits, but <code>=</code> isn't in <code>TILES</code> yet,
+so they are just holes. Fall in one and Bean falls for ever. That's the next
+step.</p>
+
+<h2 id="step-5-the-red-things">Step 5 — the red things</h2>
+
+<p>Red means bad. Lava (<code>=</code>) sits still, red blocks
+(<code>&gt;</code> and <code>v</code>) move, and touching either one, or
+falling off the bottom, starts the level again.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 30          # one tile is 30 pixels square
+RUN_SPEED = 375    # how fast Bean runs on the ground, pixels per second
+AIR_SPEED = 300    # ...and in the air, a little slower
+JUMP = 712         # how hard Bean jumps
+JUMP_HOLD = 0.2    # how long holding up keeps pushing Bean higher
+ENEMY_SPEED = 150  # how fast the red blocks move
+
+kaypy(width=TILE * 30, height=TILE * 20, background=[67, 117, 210])
+setGravity(1350)
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSprite(&quot;steel&quot;, &quot;images/steel.png&quot;)
+
+loadSound(&quot;coin&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;ouch&quot;, &quot;sounds/thump.wav&quot;)
+loadSound(&quot;done&quot;, &quot;sounds/rising_beep.wav&quot;)
+
+LEVEL_1 = [
+    &quot;                                                                                                #&quot;,
+    &quot;                                                                                                #&quot;,
+    &quot;####                                                                                            #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #            $                                                                               #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #           ####                                                                             #&quot;,
+    &quot;   #           #  #            $        $$                                                      #&quot;,
+    &quot;   #           #  #                                                                             #&quot;,
+    &quot;   #           #  #          ####     #####     ####                                            #&quot;,
+    &quot;   ####  $$    #  #          #  #               #  #                                         ####&quot;,
+    &quot;      #        #  #   $$     #  #               #  #                                         #   &quot;,
+    &quot;      #    @   #  #          #  #               #  #   $                                     #   &quot;,
+    &quot;      ##########  ############  #################  ##########           ######################   &quot;,
+    &quot;                                                            #===========#                        &quot;,
+    &quot;                                                            #############                        &quot;,
+]
+
+LEVEL_2 = [
+    &quot;   #                           #      #                                                             &quot;,
+    &quot;   #                           #      #                                                             &quot;,
+    &quot;   #                           #      #                                                             &quot;,
+    &quot;   #                           #      #                                                         ####&quot;,
+    &quot;   #        #  &gt;  #            #      #                                                         #   &quot;,
+    &quot;   #                           #      #                                                         #   &quot;,
+    &quot;   #                           #======#                                                         #   &quot;,
+    &quot;   #                           #======#              ####                                       #   &quot;,
+    &quot;   #                           #======#              #  #       $                               #   &quot;,
+    &quot;   #                           ########            ###  #                                       #   &quot;,
+    &quot;   #        @                                      #    #      ###                              #   &quot;,
+    &quot;   #                                             ###    #                                    $  #   &quot;,
+    &quot;   #                            v    v           #      #                                       #   &quot;,
+    &quot;   #         $ $ $                             ###      #                    #  $   $  #        #   &quot;,
+    &quot;   #                                           #        #                    #  &gt;      #        #   &quot;,
+    &quot;   #############################################        #               #########################   &quot;,
+    &quot;                                                        #===============#                           &quot;,
+    &quot;                                                        #################                           &quot;,
+    &quot;                                                                                                    &quot;,
+    &quot;                                                                                                    &quot;,
+]
+
+LEVELS = [LEVEL_1, LEVEL_2]
+
+TILES = {
+    &quot;#&quot;: lambda: [sprite(&quot;steel&quot;), scale(TILE / 64), area(),
+                  body(isStatic=True), &quot;ground&quot;],
+    &quot;=&quot;: lambda: [rect(TILE, TILE), color(220, 50, 50), area(), &quot;danger&quot;],
+    &quot;$&quot;: lambda: [sprite(&quot;coin&quot;), scale(0.5), area(), &quot;coin&quot;,
+                  {&quot;home_y&quot;: 0}],
+    &quot;&gt;&quot;: lambda: [rect(TILE, TILE), color(255, 100, 100), area(),
+                  &quot;danger&quot;, &quot;enemy&quot;, {&quot;across&quot;: 1, &quot;way&quot;: 1}],
+    &quot;v&quot;: lambda: [rect(TILE, TILE), color(255, 100, 100), area(),
+                  &quot;danger&quot;, &quot;enemy&quot;, {&quot;across&quot;: 0, &quot;way&quot;: 1}],
+    &quot;@&quot;: lambda: [sprite(&quot;bean&quot;), scale(0.4), area(), body(), rotate(0),
+                  z(10), &quot;player&quot;],
+}
+
+deaths = 0
+coins = 0
+hold = 0
+level_over = False
+
+
+@scene(&quot;level&quot;)
+def build_level(number, so_far):
+    global deaths, coins, hold, level_over
+
+    deaths = so_far
+    coins = 0
+    hold = 0
+    level_over = False
+
+    level = LEVELS[number]
+    level_width = len(level[0]) * TILE
+
+    addLevel(level, {
+        &quot;tileWidth&quot;: TILE,
+        &quot;tileHeight&quot;: TILE,
+        &quot;tiles&quot;: TILES,
+    })
+
+    bean = get(&quot;player&quot;)[0]
+    total = len(get(&quot;coin&quot;))
+
+    for coin in get(&quot;coin&quot;):
+        coin.home_y = coin.pos.y
+
+    label = add([text(&quot;&quot;, size=24), pos(16, 12), fixed(), z(100)])
+
+    def show_score():
+        label.text = (&quot;Level &quot; + str(number + 1)
+                      + &quot;     Coins &quot; + str(coins) + &quot; / &quot; + str(total)
+                      + &quot;     Deaths &quot; + str(deaths))
+
+    show_score()
+
+    @onUpdate
+    def each_frame():
+        global hold
+
+        if level_over:
+            return
+
+        speed = AIR_SPEED
+        if bean.isGrounded():
+            speed = RUN_SPEED
+
+        if isKeyDown(&quot;left&quot;):
+            bean.move(-speed, 0)
+        if isKeyDown(&quot;right&quot;):
+            bean.move(speed, 0)
+
+        if isKeyDown(&quot;up&quot;):
+            if bean.isGrounded():
+                bean.jump(JUMP)
+                hold = JUMP_HOLD
+            elif hold &gt; 0:
+                hold = hold - dt()
+                bean.jump(JUMP)
+        else:
+            hold = 0
+
+        # Fell off the bottom.
+        if bean.pos.y &gt; height() + 100:
+            die()
+
+        x = clamp(bean.pos.x, width() / 2, level_width - width() / 2)
+        setCamPos(vec2(x, height() / 2))
+
+    @onUpdate(&quot;coin&quot;)
+    def bob(coin):
+        coin.pos.y = coin.home_y + wave(-3, 3, time() * 5)
+
+    @bean.onCollide(&quot;coin&quot;)
+    def got_coin(coin):
+        global coins
+
+        if level_over:
+            return
+
+        coin.destroy()
+        coins = coins + 1
+        play(&quot;coin&quot;)
+        show_score()
+
+        if coins == total:
+            finish()
+
+    @onUpdate(&quot;enemy&quot;)
+    def patrol(enemy):
+        if enemy.across == 1:
+            enemy.move(enemy.way * ENEMY_SPEED, 0)
+        else:
+            enemy.move(0, enemy.way * ENEMY_SPEED)
+
+    # A red block that touches the ground turns round.
+    @onCollide(&quot;enemy&quot;, &quot;ground&quot;)
+    def turn_round(enemy, tile):
+        enemy.way = -enemy.way
+
+    @bean.onCollide(&quot;danger&quot;)
+    def ouch(thing):
+        die()
+
+    def die():
+        global level_over
+
+        if level_over:
+            return
+        level_over = True
+
+        play(&quot;ouch&quot;)
+        shake(8)
+
+        # The same level again, one more death on the count.
+        @wait(0.4)
+        def again():
+            go(&quot;level&quot;, number, deaths + 1)
+
+    def finish():
+        global level_over
+
+        level_over = True
+        play(&quot;done&quot;)
+
+        def spin(angle):
+            bean.angle = angle
+
+        tween(0, 360, 0.6, spin)
+
+        @wait(0.7)
+        def next_level():
+            if number + 1 &lt; len(LEVELS):
+                go(&quot;level&quot;, number + 1, deaths)
+            else:
+                go(&quot;level&quot;, 0, 0)
+
+
+go(&quot;level&quot;, 0, 0)</code></pre>
+
+<p><strong>One tag for everything that hurts.</strong> Lava and red blocks
+are both tagged <code>"danger"</code>, so one
+<code>@bean.onCollide("danger")</code> handles them all. Neither has a
+<code>body()</code>, so they float, and Bean goes into them rather than
+bouncing off.</p>
+
+<p><strong>Red blocks.</strong> Each one carries two values of its own:
+<code>across</code> is 1 for a block that moves side to side and 0 for one
+that moves up and down, and <code>way</code> is 1 or −1 for which way it's
+going. <code>patrol</code> moves each block along, and when a block touches
+the ground, <code>turn_round</code> flips its <code>way</code>.
+<code>@onCollide("enemy", "ground")</code> is the version that takes two tags,
+so it works for every red block and every wall tile at once.</p>
+
+<p><strong>Starting again.</strong> <code>die()</code> waits a moment, then
+calls <code>go("level", number, deaths + 1)</code>: the same level, built
+again from nothing. That puts every coin back, because they are made fresh
+from the picture. The death count goes in as <code>so_far</code>, because
+everything at the top of the scene starts again and a number kept there would
+go back to 0.</p>
+
+<p><strong>Why <code>level_over</code> in <code>die()</code>?</strong> Bean
+can touch lava and a red block in the same moment, and each one calls
+<code>die()</code>. Without the check, one mistake would play the sound
+twice, shake twice and build the level twice.</p>
+
+<h2 id="step-6-the-whole-game">Step 6 — the whole game</h2>
+
+<p>This is the game exactly as it is on the <a href="../../games/">games
+page</a>. It adds:</p>
+
+<ul>
+<li><strong>All five levels.</strong></li>
+<li><strong>Signs.</strong> The words written into the levels, like "use the
+arrow keys to move", are in <code>SIGNS</code>: one list for each level, of
+<code>[column, row, words]</code>. Columns and rows are counted in tiles, the
+same as the letters, so <code>sign[0] * TILE</code> turns a column into
+pixels.</li>
+<li><strong>A menu.</strong> <strong>Up</strong> starts at level 1.
+<strong>Down</strong> asks which level, with <code>ask()</code>: it lists
+<code>LEVEL_NAMES</code>, you click one or press its number, and
+<code>picked()</code> is handed the words you chose, such as
+<code>"Level 3"</code>. The loop finds where that is in the list, and that
+is the level to start.</li>
+<li><strong>An ending.</strong> After level 5 comes the
+<code>"end"</code> scene, with how many times you died. Fewer is better here,
+so a new best is one that is <em>smaller</em>: <code>total_deaths &lt;
+best</code>. The first time there is no best at all, which is why it is read
+with <code>getData(BEST_KEY, None)</code> and checked with
+<code>is None</code>.</li>
+<li><strong>Escape</strong> goes back to the menu.</li>
+</ul>
+
+<p>It also has every number worth changing in one settings block near the
+top, and comments that explain why each part is there.</p>
+
+<pre><code class="language-python">&quot;&quot;&quot;Dark Blue -- jump, collect the coins, and avoid the red stuff.
+
+    left / right   run
+    up             jump (hold it to jump higher)
+    escape         back to the menu
+
+Collect every coin on a level to go on to the next. Touch anything red --
+lava or a moving red block -- or fall off the bottom, and the level starts
+again. There are five levels. The game counts how many times you died, and
+remembers your fewest.
+
+Based on &quot;Dark Blue&quot; by Thomas Palef (lessmilk.com).
+
+HOW THIS FILE IS PUT TOGETHER
+
+    1. the window, the pictures and the sounds
+    2. the settings
+    3. the levels
+    4. what each letter turns into
+    5. the menu
+    6. the level scene: Bean, the camera, the coins, the red stuff
+    7. the end
+    8. start the game
+
+The levels are pictures made of letters. Move a &#x27;$&#x27; and you have moved a
+coin -- you never have to touch the code to change a level.
+&quot;&quot;&quot;
+
+from kaypy import *
+
+# ----------------------------------------------------------------- 1. setup
+
+TILE = 30          # one tile is 30 pixels square
+
+# 30 tiles across and 20 down fit in the window. A level is wider than that,
+# so the camera follows Bean from side to side.
+kaypy(width=TILE * 30, height=TILE * 20, background=[67, 117, 210])
+setGravity(1350)
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSprite(&quot;steel&quot;, &quot;images/steel.png&quot;)
+
+loadSound(&quot;coin&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;ouch&quot;, &quot;sounds/thump.wav&quot;)
+loadSound(&quot;done&quot;, &quot;sounds/rising_beep.wav&quot;)
+
+
+# -------------------------------------------------------------- 2. settings
+#
+# Every number worth changing is here.
+
+RUN_SPEED = 375       # how fast Bean runs on the ground, pixels per second
+AIR_SPEED = 300       # ...and in the air, a little slower
+JUMP = 712            # how hard Bean jumps
+JUMP_HOLD = 0.2       # how long holding up keeps pushing Bean higher
+ENEMY_SPEED = 150     # how fast the red blocks move
+
+# The name the fewest deaths is saved under. Every game on a website shares
+# the same storage, so the game&#x27;s own name goes in it.
+BEST_KEY = &quot;dark_blue_fewest_deaths&quot;
+
+
+# ---------------------------------------------------------------- 3. levels
+#
+# One letter is one tile.
+#
+#   #  ground           $  coin           @  Bean starts here
+#   =  lava             &gt;  red block that moves side to side
+#                       v  red block that moves up and down
+#
+# A space is empty.
+
+LEVEL_1 = [
+    &quot;                                                                                                #&quot;,
+    &quot;                                                                                                #&quot;,
+    &quot;####                                                                                            #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #            $                                                                               #&quot;,
+    &quot;   #                                                                                            #&quot;,
+    &quot;   #           ####                                                                             #&quot;,
+    &quot;   #           #  #            $        $$                                                      #&quot;,
+    &quot;   #           #  #                                                                             #&quot;,
+    &quot;   #           #  #          ####     #####     ####                                            #&quot;,
+    &quot;   ####  $$    #  #          #  #               #  #                                         ####&quot;,
+    &quot;      #        #  #   $$     #  #               #  #                                         #   &quot;,
+    &quot;      #    @   #  #          #  #               #  #   $                                     #   &quot;,
+    &quot;      ##########  ############  #################  ##########           ######################   &quot;,
+    &quot;                                                            #===========#                        &quot;,
+    &quot;                                                            #############                        &quot;,
+]
+
+LEVEL_2 = [
+    &quot;   #                           #      #                                                             &quot;,
+    &quot;   #                           #      #                                                             &quot;,
+    &quot;   #                           #      #                                                             &quot;,
+    &quot;   #                           #      #                                                         ####&quot;,
+    &quot;   #        #  &gt;  #            #      #                                                         #   &quot;,
+    &quot;   #                           #      #                                                         #   &quot;,
+    &quot;   #                           #======#                                                         #   &quot;,
+    &quot;   #                           #======#              ####                                       #   &quot;,
+    &quot;   #                           #======#              #  #       $                               #   &quot;,
+    &quot;   #                           ########            ###  #                                       #   &quot;,
+    &quot;   #        @                                      #    #      ###                              #   &quot;,
+    &quot;   #                                             ###    #                                    $  #   &quot;,
+    &quot;   #                            v    v           #      #                                       #   &quot;,
+    &quot;   #         $ $ $                             ###      #                    #  $   $  #        #   &quot;,
+    &quot;   #                                           #        #                    #  &gt;      #        #   &quot;,
+    &quot;   #############################################        #               #########################   &quot;,
+    &quot;                                                        #===============#                           &quot;,
+    &quot;                                                        #################                           &quot;,
+    &quot;                                                                                                    &quot;,
+    &quot;                                                                                                    &quot;,
+]
+
+LEVEL_3 = [
+    &quot;                                                  #                 #                 #         #   &quot;,
+    &quot;                                                  #                 #                 #         #   &quot;,
+    &quot;                                                  #                 #                 #         #   &quot;,
+    &quot;   ######                                         #                                   #    #    #   &quot;,
+    &quot;   #    #                                         #                                   #    #    #   &quot;,
+    &quot;   # ## #                              $ $ $      #                                   #    # $$ #   &quot;,
+    &quot;   # #  #                                         #                                   ##   #    #   &quot;,
+    &quot;   # ####                     ####    #######     #                                   #    #    #   &quot;,
+    &quot;   #                          #  #          #     #                                   #    #    #   &quot;,
+    &quot;   #                          #  #          #   &gt; #                                   #   ## $$ #   &quot;,
+    &quot;   #        @           ####  #  #          #   &gt; #      $          v          $      #    #    #   &quot;,
+    &quot;   #                    #  #  #  #          #     #                                   #    #    #   &quot;,
+    &quot;   #                    #  #  #  #          #     #      $                     $      ##   #    #   &quot;,
+    &quot;   #              ####  #  #  #  #          #                                              #====#   &quot;,
+    &quot;   #              #  #  #  #  #  #          #           ###         #         ###          #====#   &quot;,
+    &quot;   #              #  #==#  #==#  #=======   #           # #===================# #          #====#   &quot;,
+    &quot;   ################  ####  ####  #######=   ############# ##################### #################   &quot;,
+    &quot;                                        =                                                           &quot;,
+    &quot;                                        =                                                           &quot;,
+    &quot;                                        =                                                           &quot;,
+]
+
+LEVEL_4 = [
+    &quot;                                        #                         #                         #       &quot;,
+    &quot;#########                               ###########################                         ####### &quot;,
+    &quot;        #                                  =         =                                            # &quot;,
+    &quot;        #                                                                                         # &quot;,
+    &quot;        #                                                                                         # &quot;,
+    &quot;   ######                                       =         =                                       # &quot;,
+    &quot;   #                                    ###########################                         ###   # &quot;,
+    &quot;   #                         #####      #                         #&gt;                        # #   # &quot;,
+    &quot;   #                         #   #      ########################  #        &gt;                # #   # &quot;,
+    &quot;   #                         #   #                   v         #  #                &gt;        # # $ # &quot;,
+    &quot;   #  @                      #   #                     $ $ $   #  #                        &gt;# #   # &quot;,
+    &quot;   # $ $                   ###   ###             v             #  ########################### ##### &quot;,
+    &quot;   #                         #   #                     $ $ $   #                                    &quot;,
+    &quot;   ######       #####        #   #           v                 #                                    &quot;,
+    &quot;        #=======#   #        #   #                     $ $ $   #                                    &quot;,
+    &quot;        #=======#   #        #   #       v                     #                                    &quot;,
+    &quot;        #########   ##########   ###############################                                    &quot;,
+    &quot;                                                                                                    &quot;,
+    &quot;                                                                                                    &quot;,
+    &quot;                                                                                                    &quot;,
+]
+
+LEVEL_5 = [
+    &quot;  # = #                   #                     #               #                                #  &quot;,
+    &quot;  # = #                   #                     #               #                                #  &quot;,
+    &quot;  # = #                   #######################               #                               &gt;#  &quot;,
+    &quot;  # = #                                                  $ $ $  #                 &gt;              #  &quot;,
+    &quot;  # = #                                                         #&gt;                               #  &quot;,
+    &quot;  # = #     @                                          ##########                                #  &quot;,
+    &quot;  # = #                 ##     #     #     #     ##                                              #  &quot;,
+    &quot;  # = #                  #=======================#                 #        #        #        #  #  &quot;,
+    &quot;  # = #                  #=======================#                 #========#========#========#  #  &quot;,
+    &quot;  # = #########################################################################################  #  &quot;,
+    &quot;  # =                                                                                            #  &quot;,
+    &quot;  # =     $                                                      $ $ $ $ $         ###   ###     #  &quot;,
+    &quot;  # =               v                                          v           v       # #   # #     #  &quot;,
+    &quot;  # =     $                 v                        ###         $ $ $ $ $                       #  &quot;,
+    &quot;  # =                                                # #    #        &gt;        #                  #  &quot;,
+    &quot;  #===    $    ###  v  ###  v  ###  v  ###     ###   # #    ###################    vvv   vvv     #  &quot;,
+    &quot;  #=====                                             # #                                         #  &quot;,
+    &quot;  #=================#=======#=======#================# #                                         #  &quot;,
+    &quot;  ##################################################=# ###########################################  &quot;,
+    &quot;                                                    =                                               &quot;,
+]
+LEVELS = [LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5]
+LEVEL_NAMES = [&quot;Level 1&quot;, &quot;Level 2&quot;, &quot;Level 3&quot;, &quot;Level 4&quot;, &quot;Level 5&quot;]
+
+# The words written into each level, as [column, row, words]. Columns and
+# rows are counted in tiles, from 0, the same as the letters above.
+SIGNS = [
+    [[12, 3, &quot;use the arrow keys to move&quot;],
+     [40, 17, &quot;coins are awesome, take them&quot;],
+     [66, 3, &quot;red things = bad things&quot;],
+     [87, 17, &quot;collect all coins to finish the level&quot;]],
+    [[15, 1, &quot;right, left, right... this looks boring&quot;],
+     [59, 1, &quot;use the up arrow key to jump&quot;],
+     [59, 3, &quot;but you probably already know that&quot;]],
+    [],
+    [[79, 14, &quot;there are so many red things&quot;],
+     [79, 16, &quot;stop reading this!&quot;]],
+    [[15, 1, &quot;this is the last level&quot;],
+     [15, 3, &quot;you can&#x27;t beat it&quot;]],
+]
+
+
+# ----------------------------------------------- 4. what each letter becomes
+#
+# addLevel() reads the picture. Each time it finds a letter it looks it up
+# here and builds an object from the list. The `lambda:` means &quot;build a new
+# one every time you find this letter&quot;, so every coin is its own coin.
+#
+# The red blocks have no body(), so gravity leaves them alone and they
+# float. Each one carries its own direction: &quot;across&quot; is 1 for side to side
+# and 0 for up and down, and &quot;way&quot; is 1 or -1 for which way it is going.
+
+TILES = {
+    &quot;#&quot;: lambda: [sprite(&quot;steel&quot;), scale(TILE / 64), area(),
+                  body(isStatic=True), &quot;ground&quot;],
+    &quot;=&quot;: lambda: [rect(TILE, TILE), color(220, 50, 50), area(), &quot;danger&quot;],
+    &quot;$&quot;: lambda: [sprite(&quot;coin&quot;), scale(0.5), area(), &quot;coin&quot;,
+                  {&quot;home_y&quot;: 0}],
+    &quot;&gt;&quot;: lambda: [rect(TILE, TILE), color(255, 100, 100), area(),
+                  &quot;danger&quot;, &quot;enemy&quot;, {&quot;across&quot;: 1, &quot;way&quot;: 1}],
+    &quot;v&quot;: lambda: [rect(TILE, TILE), color(255, 100, 100), area(),
+                  &quot;danger&quot;, &quot;enemy&quot;, {&quot;across&quot;: 0, &quot;way&quot;: 1}],
+
+    # Bean is a tile too, so moving the &#x27;@&#x27; moves where you start.
+    # scale(0.4) makes Bean a little smaller than a tile, so it fits
+    # through a gap one tile wide.
+    &quot;@&quot;: lambda: [sprite(&quot;bean&quot;), scale(0.4), area(), body(), rotate(0),
+                  z(10), &quot;player&quot;],
+}
+
+
+# ---------------------------------------------- what the game has to remember
+#
+# These change while you play. A function that CHANGES one has to say
+# `global` first, which means &quot;the one up here, not a new one of my own&quot;.
+
+deaths = 0            # how many times you have died, this game
+coins = 0             # coins collected on this level
+hold = 0              # seconds of jump-holding left
+level_over = False
+
+
+# -------------------------------------------------------------- 5. the menu
+
+@scene(&quot;menu&quot;)
+def menu():
+    add([text(&quot;Dark Blue&quot;, size=80), pos(width() / 2, 170),
+         anchor(&quot;center&quot;)])
+    add([text(&quot;Jump, collect coins, avoid the red stuff&quot;, size=26),
+         pos(width() / 2, 250), anchor(&quot;center&quot;)])
+
+    start = add([text(&quot;press UP to start, or DOWN to choose a level&quot;, size=28),
+                 pos(width() / 2, height() - 120), anchor(&quot;center&quot;),
+                 rotate(0)])
+
+    best = getData(BEST_KEY, None)
+    if best is not None:
+        add([text(&quot;fewest deaths: &quot; + str(best), size=22),
+             pos(width() / 2, 330), anchor(&quot;center&quot;)])
+
+    add([text(&#x27;based on &quot;Dark Blue&quot; by Thomas Palef (lessmilk.com)&#x27;, size=16),
+         pos(width() / 2, height() - 30), anchor(&quot;center&quot;),
+         color(200, 200, 220)])
+
+    # wave() swings between two numbers for ever, so the words rock from
+    # side to side.
+    @onUpdate
+    def rock():
+        start.angle = wave(-1.5, 1.5, time() * 3)
+
+    @onKeyPress(&quot;up&quot;)
+    def play_from_the_start():
+        go(&quot;level&quot;, 0, 0)
+
+    @onKeyPress(&quot;down&quot;)
+    def choose():
+        # ask() lists the levels. Click one, or press its number, and
+        # picked() is handed the words you chose -- &quot;Level 3&quot;, say. The loop
+        # finds which one that was, and starts that level.
+        @ask(&quot;Which level?&quot;, LEVEL_NAMES)
+        def picked(choice):
+            for i in range(len(LEVEL_NAMES)):
+                if LEVEL_NAMES[i] == choice:
+                    go(&quot;level&quot;, i, 0)
+
+
+# ------------------------------------------------------ 6. the level scene
+#
+# number is which level (0 is the first), and so_far is how many times you
+# have died already. Dying starts the same level again with so_far + 1,
+# which puts every coin back where it was.
+#
+# The scene is CALLED &quot;level&quot;. The function is NOT called play(), because
+# kaypy already has a play() for sounds -- name your function play() and
+# every play(&quot;coin&quot;) would start a level instead of making a noise.
+
+@scene(&quot;level&quot;)
+def build_level(number, so_far):
+    global deaths, coins, hold, level_over
+
+    deaths = so_far
+    coins = 0
+    hold = 0
+    level_over = False
+
+    level = LEVELS[number]
+    level_width = len(level[0]) * TILE
+
+    addLevel(level, {
+        &quot;tileWidth&quot;: TILE,
+        &quot;tileHeight&quot;: TILE,
+        &quot;tiles&quot;: TILES,
+    })
+
+    bean = get(&quot;player&quot;)[0]
+    total = len(get(&quot;coin&quot;))
+
+    # Each coin bobs up and down around where the level put it, so it has
+    # to remember where that was.
+    for coin in get(&quot;coin&quot;):
+        coin.home_y = coin.pos.y
+
+    for sign in SIGNS[number]:
+        add([text(sign[2], size=22), pos(sign[0] * TILE, sign[1] * TILE)])
+
+    label = add([text(&quot;&quot;, size=24), pos(16, 12), fixed(), z(100)])
+
+    def show_score():
+        label.text = (&quot;Level &quot; + str(number + 1)
+                      + &quot;     Coins &quot; + str(coins) + &quot; / &quot; + str(total)
+                      + &quot;     Deaths &quot; + str(deaths))
+
+    show_score()
+
+    @onKeyPress(&quot;escape&quot;)
+    def back_to_menu():
+        go(&quot;menu&quot;)
+
+    # ------------------------------------------------------- every frame
+
+    @onUpdate
+    def each_frame():
+        global hold
+
+        if level_over:
+            return
+
+        # Running. A little slower in the air, so a jump is easier to aim.
+        speed = AIR_SPEED
+        if bean.isGrounded():
+            speed = RUN_SPEED
+
+        if isKeyDown(&quot;left&quot;):
+            bean.move(-speed, 0)
+        if isKeyDown(&quot;right&quot;):
+            bean.move(speed, 0)
+
+        # Jumping. A tap is a small jump. Keep holding up and Bean keeps
+        # being pushed upward for JUMP_HOLD seconds, so it goes higher.
+        if isKeyDown(&quot;up&quot;):
+            if bean.isGrounded():
+                bean.jump(JUMP)
+                hold = JUMP_HOLD
+            elif hold &gt; 0:
+                hold = hold - dt()
+                bean.jump(JUMP)
+        else:
+            # Let go, and the push is over until Bean lands again.
+            hold = 0
+
+        # Fell off the bottom.
+        if bean.pos.y &gt; height() + 100:
+            die()
+
+        # The camera follows Bean from side to side, but stops at the ends
+        # of the level so you never see past them. It never moves up or
+        # down: the whole level is exactly one window tall.
+        x = clamp(bean.pos.x, width() / 2, level_width - width() / 2)
+        setCamPos(vec2(x, height() / 2))
+
+    # ------------------------------------------------------------- coins
+
+    @onUpdate(&quot;coin&quot;)
+    def bob(coin):
+        coin.pos.y = coin.home_y + wave(-3, 3, time() * 5)
+
+    @bean.onCollide(&quot;coin&quot;)
+    def got_coin(coin):
+        global coins
+
+        if level_over:
+            return
+
+        coin.destroy()
+        coins = coins + 1
+        play(&quot;coin&quot;)
+        show_score()
+
+        if coins == total:
+            finish()
+
+    # ------------------------------------------------------ the red stuff
+
+    @onUpdate(&quot;enemy&quot;)
+    def patrol(enemy):
+        if enemy.across == 1:
+            enemy.move(enemy.way * ENEMY_SPEED, 0)
+        else:
+            enemy.move(0, enemy.way * ENEMY_SPEED)
+
+    # A red block that touches the ground turns round.
+    @onCollide(&quot;enemy&quot;, &quot;ground&quot;)
+    def turn_round(enemy, tile):
+        enemy.way = -enemy.way
+
+    @bean.onCollide(&quot;danger&quot;)
+    def ouch(thing):
+        die()
+
+    def die():
+        global level_over
+
+        # Bean can touch lava and a red block at the same moment, which
+        # would otherwise be two deaths.
+        if level_over:
+            return
+        level_over = True
+
+        play(&quot;ouch&quot;)
+        shake(8)
+
+        # The same level again, one more death on the count. go() builds
+        # it from scratch, so every coin is back.
+        @wait(0.4)
+        def again():
+            go(&quot;level&quot;, number, deaths + 1)
+
+    # ------------------------------------------------------- level done
+
+    def finish():
+        global level_over
+
+        level_over = True
+        play(&quot;done&quot;)
+
+        # Spin Bean round once, then go on.
+        def spin(angle):
+            bean.angle = angle
+
+        tween(0, 360, 0.6, spin)
+
+        @wait(0.7)
+        def next_level():
+            if number + 1 &lt; len(LEVELS):
+                go(&quot;level&quot;, number + 1, deaths)
+            else:
+                go(&quot;end&quot;, deaths)
+
+
+# ---------------------------------------------------------------- 7. the end
+
+@scene(&quot;end&quot;)
+def the_end(total_deaths):
+    best = getData(BEST_KEY, None)
+    if best is None or total_deaths &lt; best:
+        setData(BEST_KEY, total_deaths)
+        best_line = &quot;That&#x27;s your best yet!&quot;
+    else:
+        best_line = &quot;Your best is &quot; + str(best) + &quot;.&quot;
+
+    if total_deaths == 1:
+        died = &quot;You died 1 time.&quot;
+    else:
+        died = &quot;You died &quot; + str(total_deaths) + &quot; times.&quot;
+
+    add([text(&quot;You beat Dark Blue!&quot;, size=60), pos(width() / 2, 180),
+         anchor(&quot;center&quot;)])
+    add([text(died + &quot;\n&quot; + best_line, size=30), pos(width() / 2, 300),
+         anchor(&quot;center&quot;)])
+
+    again = add([text(&quot;press UP to play again&quot;, size=28),
+                 pos(width() / 2, height() - 120), anchor(&quot;center&quot;),
+                 rotate(0)])
+
+    @onUpdate
+    def rock():
+        again.angle = wave(-1.5, 1.5, time() * 3)
+
+    @onKeyPress(&quot;up&quot;)
+    def play_again():
+        go(&quot;menu&quot;)
+
+
+# --------------------------------------------------------- 8. start the game
+
+go(&quot;menu&quot;)</code></pre>
+
+<h2 id="make-it-yours">Make it yours</h2>
+
+<ul>
+<li><strong>Change how Bean moves.</strong> Make <code>JUMP_HOLD</code>
+bigger and held jumps go higher. Lower <code>setGravity</code> and Bean
+floats.</li>
+<li><strong>Draw level 6.</strong> Copy a level, change the letters, and add
+it to <code>LEVELS</code>. Add <code>"Level 6"</code> to
+<code>LEVEL_NAMES</code> as well, and a list of signs to <code>SIGNS</code>,
+even an empty one, <code>[]</code>. Forget the signs and level 6 crashes with
+<code>IndexError: list index out of range</code>, because
+<code>SIGNS[5]</code> doesn't exist.</li>
+<li><strong>A faster red block.</strong> Pick a spare letter, like
+<code>f</code>, and add it to <code>TILES</code> as a copy of the
+<code>&gt;</code> line. With the <code>"danger"</code> and
+<code>"enemy"</code> tags it already moves, turns round and hurts. To make it
+faster, give every red block a <code>"speed"</code> of its own next to
+<code>"way"</code>, and use <code>enemy.speed</code> in <code>patrol</code>
+instead of <code>ENEMY_SPEED</code>.</li>
+<li><strong>Use WASD as well.</strong> Change
+<code>isKeyDown("left")</code> to
+<code>isKeyDown("left") or isKeyDown("a")</code>, and the same for the
+others.</li>
+</ul>
+
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>

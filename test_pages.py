@@ -79,6 +79,7 @@ PAGES = [
     "tutorials/flappy-bean/index.html",
     "tutorials/coin-rush/index.html",
     "tutorials/coin-dash/index.html",
+    "tutorials/dark-blue/index.html",
     "tutorials/dungeon-dash/index.html",
     "tutorials/rpg-battle/index.html",
     "games/index.html",
