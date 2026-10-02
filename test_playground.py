@@ -196,9 +196,11 @@ check("  with no stale inlined copy left beside the fetch",
 check("  it sits next to play.js, so the relative fetch resolves",
       (PLAY / "starter.py").is_file())
 check("  the fetched text is put into the editor",
-      re.search(r"fetchStarter\(\)\s*\.then", script) is not None)
+      re.search(r"starterLoaded\.then\(function \(text\) \{\s*"
+                r"if \(draft \|\| !text\) return;\s*editor\.setValue\(text\)",
+                script) is not None)
 check("  a saved draft is not overwritten when it lands",
-      re.search(r"if \(draft\) return", script) is not None,
+      re.search(r"if \(draft \|\| !text\) return", script) is not None,
       "a late fetch would replace what the visitor had written")
 check("  and Start over refuses while it is still empty",
       re.search(r"if \(!STARTER\)", script) is not None,

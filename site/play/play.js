@@ -205,16 +205,115 @@
   if (draft) editor.setValue(draft);
   editor.clearHistory();
 
-  fetchStarter().then(function (text) {
-    if (draft) return;
-    editor.setValue(text);
-    editor.clearHistory();
-  }).catch(function (err) {
+  /* ------------------------------------------------------------ remixing
+   *
+   * play/?game=dark_blue opens one of the site's games in the editor, so a
+   * visitor can press Run, then change it and make it their own. The Games
+   * page and the tutorials link here.
+   *
+   * ONLY THE GAMES LISTED HERE. The name picks an entry from this list rather
+   * than being turned into a path, so a link cannot be made to load anything
+   * else. Each .py is the program inside the published game, byte for byte —
+   * test_pages.py checks that — and uses only the playground's own pictures
+   * and sounds, so it runs here on the first try.
+   *
+   * Dino Quest is left out on purpose.
+   *
+   * A VISITOR'S OWN WORK IS NEVER LOST SILENTLY. Their draft is asked about
+   * before it is replaced, unless it is the untouched starter or already
+   * this very game. Then ?game= comes off the address, so a refresh keeps
+   * their edits rather than loading the original over them. */
+  var GAMES = {
+    flappy_bean: { title: "Flappy Bean", file: "flappy_bean/flappy_bean.py" },
+    coin_rush: { title: "Coin Rush", file: "coin_rush/coin_rush.py" },
+    coin_dash: { title: "Coin Dash", file: "coin_dash/coin_dash.py" },
+    dark_blue: { title: "Dark Blue", file: "dark_blue/dark_blue.py" },
+    rpg_battle: { title: "Turn-Based Battle", file: "rpg_battle/rpg_battle.py" },
+    dungeon_dash: { title: "Dungeon Dash", file: "dungeon_dash/dungeon_dash.py" }
+  };
+
+  function wantedGame() {
+    try {
+      var name = new URLSearchParams(window.location.search).get("game");
+      return Object.prototype.hasOwnProperty.call(GAMES, name) ? name : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function fetchGame(name) {
+    return fetch("../static/games/" + GAMES[name].file, { cache: "no-cache" })
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.text();
+      }).then(function (text) {
+        // The same guard as the starter's: a server's own "not found" page,
+        // answered with 200, must not go in the editor as Python.
+        if (!/^from kaypy import \*/m.test(text)) {
+          throw new Error("that file does not look like a kaypy program");
+        }
+        return text;
+      });
+  }
+
+  /* Take ?game= off the address without reloading the page. */
+  function forgetGame() {
+    try {
+      window.history.replaceState(null, "", window.location.pathname);
+    } catch (e) { /* nothing worse than a refresh loading it again */ }
+  }
+
+  var game = wantedGame();
+  var remixNote = "";
+
+  var starterLoaded = fetchStarter().catch(function (err) {
     /* The editor is simply empty, which is a workable state — you can write a
        program and press Run. Said out loud rather than left as a mystery. */
     write("Could not load the starter program: " + err.message
           + "\nThe editor is empty; write a program and press Run.\n", "err");
+    return "";
   });
+
+  if (game) {
+    Promise.all([starterLoaded, fetchGame(game)]).then(function (both) {
+      var starter = both[0];
+      var text = both[1];
+      var title = GAMES[game].title;
+      var theirs = draft && draft.trim() && draft !== starter && draft !== text;
+      if (theirs && !window.confirm(
+          "Open " + title + " in the editor?\n\n"
+          + "This replaces the program you have been writing here. "
+          + "Copy it somewhere first if you want to keep it.")) {
+        forgetGame();
+        return;
+      }
+      editor.setValue(text);
+      editor.clearHistory();
+      saveDraft(text);
+      forgetGame();
+      /* Said now, and said again once Python is ready: start-up clears the
+         output, and the game nearly always arrives before Python does. */
+      remixNote = title + " is in the editor. Press Run to play it, then "
+                  + "change something and make it your own.\n";
+      write(remixNote);
+    }).catch(function (err) {
+      forgetGame();
+      write("Could not open " + GAMES[game].title + ": " + err.message + "\n",
+            "err");
+      starterLoaded.then(function (starter) {
+        if (!draft && starter) {
+          editor.setValue(starter);
+          editor.clearHistory();
+        }
+      });
+    });
+  } else {
+    starterLoaded.then(function (text) {
+      if (draft || !text) return;
+      editor.setValue(text);
+      editor.clearHistory();
+    });
+  }
 
   var saveTimer = null;
   editor.on("change", function () {
@@ -301,6 +400,7 @@
       write("Python " + version + " is ready. Press Run.\n" +
             "A program that says `from kaypy import *` opens a game window;" +
             " anything else runs here.\n", "dim");
+      if (remixNote) write(remixNote);
       runBtn.disabled = false;
       runLabel.textContent = "Run";
     } catch (e) {

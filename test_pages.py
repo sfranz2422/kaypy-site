@@ -307,6 +307,16 @@ games = pages["games/index.html"]
 linked = re.findall(r'href="\.\./static/games/([A-Za-z0-9_\-]+)/"', games)
 check("the Games page links some games", len(linked) >= 2, str(linked))
 
+# The games the playground will open from a remix link: the GAMES list in
+# play.js, name -> .py path under static/games/.
+PLAYGROUND_GAMES = dict(re.findall(
+    r'(\w+): \{ title: "[^"]*", file: "([^"]+)" \}',
+    (SITE / "play" / "play.js").read_text()))
+check("the playground has a list of games to remix",
+      len(PLAYGROUND_GAMES) >= 2, str(sorted(PLAYGROUND_GAMES)))
+# Dino Quest is left out of remixing on purpose.
+NO_REMIX = {"top_down_game"}
+
 for name in linked:
     index = SITE / "static" / "games" / name / "index.html"
     if not index.is_file():
@@ -336,6 +346,33 @@ for name in linked:
               source.is_file() and program is not None
               and source.read_text() == json.loads(program.group(1)),
               code.group(1) if source.is_file() else "no " + code.group(1))
+
+    # "Remix it in the playground" opens the game's .py in the editor. The
+    # playground picks the file from its own GAMES list by name, so a link
+    # whose name is not on that list opens the starter instead -- no error,
+    # just the wrong program. And the list must point at the SAME .py the
+    # GitHub link does, the one checked above against the game itself, or a
+    # student remixes something other than the game they just played.
+    if name in NO_REMIX:
+        check("  %s has no remix link, on purpose" % name,
+              "play/?game=%s\"" % name not in games)
+        continue
+    check("  %s has a remix link" % name,
+          'href="../play/?game=%s"' % name in games)
+    listed = PLAYGROUND_GAMES.get(name)
+    check("    which the playground knows", listed is not None,
+          "not in GAMES in play.js")
+    if code and listed:
+        check("    and it opens the same .py the GitHub link shows",
+              "static/games/" + listed == code.group(1),
+              "play.js: %s, GitHub: %s" % (listed, code.group(1)))
+
+# A tutorial's "open the whole game in the playground" link has to name a
+# game the playground knows, or it opens the starter instead.
+for rel in PAGES:
+    for name in re.findall(r'play/\?game=([A-Za-z0-9_]+)"', pages.get(rel, "")):
+        check("%s remixes a game the playground knows" % rel,
+              name in PLAYGROUND_GAMES, name)
 
 all_games = sorted(p.name for p in (SITE / "static" / "games").iterdir()
                    if p.is_dir())
