@@ -229,6 +229,7 @@
     coin_dash: { title: "Coin Dash", file: "coin_dash/coin_dash.py" },
     dark_blue: { title: "Dark Blue", file: "dark_blue/dark_blue.py" },
     spike_runner: { title: "Spike Runner", file: "spike_runner/spike_runner.py" },
+    block_slide: { title: "Block Slide", file: "block_slide/block_slide.py" },
     rpg_battle: { title: "Turn-Based Battle", file: "rpg_battle/rpg_battle.py" },
     dungeon_dash: { title: "Dungeon Dash", file: "dungeon_dash/dungeon_dash.py" }
   };
