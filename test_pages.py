@@ -35,6 +35,7 @@ WHAT GOES WRONG HERE, AND LOOKS FINE
 from __future__ import annotations
 
 import argparse
+import json
 import pathlib
 import re
 import subprocess
@@ -315,6 +316,24 @@ for name in linked:
     # same folder, same index.html, same canvas.
     check("  %s really is a kaypy game (it loads Python)" % name,
           "pyodide" in text.lower(), "no mention of pyodide")
+
+    # "Read the code on GitHub" points at a .py file kept next to the game,
+    # because inside index.html the program is one long JSON string nobody
+    # can read. That makes it a second copy, and a second copy goes stale the
+    # first time a game is rebuilt and the .py is forgotten -- the link still
+    # works, and shows a student code that is not the game they just played.
+    # So the .py must be the program inside the game, byte for byte.
+    code = re.search(r'href="https://github\.com/sfranz2422/kaypy-site/blob/'
+                     r'main/site/(static/games/%s/[A-Za-z0-9_\-]+\.py)"'
+                     % re.escape(name), games)
+    check("  %s links its code on GitHub" % name, code is not None)
+    if code:
+        source = SITE / code.group(1)
+        program = re.search(r'^var PROGRAM = (".*");$', text, re.M)
+        check("    and that .py is the program inside the game",
+              source.is_file() and program is not None
+              and source.read_text() == json.loads(program.group(1)),
+              code.group(1) if source.is_file() else "no " + code.group(1))
 
 all_games = sorted(p.name for p in (SITE / "static" / "games").iterdir()
                    if p.is_dir())

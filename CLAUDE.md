@@ -76,6 +76,10 @@ site/            the website, served as-is
   guide/ api/ tutorials/ games/ start/ play/
   static/        site.css, site.js, the exported games
   assets/        sprite packs and the manifest
+  static/games/  one folder per game: index.html (built by `kaypy web`)
+                 and the program as a .py beside it, which the Games page
+                 links on GitHub. Rebuild a game, rewrite its .py --
+                 test_pages.py fails if the two differ by a byte
 pagecode.py      pulls code blocks and headings out of built HTML
 vendor.py        copies the engine and assets in from PyIDE
 ```
