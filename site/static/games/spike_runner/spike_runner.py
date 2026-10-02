@@ -3,8 +3,8 @@
     space, up or click   jump (hold it to keep jumping)
 
 The cube never stops running. Jump over the spikes, onto the blocks and
-across the gaps. In mid-air, a yellow orb gives you a second jump if you
-press while you are touching it. Touch a spike, run into the side of a
+across the gaps. In mid-air, a yellow orb gives you a second jump: hold
+jump as you go through it. Touch a spike, run into the side of a
 block or fall into a gap, and you start again from the beginning. The bar
 at the top shows how far you got, and your best is remembered.
 
@@ -199,10 +199,10 @@ ORB_CHAIN = [
     "                        ",
     "                        ",
     "                        ",
-    "       o    o           ",
+    "       o   o            ",
     "                        ",
     "                        ",
-    "#####            #######",
+    "#####          #########",
 ]
 
 FINISH = [
@@ -270,8 +270,9 @@ TILES = {
     # See crashed_into_spike() below for why.
     "^": lambda: [sprite("spike"), scale(TILE / 48, TILE / 39), "spike"],
 
+    # An orb works once per attempt. "used" says whether it has been.
     "o": lambda: [circle(14), color(255, 220, 60), outline(3, (255, 255, 255)),
-                  "orb"],
+                  opacity(1), "orb", {"used": False}],
 
     # The cube. anchor("center") so that it turns about its middle.
     "@": lambda: [rect(36, 36), color(255, 210, 40), outline(3, (0, 0, 0)),
@@ -338,28 +339,29 @@ def run(number):
     def holding_jump():
         return isKeyDown("space") or isKeyDown("up") or isMouseDown()
 
-    # An orb only works on a fresh press, while the cube is touching it.
-    def try_orb():
-        if crashed or finished:
-            return
+    # An orb fires if jump is held while the cube touches it -- held, not
+    # just pressed at that moment. The cube is only touching an orb for a
+    # tenth of a second, far too short to hit with a fresh press; holding
+    # the key as you go in is how it is meant to be played.
+    #
+    # Each orb fires once, then dims. Without "used", holding the key would
+    # fire it again on every frame the cube was touching it.
+    def use_orbs():
         for orb in get("orb"):
             # A circle's pos is its top-left corner; its middle is one
             # radius (14) in from there.
             middle = vec2(orb.pos.x + 14, orb.pos.y + 14)
-            if cube.pos.dist(middle) < 40:
+            if not orb.used and cube.pos.dist(middle) < 40:
+                orb.used = True
+                orb.opacity = 0.3
                 cube.jump(ORB_JUMP)
 
-    @onKeyPress("space")
-    def orb_space():
-        try_orb()
-
-    @onKeyPress("up")
-    def orb_up():
-        try_orb()
-
-    @onMousePress
-    def orb_click():
-        try_orb()
+    # A sign over the first orb, because nothing else says what they do.
+    orbs = get("orb")
+    if len(orbs) > 0:
+        first = orbs[0]
+        add([text("hold jump through the orb!", size=22),
+             pos(first.pos.x - 130, first.pos.y - 60)])
 
     # ------------------------------------------------------ every frame
 
@@ -390,6 +392,8 @@ def run(number):
                 cube.jump(JUMP)
         else:
             cube.angle = cube.angle + SPIN * dt()
+            if holding_jump():
+                use_orbs()
 
         if crashed_into_spike():
             crash()
