@@ -1,0 +1,1594 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Block Slide · KayPy</title>
+<meta name="description" content="How Block Slide was built, a step at a time: a board that is a list of dictionaries, dragging with a finger or the mouse, falling, clearing rows and a new row every move — in plain Python a student can copy.">
+<meta property="og:title" content="Building Block Slide · KayPy">
+<meta property="og:description" content="How Block Slide was built, a step at a time.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All eight lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li><li><a class="dropdown-item" href="../../learn/functions/">6 — Functions</a></li><li><a class="dropdown-item" href="../../learn/decorators/">7 — Decorators</a></li><li><a class="dropdown-item" href="../../learn/dictionaries/">8 — Dictionaries</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../../tutorials/" aria-current="page">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <article class="prose">
+<h1 id="building-block-slide">Building Block Slide</h1>
+
+<p><a href="../../static/games/block_slide/">Play it first →</a> Drag a
+block left or right, with your finger on a phone or the mouse on a computer.
+Blocks with nothing under them fall, and a row with no gaps disappears.
+After every move a new row pushes up from the bottom, and if the blocks are
+pushed off the top, the game is over.</p>
+
+<p>This is how it was built, a step at a time. Every numbered step below is a
+whole program: copy it into
+<a href="../../play/">the playground</a>, press Run, and it works. Each step
+is the one before it with something added, so you can build the game the way
+it was built. Then break something on purpose and see what changes. That
+teaches you more than reading does.</p>
+
+<p>There is nothing clever in it. No list comprehensions, no tricks, and every
+kaypy function it uses is on the <a href="../../api/">API page</a>.</p>
+
+<h2 id="the-one-big-idea">The one big idea: the board is a list</h2>
+
+<p>The other games on this site are made of <em>game objects</em>: things
+added with <code>add()</code> that move and bump into each other by
+themselves. This one has none. Every block is a dictionary:</p>
+
+<pre><code class="language-python">{"row": 9, "col": 2, "length": 3, "x": 120, "y": 560}</code></pre>
+
+<p>and the whole board is a list of them. Row 0 is the top and row 9 the
+bottom; column 0 is the left. A block of length 3 at column 2 covers
+columns 2, 3 and 4. Every frame the board is drawn fresh from the list, so
+moving a block is just changing a number in its dictionary.</p>
+
+<p>That makes the rules easy to write. "Can this block fall?" is a loop over
+the squares underneath it. "Is this row full?" is a loop along it. No
+physics, no collisions: just lists, dictionaries and loops.</p>
+
+<h2 id="step-1-the-board-drawn-from-a-list">Step 1 — the board, drawn from a list</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+COLS = 8           # squares across
+ROWS = 10          # squares down
+CELL = 50          # one square is 50 pixels
+
+BOARD_X = 20       # where the board&#x27;s top-left corner is in the window
+BOARD_Y = 110
+
+# Tall rather than wide, to fit a phone held upright.
+kaypy(width=COLS * CELL + 40, height=BOARD_Y + ROWS * CELL + 30,
+      background=[30, 30, 50])
+
+# A block&#x27;s colour depends on how long it is.
+COLOURS = {
+    1: (240, 90, 90),
+    2: (250, 180, 60),
+    3: (90, 200, 120),
+    4: (80, 150, 240),
+}
+
+
+def cell_x(col):
+    return BOARD_X + col * CELL
+
+
+def cell_y(row):
+    return BOARD_Y + row * CELL
+
+
+def new_block(row, col, length):
+    return {&quot;row&quot;: row, &quot;col&quot;: col, &quot;length&quot;: length,
+            &quot;x&quot;: cell_x(col), &quot;y&quot;: cell_y(row)}
+
+
+# Every block is a dictionary in this list. Change a number and run it
+# again: the picture follows.
+blocks = [
+    new_block(9, 0, 3),
+    new_block(9, 4, 4),
+    new_block(8, 1, 2),
+    new_block(8, 5, 1),
+    new_block(7, 2, 4),
+]
+
+
+@onDraw
+def draw_everything():
+    # The board, and a faint square for every space.
+    drawRect(pos=vec2(BOARD_X - 6, BOARD_Y - 6), width=COLS * CELL + 12,
+             height=ROWS * CELL + 12, color=(50, 50, 80), radius=8)
+    for row in range(ROWS):
+        for col in range(COLS):
+            drawRect(pos=vec2(cell_x(col) + 2, cell_y(row) + 2),
+                     width=CELL - 4, height=CELL - 4, color=(40, 40, 64),
+                     radius=6)
+
+    for block in blocks:
+        colour = COLOURS[block[&quot;length&quot;]]
+        drawRect(pos=vec2(block[&quot;x&quot;] + 3, block[&quot;y&quot;] + 3),
+                 width=block[&quot;length&quot;] * CELL - 6, height=CELL - 6,
+                 color=colour, radius=10)</code></pre>
+
+<p>Run it and you get the board with five blocks on it. Nothing moves yet.
+Change a number in one of the <code>new_block(...)</code> lines and run it
+again: the picture follows the list.</p>
+
+<ul>
+<li><code>cell_x(col)</code> and <code>cell_y(row)</code> turn a square into
+pixels: the board's corner, plus that many squares of <code>CELL</code>
+pixels. Everything that draws uses them, so the board can move or change
+size by changing one number.</li>
+<li><code>new_block(row, col, length)</code> makes the dictionary for a
+block, so the list can be written as one short line per block.</li>
+<li><code>@onDraw</code> runs every frame, after everything else, and is the
+only place the <code>draw...</code> functions work. It draws the board, then
+one rounded rectangle per block. <code>COLOURS[block["length"]]</code> looks
+up the colour for that length in a dictionary.</li>
+</ul>
+
+<p>Put two blocks in the same square and there's no error message. One just
+gets drawn on top of the other. Nothing checks the list but you, until
+later steps start asking questions about it.</p>
+
+<h2 id="step-2-random-rows">Step 2 — random rows</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+COLS = 8           # squares across
+ROWS = 10          # squares down
+CELL = 50          # one square is 50 pixels
+
+BOARD_X = 20       # where the board&#x27;s top-left corner is in the window
+BOARD_Y = 110
+
+# Tall rather than wide, to fit a phone held upright.
+kaypy(width=COLS * CELL + 40, height=BOARD_Y + ROWS * CELL + 30,
+      background=[30, 30, 50])
+
+START_ROWS = 4     # rows of blocks on the board when a game starts
+GAP_CHANCE = 0.3   # how often a new row has a gap where a block could be
+
+# A block&#x27;s colour depends on how long it is.
+COLOURS = {
+    1: (240, 90, 90),
+    2: (250, 180, 60),
+    3: (90, 200, 120),
+    4: (80, 150, 240),
+}
+
+
+def cell_x(col):
+    return BOARD_X + col * CELL
+
+
+def cell_y(row):
+    return BOARD_Y + row * CELL
+
+
+def new_block(row, col, length):
+    return {&quot;row&quot;: row, &quot;col&quot;: col, &quot;length&quot;: length,
+            &quot;x&quot;: cell_x(col), &quot;y&quot;: cell_y(row)}
+
+
+blocks = []
+
+
+def make_row(row):
+    made = []
+    col = 0
+    while col &lt; COLS:
+        if chance(GAP_CHANCE):
+            col = col + 1
+        else:
+            length = choose([1, 2, 3, 4])
+            if col + length &gt; COLS:
+                length = COLS - col
+            made.append(new_block(row, col, length))
+            col = col + length
+
+    filled = 0
+    for block in made:
+        filled = filled + block[&quot;length&quot;]
+    if filled == COLS:
+        made.pop()
+
+    return made
+
+
+# Fill the bottom rows to start with. Every game is different.
+for row in range(ROWS - START_ROWS, ROWS):
+    for block in make_row(row):
+        blocks.append(block)
+
+
+@onDraw
+def draw_everything():
+    drawRect(pos=vec2(BOARD_X - 6, BOARD_Y - 6), width=COLS * CELL + 12,
+             height=ROWS * CELL + 12, color=(50, 50, 80), radius=8)
+    for row in range(ROWS):
+        for col in range(COLS):
+            drawRect(pos=vec2(cell_x(col) + 2, cell_y(row) + 2),
+                     width=CELL - 4, height=CELL - 4, color=(40, 40, 64),
+                     radius=6)
+
+    for block in blocks:
+        colour = COLOURS[block[&quot;length&quot;]]
+        drawRect(pos=vec2(block[&quot;x&quot;] + 3, block[&quot;y&quot;] + 3),
+                 width=block[&quot;length&quot;] * CELL - 6, height=CELL - 6,
+                 color=colour, radius=10)</code></pre>
+
+<p>Run it a few times. The bottom four rows are different every time.</p>
+
+<p><code>make_row(row)</code> walks along the row from the left. At each
+square it either leaves a gap (<code>chance(GAP_CHANCE)</code> is true about
+3 times in 10) or puts down a block of a random length, cut short if it would
+run off the edge. Either way, <code>col</code> moves past what it just did,
+and the loop stops at the end of the row.</p>
+
+<p>A row with no gaps at all would be cleared the moment it appeared, which
+isn't fair. So <code>make_row</code> adds up the lengths, and if they come to
+the whole width, it takes the last block away again with
+<code>made.pop()</code>.</p>
+
+<h2 id="step-3-dragging">Step 3 — dragging</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+COLS = 8           # squares across
+ROWS = 10          # squares down
+CELL = 50          # one square is 50 pixels
+
+BOARD_X = 20       # where the board&#x27;s top-left corner is in the window
+BOARD_Y = 110
+
+# Tall rather than wide, to fit a phone held upright.
+kaypy(width=COLS * CELL + 40, height=BOARD_Y + ROWS * CELL + 30,
+      background=[30, 30, 50])
+
+START_ROWS = 4     # rows of blocks on the board when a game starts
+GAP_CHANCE = 0.3   # how often a new row has a gap where a block could be
+
+# A block&#x27;s colour depends on how long it is.
+COLOURS = {
+    1: (240, 90, 90),
+    2: (250, 180, 60),
+    3: (90, 200, 120),
+    4: (80, 150, 240),
+}
+
+
+def cell_x(col):
+    return BOARD_X + col * CELL
+
+
+def cell_y(row):
+    return BOARD_Y + row * CELL
+
+
+def new_block(row, col, length):
+    return {&quot;row&quot;: row, &quot;col&quot;: col, &quot;length&quot;: length,
+            &quot;x&quot;: cell_x(col), &quot;y&quot;: cell_y(row)}
+
+
+blocks = []
+held = None        # the block being dragged, or None
+grab_dx = 0        # where on the block the finger is, in pixels
+left_limit = 0     # how far the held block may go, in pixels
+right_limit = 0
+
+
+def block_at(row, col):
+    &quot;&quot;&quot;The block covering that square, or None if it is empty.&quot;&quot;&quot;
+    for block in blocks:
+        if block[&quot;row&quot;] == row:
+            if block[&quot;col&quot;] &lt;= col &lt; block[&quot;col&quot;] + block[&quot;length&quot;]:
+                return block
+    return None
+
+
+def make_row(row):
+    made = []
+    col = 0
+    while col &lt; COLS:
+        if chance(GAP_CHANCE):
+            col = col + 1
+        else:
+            length = choose([1, 2, 3, 4])
+            if col + length &gt; COLS:
+                length = COLS - col
+            made.append(new_block(row, col, length))
+            col = col + length
+
+    filled = 0
+    for block in made:
+        filled = filled + block[&quot;length&quot;]
+    if filled == COLS:
+        made.pop()
+
+    return made
+
+
+# Fill the bottom rows to start with. Every game is different.
+for row in range(ROWS - START_ROWS, ROWS):
+    for block in make_row(row):
+        blocks.append(block)
+
+
+@onMousePress
+def grab():
+    global held, grab_dx, left_limit, right_limit
+
+    finger = mousePos()
+    col = int((finger.x - BOARD_X) // CELL)
+    row = int((finger.y - BOARD_Y) // CELL)
+    if col &lt; 0 or col &gt;= COLS or row &lt; 0 or row &gt;= ROWS:
+        return
+
+    block = block_at(row, col)
+    if block is None:
+        return
+
+    held = block
+    grab_dx = finger.x - block[&quot;x&quot;]
+
+    # How far it can go: walk left from the block until a square is taken
+    # or the board ends, then the same to the right.
+    left = block[&quot;col&quot;]
+    while left &gt; 0 and block_at(row, left - 1) is None:
+        left = left - 1
+    right = block[&quot;col&quot;]
+    while (right + block[&quot;length&quot;] &lt; COLS
+           and block_at(row, right + block[&quot;length&quot;]) is None):
+        right = right + 1
+
+    left_limit = cell_x(left)
+    right_limit = cell_x(right)
+
+
+@onMouseRelease
+def let_go():
+    global held
+
+    if held is None:
+        return
+
+    # Snap to the nearest column.
+    held[&quot;col&quot;] = round((held[&quot;x&quot;] - BOARD_X) / CELL)
+    held = None
+
+
+@onUpdate
+def glide():
+    if held is not None:
+        held[&quot;x&quot;] = clamp(mousePos().x - grab_dx, left_limit, right_limit)
+
+    # Every other block slides to its column, a good part of the way
+    # each frame.
+    amount = clamp(dt() * 18, 0, 1)
+    for block in blocks:
+        if block is not held:
+            block[&quot;x&quot;] = lerp(block[&quot;x&quot;], cell_x(block[&quot;col&quot;]), amount)
+
+
+@onDraw
+def draw_everything():
+    drawRect(pos=vec2(BOARD_X - 6, BOARD_Y - 6), width=COLS * CELL + 12,
+             height=ROWS * CELL + 12, color=(50, 50, 80), radius=8)
+    for row in range(ROWS):
+        for col in range(COLS):
+            drawRect(pos=vec2(cell_x(col) + 2, cell_y(row) + 2),
+                     width=CELL - 4, height=CELL - 4, color=(40, 40, 64),
+                     radius=6)
+
+    for block in blocks:
+        colour = COLOURS[block[&quot;length&quot;]]
+        drawRect(pos=vec2(block[&quot;x&quot;] + 3, block[&quot;y&quot;] + 3),
+                 width=block[&quot;length&quot;] * CELL - 6, height=CELL - 6,
+                 color=colour, radius=10)</code></pre>
+
+<p>Drag a block sideways and it slides, as far as the gaps let it, and snaps
+to a column when you let go. Nothing falls yet, so a block dragged off
+another one is left floating in mid-air. That's step 4.</p>
+
+<p><strong>A finger is a mouse.</strong> On a phone, a finger touching the
+screen comes into the game as <code>onMousePress</code>, moving it shows in
+<code>mousePos()</code>, and lifting it is <code>onMouseRelease</code>. One
+set of code works for both, which is why this game needs nothing special for
+touch.</p>
+
+<p><strong>Which block?</strong> <code>grab</code> turns the finger's position
+into a square. Take away the board's corner and divide by the size of a
+square: <code>//</code> divides and throws away the remainder, so anywhere
+in the first 50 pixels is square 0. <code>block_at(row, col)</code> then
+looks through the list for the block covering that square.</p>
+
+<p><strong>How far can it go?</strong> Before the block moves at all,
+<code>grab</code> walks left from it, one square at a time, until a square is
+taken or the board ends, and the same to the right. Those two limits, in
+pixels, are as far as it can be dragged. <code>clamp</code> keeps it between
+them.</p>
+
+<p><strong>Where you held it.</strong> <code>grab_dx</code> is how far along
+the block your finger is. Without it, the block's left end would jump under
+your finger the moment you touched it; with it, the block keeps the same
+part under your finger all the way.</p>
+
+<p><strong>Gliding.</strong> While you drag, the block's <code>"x"</code>
+follows your finger exactly. When you let go, <code>"col"</code> is set to the
+nearest column, and every frame <code>lerp</code> moves <code>"x"</code> a
+good part of the way there, so the block settles into place instead of
+jumping.</p>
+
+<h2 id="step-4-falling-and-clearing">Step 4 — falling and clearing</h2>
+
+<p>Let go of a block and the turn plays out: anything with nothing under it
+falls, a full row flashes white and goes, and everything above it falls
+too.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+COLS = 8           # squares across
+ROWS = 10          # squares down
+CELL = 50          # one square is 50 pixels
+
+BOARD_X = 20       # where the board&#x27;s top-left corner is in the window
+BOARD_Y = 110
+
+# Tall rather than wide, to fit a phone held upright.
+kaypy(width=COLS * CELL + 40, height=BOARD_Y + ROWS * CELL + 30,
+      background=[30, 30, 50])
+
+START_ROWS = 4        # rows of blocks on the board when a game starts
+GAP_CHANCE = 0.3      # how often a new row has a gap where a block could be
+STEP_TIME = 0.08      # seconds between one step of falling and the next
+CLEAR_TIME = 0.25     # how long a full row flashes before it goes
+POINTS_PER_ROW = 10
+
+# A block&#x27;s colour depends on how long it is.
+COLOURS = {
+    1: (240, 90, 90),
+    2: (250, 180, 60),
+    3: (90, 200, 120),
+    4: (80, 150, 240),
+}
+
+
+
+blocks = []
+
+
+def cell_x(col):
+    return BOARD_X + col * CELL
+
+
+def cell_y(row):
+    return BOARD_Y + row * CELL
+
+
+def new_block(row, col, length):
+    return {&quot;row&quot;: row, &quot;col&quot;: col, &quot;length&quot;: length,
+            &quot;x&quot;: cell_x(col), &quot;y&quot;: cell_y(row)}
+
+
+def block_at(row, col):
+    &quot;&quot;&quot;The block covering that square, or None if it is empty.&quot;&quot;&quot;
+    for block in blocks:
+        if block[&quot;row&quot;] == row:
+            if block[&quot;col&quot;] &lt;= col &lt; block[&quot;col&quot;] + block[&quot;length&quot;]:
+                return block
+    return None
+
+
+def can_fall(block):
+    &quot;&quot;&quot;Is every square directly under this block empty?&quot;&quot;&quot;
+    below = block[&quot;row&quot;] + 1
+    if below &gt;= ROWS:
+        return False
+    for col in range(block[&quot;col&quot;], block[&quot;col&quot;] + block[&quot;length&quot;]):
+        if block_at(below, col) is not None:
+            return False
+    return True
+
+
+def row_is_full(row):
+    for col in range(COLS):
+        if block_at(row, col) is None:
+            return False
+    return True
+
+
+def make_row(row):
+    made = []
+    col = 0
+    while col &lt; COLS:
+        if chance(GAP_CHANCE):
+            col = col + 1
+        else:
+            length = choose([1, 2, 3, 4])
+            if col + length &gt; COLS:
+                length = COLS - col
+            made.append(new_block(row, col, length))
+            col = col + length
+
+    filled = 0
+    for block in made:
+        filled = filled + block[&quot;length&quot;]
+    if filled == COLS:
+        made.pop()
+
+    return made
+
+
+# ---------------------------------------------- what the game has to remember
+#
+# These change while you play. A function that CHANGES one has to say
+# `global` first, which means &quot;the one up here, not a new one of my own&quot;.
+
+score = 0
+busy = False          # True while a turn is playing out: no dragging then
+flashing = []         # rows that are full and about to go
+held = None           # the block being dragged, or None
+grab_dx = 0           # where on the block the finger is, in pixels
+left_limit = 0        # how far the held block may go, in pixels
+right_limit = 0
+
+
+def start_turn():
+    global busy
+    busy = True
+    step()
+
+
+def step():
+    global blocks, busy, flashing, score
+
+    # Falling, one row per step. Going through the rows from the bottom up
+    # is what makes it ONE row: a block that has just moved down lands in a
+    # row this loop has already been through, so it is not moved again until
+    # the next step. Top down, it would be checked again in its new row, and
+    # again, and drop to the floor in one go -- and a block resting on it
+    # would be left behind.
+    moved = False
+    for row in range(ROWS - 2, -1, -1):
+        for block in blocks:
+            if block[&quot;row&quot;] == row and can_fall(block):
+                block[&quot;row&quot;] = row + 1
+                moved = True
+    if moved:
+        wait(STEP_TIME, step)
+        return
+
+    # Clearing. Full rows flash first, and go on the next step.
+    if len(flashing) &gt; 0:
+        for row in flashing:
+            keep = []
+            for block in blocks:
+                if block[&quot;row&quot;] != row:
+                    keep.append(block)
+            blocks = keep
+        score = score + POINTS_PER_ROW * len(flashing) * len(flashing)
+        flashing = []
+        wait(STEP_TIME, step)
+        return
+
+    for row in range(ROWS):
+        if row_is_full(row):
+            flashing.append(row)
+    if len(flashing) &gt; 0:
+        wait(CLEAR_TIME, step)
+        return
+
+    busy = False
+
+
+def new_game():
+    global blocks, score, busy, flashing, held
+
+    score = 0
+    busy = False
+    flashing = []
+    held = None
+    blocks = []
+    for row in range(ROWS - START_ROWS, ROWS):
+        for block in make_row(row):
+            blocks.append(block)
+
+
+@onMousePress
+def grab():
+    global held, grab_dx, left_limit, right_limit
+
+    if busy:
+        return
+
+    finger = mousePos()
+    col = int((finger.x - BOARD_X) // CELL)
+    row = int((finger.y - BOARD_Y) // CELL)
+    if col &lt; 0 or col &gt;= COLS or row &lt; 0 or row &gt;= ROWS:
+        return
+
+    block = block_at(row, col)
+    if block is None:
+        return
+
+    held = block
+    grab_dx = finger.x - block[&quot;x&quot;]
+
+    # How far it can go: walk left from the block until a square is taken
+    # or the board ends, then the same to the right.
+    left = block[&quot;col&quot;]
+    while left &gt; 0 and block_at(row, left - 1) is None:
+        left = left - 1
+    right = block[&quot;col&quot;]
+    while (right + block[&quot;length&quot;] &lt; COLS
+           and block_at(row, right + block[&quot;length&quot;]) is None):
+        right = right + 1
+
+    left_limit = cell_x(left)
+    right_limit = cell_x(right)
+
+
+@onMouseRelease
+def let_go():
+    global held
+
+    if held is None:
+        return
+
+    # Snap to the nearest column.
+    col = round((held[&quot;x&quot;] - BOARD_X) / CELL)
+    moved = col != held[&quot;col&quot;]
+    held[&quot;col&quot;] = col
+    held = None
+
+    # A tap that moved nothing is not a move, so no new row for it.
+    if moved:
+        start_turn()
+
+
+@onUpdate
+def glide():
+    if held is not None:
+        held[&quot;x&quot;] = clamp(mousePos().x - grab_dx, left_limit, right_limit)
+
+    # Each frame, cover a good part of the distance that is left. Near
+    # enough is snapped, so it does not creep for ever.
+    amount = clamp(dt() * 18, 0, 1)
+    for block in blocks:
+        if block is not held:
+            block[&quot;x&quot;] = lerp(block[&quot;x&quot;], cell_x(block[&quot;col&quot;]), amount)
+        block[&quot;y&quot;] = lerp(block[&quot;y&quot;], cell_y(block[&quot;row&quot;]), amount)
+
+
+@onDraw
+def draw_everything():
+    # The board, and a faint square for every empty space.
+    drawRect(pos=vec2(BOARD_X - 6, BOARD_Y - 6), width=COLS * CELL + 12,
+             height=ROWS * CELL + 12, color=(50, 50, 80), radius=8)
+    for row in range(ROWS):
+        for col in range(COLS):
+            drawRect(pos=vec2(cell_x(col) + 2, cell_y(row) + 2),
+                     width=CELL - 4, height=CELL - 4, color=(40, 40, 64),
+                     radius=6)
+
+    for block in blocks:
+        colour = COLOURS[block[&quot;length&quot;]]
+        if block[&quot;row&quot;] in flashing:
+            colour = (255, 255, 255)
+        drawRect(pos=vec2(block[&quot;x&quot;] + 3, block[&quot;y&quot;] + 3),
+                 width=block[&quot;length&quot;] * CELL - 6, height=CELL - 6,
+                 color=colour, radius=10)
+
+    drawText(text=&quot;Score &quot; + str(score), pos=vec2(BOARD_X, 62), size=24)
+
+
+new_game()</code></pre>
+
+<p><strong>One step at a time.</strong> If the whole turn happened at once,
+the board would just change, and you couldn't see why. So
+<code>step()</code> does <em>one</em> thing, then
+<code>wait(STEP_TIME, step)</code> asks for <code>step</code> to run again
+a moment later. Each step, it does the first of these that applies:</p>
+
+<ol>
+<li>If any block can fall, move every block that can fall down one row.</li>
+<li>If there are flashing rows, remove them and add to the score.</li>
+<li>If any row is full, start it flashing.</li>
+<li>Otherwise the turn is over: <code>busy = False</code>.</li>
+</ol>
+
+<p>While <code>busy</code> is <code>True</code>, <code>grab</code> refuses to
+pick anything up, so you can't drag a block in the middle of a turn.</p>
+
+<p><strong>From the bottom up.</strong> The falling loop goes through the rows
+from the bottom to the top, and that is what makes it <em>one</em> row per
+step. A block that has just moved down lands in a row the loop has already
+done, so it isn't moved again until the next step. Go from the top down
+instead and a falling block is checked again in its new row, and again, and
+drops to the floor in one go, while a block resting on it is left behind.</p>
+
+<p><strong>The score.</strong> One row is worth 10. Two at once is
+<code>10 × 2 × 2</code>, which is 40: four times as much for clearing two
+together.</p>
+
+<p><strong>A tap is not a move.</strong> <code>let_go</code> only starts a
+turn if the block ended up in a different column, so tapping a block does
+nothing.</p>
+
+<p>Clear every block and there's nothing left to do. On a lucky board that
+can take only a couple of moves. Step 5 fixes that.</p>
+
+<div class="callout"><p><strong>Don't forget <code>global blocks</code>.</strong>
+Clearing a row builds a new list, <code>keep</code>, and then
+<code>blocks = keep</code>. Take <code>blocks</code> out of the
+<code>global</code> line and the first move crashes with
+<code>UnboundLocalError: cannot access local variable 'blocks' where it is
+not associated with a value</code>. The error points at the falling loop near
+the top of <code>step()</code>, not at <code>blocks = keep</code> further
+down, because one assignment anywhere in a function makes Python treat the
+name as the function's own all the way through.</p></div>
+
+<h2 id="step-5-a-new-row-every-move">Step 5 — a new row every move</h2>
+
+<p>Now the board fights back. After every move, once everything has settled,
+a new row pushes up from the bottom. Push a block off the top and the game
+is over.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+COLS = 8           # squares across
+ROWS = 10          # squares down
+CELL = 50          # one square is 50 pixels
+
+BOARD_X = 20       # where the board&#x27;s top-left corner is in the window
+BOARD_Y = 110
+
+# Tall rather than wide, to fit a phone held upright.
+kaypy(width=COLS * CELL + 40, height=BOARD_Y + ROWS * CELL + 30,
+      background=[30, 30, 50])
+
+START_ROWS = 4        # rows of blocks on the board when a game starts
+GAP_CHANCE = 0.3      # how often a new row has a gap where a block could be
+STEP_TIME = 0.08      # seconds between one step of falling and the next
+CLEAR_TIME = 0.25     # how long a full row flashes before it goes
+POINTS_PER_ROW = 10
+
+# A block&#x27;s colour depends on how long it is.
+COLOURS = {
+    1: (240, 90, 90),
+    2: (250, 180, 60),
+    3: (90, 200, 120),
+    4: (80, 150, 240),
+}
+
+# The name the best score is saved under. Every game on a website shares
+# the same storage, so the game&#x27;s own name goes in it.
+BEST_KEY = &quot;block_slide_best&quot;
+
+
+blocks = []
+
+
+def cell_x(col):
+    return BOARD_X + col * CELL
+
+
+def cell_y(row):
+    return BOARD_Y + row * CELL
+
+
+def new_block(row, col, length):
+    return {&quot;row&quot;: row, &quot;col&quot;: col, &quot;length&quot;: length,
+            &quot;x&quot;: cell_x(col), &quot;y&quot;: cell_y(row)}
+
+
+def block_at(row, col):
+    &quot;&quot;&quot;The block covering that square, or None if it is empty.&quot;&quot;&quot;
+    for block in blocks:
+        if block[&quot;row&quot;] == row:
+            if block[&quot;col&quot;] &lt;= col &lt; block[&quot;col&quot;] + block[&quot;length&quot;]:
+                return block
+    return None
+
+
+def can_fall(block):
+    &quot;&quot;&quot;Is every square directly under this block empty?&quot;&quot;&quot;
+    below = block[&quot;row&quot;] + 1
+    if below &gt;= ROWS:
+        return False
+    for col in range(block[&quot;col&quot;], block[&quot;col&quot;] + block[&quot;length&quot;]):
+        if block_at(below, col) is not None:
+            return False
+    return True
+
+
+def row_is_full(row):
+    for col in range(COLS):
+        if block_at(row, col) is None:
+            return False
+    return True
+
+
+def make_row(row):
+    made = []
+    col = 0
+    while col &lt; COLS:
+        if chance(GAP_CHANCE):
+            col = col + 1
+        else:
+            length = choose([1, 2, 3, 4])
+            if col + length &gt; COLS:
+                length = COLS - col
+            made.append(new_block(row, col, length))
+            col = col + length
+
+    filled = 0
+    for block in made:
+        filled = filled + block[&quot;length&quot;]
+    if filled == COLS:
+        made.pop()
+
+    return made
+
+
+# ---------------------------------------------- what the game has to remember
+#
+# These change while you play. A function that CHANGES one has to say
+# `global` first, which means &quot;the one up here, not a new one of my own&quot;.
+
+score = 0
+best = getData(BEST_KEY, 0)
+busy = False          # True while a turn is playing out: no dragging then
+flashing = []         # rows that are full and about to go
+held = None           # the block being dragged, or None
+grab_dx = 0           # where on the block the finger is, in pixels
+left_limit = 0        # how far the held block may go, in pixels
+right_limit = 0
+over = False
+
+
+risen = False          # has this turn&#x27;s new row come up yet?
+
+
+def start_turn():
+    global busy, risen
+    busy = True
+    risen = False
+    step()
+
+
+def step():
+    global blocks, busy, risen, flashing, score
+
+    # Falling, one row per step. Going through the rows from the bottom up
+    # is what makes it ONE row: a block that has just moved down lands in a
+    # row this loop has already been through, so it is not moved again until
+    # the next step. Top down, it would be checked again in its new row, and
+    # again, and drop to the floor in one go -- and a block resting on it
+    # would be left behind.
+    moved = False
+    for row in range(ROWS - 2, -1, -1):
+        for block in blocks:
+            if block[&quot;row&quot;] == row and can_fall(block):
+                block[&quot;row&quot;] = row + 1
+                moved = True
+    if moved:
+        wait(STEP_TIME, step)
+        return
+
+    # Clearing. Full rows flash first, and go on the next step.
+    if len(flashing) &gt; 0:
+        for row in flashing:
+            keep = []
+            for block in blocks:
+                if block[&quot;row&quot;] != row:
+                    keep.append(block)
+            blocks = keep
+        score = score + POINTS_PER_ROW * len(flashing) * len(flashing)
+        flashing = []
+        wait(STEP_TIME, step)
+        return
+
+    for row in range(ROWS):
+        if row_is_full(row):
+            flashing.append(row)
+    if len(flashing) &gt; 0:
+        wait(CLEAR_TIME, step)
+        return
+
+    # Rising. Once a turn, after everything has settled.
+    if not risen:
+        risen = True
+        for block in blocks:
+            block[&quot;row&quot;] = block[&quot;row&quot;] - 1
+        for block in make_row(ROWS - 1):
+            blocks.append(block)
+        for block in blocks:
+            if block[&quot;row&quot;] &lt; 0:
+                game_over()
+                return
+        wait(STEP_TIME, step)
+        return
+
+    busy = False
+
+
+def game_over():
+    global over, best
+
+    over = True
+    shake(8)
+    if score &gt; best:
+        best = score
+        setData(BEST_KEY, best)
+        message = &quot;New best: &quot; + str(score) + &quot;!&quot;
+    else:
+        message = &quot;Score: &quot; + str(score) + &quot;\nBest: &quot; + str(best)
+
+    @say(&quot;Game over!\n\n&quot; + message, button=&quot;Play again&quot;)
+    def again():
+        new_game()
+
+
+def new_game():
+    global blocks, score, busy, flashing, held, over
+
+    score = 0
+    busy = False
+    flashing = []
+    held = None
+    over = False
+    blocks = []
+    for row in range(ROWS - START_ROWS, ROWS):
+        for block in make_row(row):
+            blocks.append(block)
+
+
+@onMousePress
+def grab():
+    global held, grab_dx, left_limit, right_limit
+
+    if busy or over:
+        return
+
+    finger = mousePos()
+    col = int((finger.x - BOARD_X) // CELL)
+    row = int((finger.y - BOARD_Y) // CELL)
+    if col &lt; 0 or col &gt;= COLS or row &lt; 0 or row &gt;= ROWS:
+        return
+
+    block = block_at(row, col)
+    if block is None:
+        return
+
+    held = block
+    grab_dx = finger.x - block[&quot;x&quot;]
+
+    # How far it can go: walk left from the block until a square is taken
+    # or the board ends, then the same to the right.
+    left = block[&quot;col&quot;]
+    while left &gt; 0 and block_at(row, left - 1) is None:
+        left = left - 1
+    right = block[&quot;col&quot;]
+    while (right + block[&quot;length&quot;] &lt; COLS
+           and block_at(row, right + block[&quot;length&quot;]) is None):
+        right = right + 1
+
+    left_limit = cell_x(left)
+    right_limit = cell_x(right)
+
+
+@onMouseRelease
+def let_go():
+    global held
+
+    if held is None:
+        return
+
+    # Snap to the nearest column.
+    col = round((held[&quot;x&quot;] - BOARD_X) / CELL)
+    moved = col != held[&quot;col&quot;]
+    held[&quot;col&quot;] = col
+    held = None
+
+    # A tap that moved nothing is not a move, so no new row for it.
+    if moved:
+        start_turn()
+
+
+@onUpdate
+def glide():
+    if held is not None:
+        held[&quot;x&quot;] = clamp(mousePos().x - grab_dx, left_limit, right_limit)
+
+    # Each frame, cover a good part of the distance that is left. Near
+    # enough is snapped, so it does not creep for ever.
+    amount = clamp(dt() * 18, 0, 1)
+    for block in blocks:
+        if block is not held:
+            block[&quot;x&quot;] = lerp(block[&quot;x&quot;], cell_x(block[&quot;col&quot;]), amount)
+        block[&quot;y&quot;] = lerp(block[&quot;y&quot;], cell_y(block[&quot;row&quot;]), amount)
+
+
+@onDraw
+def draw_everything():
+    # The board, and a faint square for every empty space.
+    drawRect(pos=vec2(BOARD_X - 6, BOARD_Y - 6), width=COLS * CELL + 12,
+             height=ROWS * CELL + 12, color=(50, 50, 80), radius=8)
+    for row in range(ROWS):
+        for col in range(COLS):
+            drawRect(pos=vec2(cell_x(col) + 2, cell_y(row) + 2),
+                     width=CELL - 4, height=CELL - 4, color=(40, 40, 64),
+                     radius=6)
+
+    for block in blocks:
+        colour = COLOURS[block[&quot;length&quot;]]
+        if block[&quot;row&quot;] in flashing:
+            colour = (255, 255, 255)
+        drawRect(pos=vec2(block[&quot;x&quot;] + 3, block[&quot;y&quot;] + 3),
+                 width=block[&quot;length&quot;] * CELL - 6, height=CELL - 6,
+                 color=colour, radius=10)
+
+    drawText(text=&quot;Score &quot; + str(score), pos=vec2(BOARD_X, 62), size=24)
+    drawText(text=&quot;Best &quot; + str(best),
+             pos=vec2(BOARD_X + 220, 62), size=24)
+
+
+new_game()</code></pre>
+
+<p><strong>Rising.</strong> The new step comes after falling and clearing:
+every block's row goes down by one, which moves it <em>up</em> the screen,
+and <code>make_row</code> fills the bottom row. <code>risen</code> makes sure
+it happens once a turn. Then <code>step</code> carries on as before, because
+the new row might leave something able to fall.</p>
+
+<p><strong>Game over.</strong> Any block now in row −1 has been pushed off
+the top. <code>game_over()</code> saves the score if it's a new best, and
+<code>say()</code> shows it with a <strong>Play again</strong> button.
+<code>say()</code> pauses the game while it's up, and <code>over</code>
+stops <code>grab</code> picking anything up until the next game starts.</p>
+
+<p><strong><code>new_game()</code></strong> puts everything back as it
+started: the score, the flags, and a fresh board. The same function starts
+the very first game and every game after it.</p>
+
+<h2 id="step-6-the-whole-game">Step 6 — the whole game</h2>
+
+<p>This is the game exactly as it is on the <a href="../../games/">games
+page</a>. It adds:</p>
+
+<ul>
+<li><strong>Sounds</strong>: a swoosh when a block moves, a beep when a row
+clears, and a boom at game over.</li>
+<li><strong>A message at the start</strong> explaining what to do, with a
+<strong>Play</strong> button.</li>
+<li><strong>The danger line</strong>, a thin red line across the top of the
+board, so you can see where the edge is.</li>
+<li><strong>A tidy game over.</strong> The game-over message pauses the
+game, and anything still gliding would freeze halfway, drawn on top of its
+neighbour. So <code>game_over</code> first puts every block exactly where it
+belongs.</li>
+</ul>
+
+<p>It also has every number worth changing in one settings block near the
+top, and comments that explain why each part is there.</p>
+
+<pre><code class="language-python">&quot;&quot;&quot;Block Slide -- slide the blocks, fill the rows, don&#x27;t reach the top.
+
+    drag a block left or right   (a finger on a phone, the mouse elsewhere)
+
+Every block lies in a row. Drag one sideways, as far as the gaps let it go,
+and let go. Blocks with nothing under them fall. A row with no gaps left is
+cleared, and everything above it falls too. Then a new row of blocks pushes
+up from the bottom -- after every single move. If the blocks are pushed off
+the top, the game is over. Your best score is remembered.
+
+HOW THIS FILE IS PUT TOGETHER
+
+    1. the window
+    2. the settings
+    3. the board: a list of blocks, and questions you can ask it
+    4. making a new row
+    5. a turn: falling, clearing, rising -- one step at a time
+    6. dragging
+    7. drawing
+    8. start the game
+
+There are no game objects in this game. Every block is a dictionary in a
+list, and the board is drawn from that list every frame. Moving a block is
+changing a number in its dictionary.
+&quot;&quot;&quot;
+
+from kaypy import *
+
+# ----------------------------------------------------------------- 1. setup
+
+COLS = 8           # squares across
+ROWS = 10          # squares down
+CELL = 50          # one square is 50 pixels
+
+BOARD_X = 20       # where the board&#x27;s top-left corner is in the window
+BOARD_Y = 110
+
+# Tall rather than wide, to fit a phone held upright.
+kaypy(width=COLS * CELL + 40, height=BOARD_Y + ROWS * CELL + 30,
+      background=[30, 30, 50])
+
+loadSound(&quot;clear&quot;, &quot;sounds/rising_beep.wav&quot;)
+loadSound(&quot;slide&quot;, &quot;sounds/swoosh.wav&quot;)
+loadSound(&quot;over&quot;, &quot;sounds/small_boom.wav&quot;)
+
+
+# -------------------------------------------------------------- 2. settings
+#
+# Every number worth changing is here.
+
+START_ROWS = 4        # rows of blocks on the board when a game starts
+GAP_CHANCE = 0.3      # how often a new row has a gap where a block could be
+STEP_TIME = 0.08      # seconds between one step of falling and the next
+CLEAR_TIME = 0.25     # how long a full row flashes before it goes
+POINTS_PER_ROW = 10
+
+# A block&#x27;s colour depends on how long it is.
+COLOURS = {
+    1: (240, 90, 90),
+    2: (250, 180, 60),
+    3: (90, 200, 120),
+    4: (80, 150, 240),
+}
+
+# The name the best score is saved under. Every game on a website shares
+# the same storage, so the game&#x27;s own name goes in it.
+BEST_KEY = &quot;block_slide_best&quot;
+
+
+# ------------------------------------------------------------- 3. the board
+#
+# Every block is a dictionary:
+#
+#     {&quot;row&quot;: 9, &quot;col&quot;: 2, &quot;length&quot;: 3, &quot;x&quot;: ..., &quot;y&quot;: ...}
+#
+# row 0 is the top and row 9 the bottom; col 0 is the left. A block of
+# length 3 at col 2 covers columns 2, 3 and 4. &quot;x&quot; and &quot;y&quot; are where it is
+# DRAWN, in pixels -- they glide towards where it really is, so blocks slide
+# and fall smoothly instead of jumping.
+
+blocks = []
+
+
+def cell_x(col):
+    return BOARD_X + col * CELL
+
+
+def cell_y(row):
+    return BOARD_Y + row * CELL
+
+
+def new_block(row, col, length):
+    return {&quot;row&quot;: row, &quot;col&quot;: col, &quot;length&quot;: length,
+            &quot;x&quot;: cell_x(col), &quot;y&quot;: cell_y(row)}
+
+
+def block_at(row, col):
+    &quot;&quot;&quot;The block covering that square, or None if it is empty.&quot;&quot;&quot;
+    for block in blocks:
+        if block[&quot;row&quot;] == row:
+            if block[&quot;col&quot;] &lt;= col &lt; block[&quot;col&quot;] + block[&quot;length&quot;]:
+                return block
+    return None
+
+
+def can_fall(block):
+    &quot;&quot;&quot;Is every square directly under this block empty?&quot;&quot;&quot;
+    below = block[&quot;row&quot;] + 1
+    if below &gt;= ROWS:
+        return False
+    for col in range(block[&quot;col&quot;], block[&quot;col&quot;] + block[&quot;length&quot;]):
+        if block_at(below, col) is not None:
+            return False
+    return True
+
+
+def row_is_full(row):
+    for col in range(COLS):
+        if block_at(row, col) is None:
+            return False
+    return True
+
+
+# -------------------------------------------------------- 4. a new row
+#
+# Walk along the row from the left. Each time: either leave a gap, or put
+# down a block of random length that still fits. A full row would clear
+# the moment it arrived, so if the row happens to come out full, the last
+# block is taken away again.
+
+def make_row(row):
+    made = []
+    col = 0
+    while col &lt; COLS:
+        if chance(GAP_CHANCE):
+            col = col + 1
+        else:
+            length = choose([1, 2, 3, 4])
+            if col + length &gt; COLS:
+                length = COLS - col
+            made.append(new_block(row, col, length))
+            col = col + length
+
+    filled = 0
+    for block in made:
+        filled = filled + block[&quot;length&quot;]
+    if filled == COLS:
+        made.pop()
+
+    return made
+
+
+# ---------------------------------------------- what the game has to remember
+#
+# These change while you play. A function that CHANGES one has to say
+# `global` first, which means &quot;the one up here, not a new one of my own&quot;.
+
+score = 0
+best = getData(BEST_KEY, 0)
+busy = False          # True while a turn is playing out: no dragging then
+flashing = []         # rows that are full and about to go
+held = None           # the block being dragged, or None
+grab_dx = 0           # where on the block the finger is, in pixels
+left_limit = 0        # how far the held block may go, in pixels
+right_limit = 0
+over = False
+
+
+# ---------------------------------------------------------- 5. a turn
+#
+# After a move, the turn plays out one step at a time, with a short wait
+# between steps so you can see what happens:
+#
+#     anything that can fall, falls one row      (again, until nothing can)
+#     full rows flash, then go                   (then back to falling)
+#     a new row pushes up from the bottom        (then back to falling)
+#
+# step() does ONE of those and then waits and calls itself again, until
+# there is nothing left to do.
+
+risen = False          # has this turn&#x27;s new row come up yet?
+
+
+def start_turn():
+    global busy, risen
+    busy = True
+    risen = False
+    step()
+
+
+def step():
+    global blocks, busy, risen, flashing, score
+
+    # Falling, one row per step. Going through the rows from the bottom up
+    # is what makes it ONE row: a block that has just moved down lands in a
+    # row this loop has already been through, so it is not moved again until
+    # the next step. Top down, it would be checked again in its new row, and
+    # again, and drop to the floor in one go -- and a block resting on it
+    # would be left behind.
+    moved = False
+    for row in range(ROWS - 2, -1, -1):
+        for block in blocks:
+            if block[&quot;row&quot;] == row and can_fall(block):
+                block[&quot;row&quot;] = row + 1
+                moved = True
+    if moved:
+        wait(STEP_TIME, step)
+        return
+
+    # Clearing. Full rows flash first, and go on the next step.
+    if len(flashing) &gt; 0:
+        for row in flashing:
+            keep = []
+            for block in blocks:
+                if block[&quot;row&quot;] != row:
+                    keep.append(block)
+            blocks = keep
+        score = score + POINTS_PER_ROW * len(flashing) * len(flashing)
+        flashing = []
+        wait(STEP_TIME, step)
+        return
+
+    for row in range(ROWS):
+        if row_is_full(row):
+            flashing.append(row)
+    if len(flashing) &gt; 0:
+        play(&quot;clear&quot;)
+        wait(CLEAR_TIME, step)
+        return
+
+    # Rising. Once a turn, after everything has settled.
+    if not risen:
+        risen = True
+        for block in blocks:
+            block[&quot;row&quot;] = block[&quot;row&quot;] - 1
+        for block in make_row(ROWS - 1):
+            blocks.append(block)
+        for block in blocks:
+            if block[&quot;row&quot;] &lt; 0:
+                game_over()
+                return
+        wait(STEP_TIME, step)
+        return
+
+    busy = False
+
+
+def game_over():
+    global over, best
+
+    over = True
+    play(&quot;over&quot;)
+    shake(8)
+
+    # The message pauses the game, which would freeze any block halfway
+    # through gliding to its square. Put every block where it really is.
+    for block in blocks:
+        block[&quot;x&quot;] = cell_x(block[&quot;col&quot;])
+        block[&quot;y&quot;] = cell_y(block[&quot;row&quot;])
+    if score &gt; best:
+        best = score
+        setData(BEST_KEY, best)
+        message = &quot;New best: &quot; + str(score) + &quot;!&quot;
+    else:
+        message = &quot;Score: &quot; + str(score) + &quot;\nBest: &quot; + str(best)
+
+    @say(&quot;Game over!\n\n&quot; + message, button=&quot;Play again&quot;)
+    def again():
+        new_game()
+
+
+def new_game():
+    global blocks, score, busy, flashing, held, over
+
+    score = 0
+    busy = False
+    flashing = []
+    held = None
+    over = False
+    blocks = []
+    for row in range(ROWS - START_ROWS, ROWS):
+        for block in make_row(row):
+            blocks.append(block)
+
+
+# ---------------------------------------------------------- 6. dragging
+#
+# A finger on a phone and the mouse on a computer are the same thing to
+# kaypy: onMousePress, mousePos() and onMouseRelease answer to both.
+
+@onMousePress
+def grab():
+    global held, grab_dx, left_limit, right_limit
+
+    if busy or over:
+        return
+
+    finger = mousePos()
+    col = int((finger.x - BOARD_X) // CELL)
+    row = int((finger.y - BOARD_Y) // CELL)
+    if col &lt; 0 or col &gt;= COLS or row &lt; 0 or row &gt;= ROWS:
+        return
+
+    block = block_at(row, col)
+    if block is None:
+        return
+
+    held = block
+    grab_dx = finger.x - block[&quot;x&quot;]
+
+    # How far it can go: walk left from the block until a square is taken
+    # or the board ends, then the same to the right.
+    left = block[&quot;col&quot;]
+    while left &gt; 0 and block_at(row, left - 1) is None:
+        left = left - 1
+    right = block[&quot;col&quot;]
+    while (right + block[&quot;length&quot;] &lt; COLS
+           and block_at(row, right + block[&quot;length&quot;]) is None):
+        right = right + 1
+
+    left_limit = cell_x(left)
+    right_limit = cell_x(right)
+
+
+@onMouseRelease
+def let_go():
+    global held
+
+    if held is None:
+        return
+
+    # Snap to the nearest column.
+    col = round((held[&quot;x&quot;] - BOARD_X) / CELL)
+    moved = col != held[&quot;col&quot;]
+    held[&quot;col&quot;] = col
+    held = None
+
+    # A tap that moved nothing is not a move, so no new row for it.
+    if moved:
+        play(&quot;slide&quot;)
+        start_turn()
+
+
+# ------------------------------------------------------------ 7. drawing
+#
+# Every frame: the dragged block follows the finger, every other block
+# glides towards where it really is, and then everything is drawn.
+
+@onUpdate
+def glide():
+    if held is not None:
+        held[&quot;x&quot;] = clamp(mousePos().x - grab_dx, left_limit, right_limit)
+
+    # Each frame, cover a good part of the distance that is left. Near
+    # enough is snapped, so it does not creep for ever.
+    amount = clamp(dt() * 18, 0, 1)
+    for block in blocks:
+        if block is not held:
+            block[&quot;x&quot;] = lerp(block[&quot;x&quot;], cell_x(block[&quot;col&quot;]), amount)
+        block[&quot;y&quot;] = lerp(block[&quot;y&quot;], cell_y(block[&quot;row&quot;]), amount)
+
+
+@onDraw
+def draw_everything():
+    # The board, and a faint square for every empty space.
+    drawRect(pos=vec2(BOARD_X - 6, BOARD_Y - 6), width=COLS * CELL + 12,
+             height=ROWS * CELL + 12, color=(50, 50, 80), radius=8)
+    for row in range(ROWS):
+        for col in range(COLS):
+            drawRect(pos=vec2(cell_x(col) + 2, cell_y(row) + 2),
+                     width=CELL - 4, height=CELL - 4, color=(40, 40, 64),
+                     radius=6)
+
+    # The top row is the danger line: anything pushed above it ends the game.
+    drawRect(pos=vec2(BOARD_X, BOARD_Y - 4), width=COLS * CELL, height=3,
+             color=(240, 90, 90))
+
+    for block in blocks:
+        colour = COLOURS[block[&quot;length&quot;]]
+        if block[&quot;row&quot;] in flashing:
+            colour = (255, 255, 255)
+        drawRect(pos=vec2(block[&quot;x&quot;] + 3, block[&quot;y&quot;] + 3),
+                 width=block[&quot;length&quot;] * CELL - 6, height=CELL - 6,
+                 color=colour, radius=10)
+
+    drawText(text=&quot;Block Slide&quot;, pos=vec2(BOARD_X, 18), size=32)
+    drawText(text=&quot;Score &quot; + str(score), pos=vec2(BOARD_X, 62), size=24)
+    drawText(text=&quot;Best &quot; + str(best),
+             pos=vec2(BOARD_X + 220, 62), size=24)
+
+
+# ------------------------------------------------------- 8. start the game
+
+new_game()
+say(&quot;Drag a block left or right to fill a row.\n\n&quot;
+    &quot;Every move, a new row comes up from the bottom. &quot;
+    &quot;Don&#x27;t let the blocks reach the top!&quot;, button=&quot;Play&quot;)</code></pre>
+
+<h2 id="make-it-yours">Make it yours</h2>
+
+<p><a href="../../play/?game=block_slide">Open the whole game in the playground →</a>
+It goes straight into the editor, ready to change and run.</p>
+
+<ul>
+<li><strong>Change the board.</strong> <code>COLS</code> and
+<code>ROWS</code> change its size; the window grows to fit. A wider board
+is harder, because rows take more filling.</li>
+<li><strong>Change the rows.</strong> A bigger <code>GAP_CHANCE</code> makes
+emptier rows, which are easier. <code>START_ROWS</code> is how full the
+board is when a game begins.</li>
+<li><strong>Longer blocks.</strong> Add <code>5</code> to the list in
+<code>make_row</code>, and give <code>COLOURS</code> a colour for
+<code>5</code>. Forget the colour and the first block of length 5 stops the
+game with <code>KeyError: 5</code>, because there's nothing in
+<code>COLOURS</code> to look up.</li>
+<li><strong>A slower turn.</strong> Make <code>STEP_TIME</code> bigger and
+watch the blocks fall one row at a time.</li>
+</ul>
+
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>

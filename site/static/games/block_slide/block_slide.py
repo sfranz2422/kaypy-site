@@ -191,8 +191,12 @@ def start_turn():
 def step():
     global blocks, busy, risen, flashing, score
 
-    # Falling. Bottom rows first, so a block lands on the one under it
-    # rather than both moving at once and overlapping.
+    # Falling, one row per step. Going through the rows from the bottom up
+    # is what makes it ONE row: a block that has just moved down lands in a
+    # row this loop has already been through, so it is not moved again until
+    # the next step. Top down, it would be checked again in its new row, and
+    # again, and drop to the floor in one go -- and a block resting on it
+    # would be left behind.
     moved = False
     for row in range(ROWS - 2, -1, -1):
         for block in blocks:
