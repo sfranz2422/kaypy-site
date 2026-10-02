@@ -1136,10 +1136,20 @@ if a.curAnim() == &quot;idle&quot;:
     pass
 </code></pre>
 <h3 id="size">.size()</h3>
-<p>How big it is on screen, as a <code>vec2</code>. Works for a sprite, a rect, a circle and
+<p>How big it is, as a <code>vec2</code>: <code>.x</code> is the width and
+<code>.y</code> the height, in pixels. Works for a sprite, a rect, a circle and
 text.</p>
+<p>It is the size of the thing itself, before <code>scale()</code>. A
+100 × 40 rectangle with <code>scale(2)</code> looks 200 × 80 on the screen,
+but its <code>.size()</code> is still 100 × 40, the same as KAPLAY's
+<code>width</code> and <code>height</code>. If you need how big it looks,
+multiply by the scale you gave it.</p>
 <pre><code class="language-python">label = add([text(&quot;Score&quot;, size=24), pos(10, 10)])
-w = label.size()
+w = label.size().x           # how wide the words are
+h = label.size().y           # and how tall
+
+box = add([rect(100, 40), pos(10, 60), scale(2)])
+looks = box.size().x * 2     # 200, how wide it looks
 </code></pre>
 <h3 id="hurtamount">.hurt(amount)</h3>
 <p>Take damage, on an object with <code>health()</code>.</p>
