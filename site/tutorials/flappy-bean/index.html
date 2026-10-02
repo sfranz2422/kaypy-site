@@ -1,0 +1,1103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Flappy Bean · KayPy</title>
+<meta name="description" content="How Flappy Bean was built, a step at a time: Bean falling and flapping, pipes sliding past, points, game over, and a game that gets harder — in plain Python a student can copy.">
+<meta property="og:title" content="Building Flappy Bean · KayPy">
+<meta property="og:description" content="How Flappy Bean was built, a step at a time.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All eight lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li><li><a class="dropdown-item" href="../../learn/functions/">6 — Functions</a></li><li><a class="dropdown-item" href="../../learn/decorators/">7 — Decorators</a></li><li><a class="dropdown-item" href="../../learn/dictionaries/">8 — Dictionaries</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../../tutorials/" aria-current="page">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <article class="prose">
+<h1 id="building-flappy-bean">Building Flappy Bean</h1>
+
+<p><a href="../../static/games/flappy_bean/">Play it first →</a> Bean is
+always falling, and every flap pushes it back up. Fly through the gap between
+each pair of pipes for a point. The more points you have, the faster the pipes
+come and the smaller the gaps get. Touch a pipe or the grass and it's game
+over.</p>
+
+<p>This is how it was built, a step at a time. Every numbered step below is a
+whole program: copy it into
+<a href="../../play/">the playground</a>, press Run, and it works. Each step
+is the one before it with something added, so you can build the game the way
+it was built. Then break something on purpose and see what changes. That
+teaches you more than reading does.</p>
+
+<p>There is nothing clever in it. No list comprehensions, no tricks, and every
+kaypy function it uses is on the <a href="../../api/">API page</a>. The pipes
+are plain rectangles, so the only picture is Bean.</p>
+
+<p>It is the shortest game on the site, which makes it a good first one to
+build. If you want something longer afterwards, try
+<a href="../coin-dash/">Coin Dash</a>.</p>
+
+<h2 id="the-one-big-idea">The one big idea: Bean never moves sideways</h2>
+
+<p>It looks as if Bean flies to the right. It doesn't. Bean only ever goes up
+and down, and the <em>pipes</em> slide to the left. Your eye can't tell the
+difference, and the game is much simpler this way: there is no camera to move,
+and Bean's <code>x</code> is always 180.</p>
+
+<h2 id="step-1-bean-falls-and-flaps">Step 1 — Bean falls and flaps</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+FLAP = 520            # how hard a flap pushes Bean up
+GROUND = 60           # how tall the strip of grass is
+
+kaypy(width=800, height=600, background=[121, 189, 220])
+setGravity(1600)
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+bean = add([sprite(&quot;bean&quot;), pos(180, 240), anchor(&quot;center&quot;), area(), body()])
+
+# The grass. It is solid, so Bean lands on it.
+add([rect(width(), GROUND), pos(0, height() - GROUND),
+     color(96, 156, 76), area(), body(isStatic=True), &quot;ground&quot;])
+
+
+def flap():
+    bean.jump(FLAP)
+
+
+onKeyPress(&quot;space&quot;, flap)
+onKeyPress(&quot;up&quot;, flap)
+onClick(flap)</code></pre>
+
+<p>Bean drops as soon as the game starts, so be quick. Press
+<strong>space</strong>, <strong>up</strong> or click to flap.</p>
+
+<ul>
+<li><code>setGravity(1600)</code> makes anything with a <code>body()</code>
+fall. Bean has one, so Bean falls.</li>
+<li>The grass is a rectangle with <code>body(isStatic=True)</code>, so it is
+solid and never moves. Bean lands on it.</li>
+<li><code>bean.jump(FLAP)</code> throws Bean upwards. In most platform games
+you check <code>isGrounded()</code> first so the player can't jump in mid-air.
+Here jumping in mid-air is the whole game, so there's no check.</li>
+</ul>
+
+<p><code>onKeyPress("space", flap)</code> means "when space is pressed, run
+<code>flap</code>." It's the same as writing <code>@onKeyPress("space")</code>
+above a function, but because three things all do the same job, it's
+shorter to write <code>flap</code> once and hand it to all three.</p>
+
+<div class="callout"><p><strong>No brackets after <code>flap</code>.</strong>
+<code>onKeyPress("space", flap)</code> hands over the function, to be run
+later. <code>onKeyPress("space", flap())</code> runs it right now, once, and
+hands over what it gave back, which is nothing. There's no error message. Bean
+flaps once by itself at the start, and after that the space bar does
+nothing.</p></div>
+
+<h2 id="step-2-pipes">Step 2 — pipes</h2>
+
+<p>Every 1.55 seconds a pair of pipes appears just off the right-hand edge
+and slides left.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+FLAP = 520            # how hard a flap pushes Bean up
+GROUND = 60           # how tall the strip of grass is
+PIPE_WIDTH = 70
+MARGIN = 90           # how close to the top or the grass a gap may be
+GAP = 210             # the hole between the pipes
+SPEED = 190           # how fast the pipes slide, in pixels per second
+WAIT = 1.55           # seconds between pipes
+
+kaypy(width=800, height=600, background=[121, 189, 220])
+setGravity(1600)
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+bean = add([sprite(&quot;bean&quot;), pos(180, 240), anchor(&quot;center&quot;), area(), body(),
+            z(5)])
+
+# The grass. It is solid, so Bean lands on it.
+add([rect(width(), GROUND), pos(0, height() - GROUND),
+     color(96, 156, 76), area(), body(isStatic=True), &quot;ground&quot;])
+
+next_pipe = WAIT      # seconds until the next pair of pipes
+
+
+def flap():
+    bean.jump(FLAP)
+
+
+onKeyPress(&quot;space&quot;, flap)
+onKeyPress(&quot;up&quot;, flap)
+onClick(flap)
+
+
+@onUpdate
+def each_frame():
+    global next_pipe
+
+    next_pipe = next_pipe - dt()
+    if next_pipe &lt;= 0:
+        add_pipes()
+        next_pipe = WAIT
+
+
+def add_pipes():
+    # Where the gap starts, picked at random.
+    top = rand(MARGIN, height() - GROUND - MARGIN - GAP)
+    bottom = top + GAP
+    x = width()             # just off the right-hand edge
+
+    # The pipe above the gap, from the top of the window down.
+    add([rect(PIPE_WIDTH, top), pos(x, 0), color(76, 145, 65),
+         outline(4, (46, 100, 40)), area(), &quot;pipe&quot;, &quot;slides&quot;])
+
+    # The pipe below the gap, from the gap down to the grass.
+    add([rect(PIPE_WIDTH, height() - GROUND - bottom), pos(x, bottom),
+         color(76, 145, 65), outline(4, (46, 100, 40)), area(),
+         &quot;pipe&quot;, &quot;slides&quot;])
+
+
+@onUpdate(&quot;slides&quot;)
+def slide(thing):
+    thing.move(-SPEED, 0)
+
+    # Gone off the left-hand edge? Throw it away.
+    if thing.pos.x &lt; -PIPE_WIDTH - 20:
+        thing.destroy()</code></pre>
+
+<p><strong>The countdown.</strong> <code>next_pipe</code> is how many seconds
+until the next pair. <code>dt()</code> is how long the last frame took, so
+taking it away every frame counts down in real seconds. When it reaches zero,
+<code>add_pipes()</code> makes a pair and the countdown starts again.</p>
+
+<p><strong>Two pipes and a gap.</strong> The gap is <code>GAP</code> pixels
+tall, and <code>top</code> is where it starts, picked at random. The top pipe
+runs from the top of the window down to <code>top</code>. The bottom pipe
+starts at <code>bottom</code>, the bottom of the gap, and runs down to the
+grass. <code>MARGIN</code> keeps the gap from being so near the top or the
+grass that you couldn't get through it.</p>
+
+<p><strong>Sliding.</strong> Both pipes are tagged <code>"slides"</code>, and
+<code>@onUpdate("slides")</code> runs <code>slide</code> once a frame for
+every object with that tag, handing each one in as <code>thing</code>. Once a
+pipe is off the left-hand edge it is destroyed. Without that, the game would
+keep every pipe it ever made, and after a few minutes there would be hundreds
+of them out of sight, all still being moved every frame.</p>
+
+<p>Bean now has <code>z(5)</code> in its list. Things are drawn in the order
+they were added, so the pipes, added after Bean, would be drawn over it.
+A higher <code>z</code> is drawn in front, so 5 keeps Bean in front of the
+pipes, which have none.</p>
+
+<p>The pipes have an <code>area()</code> but no <code>body()</code>. Bean flies
+straight through them for now. With a <code>body()</code> they would shove
+Bean out of the way instead, which looks like the game is broken rather than
+like you lost. Step 4 makes touching one the end of the game.</p>
+
+<h2 id="step-3-points">Step 3 — points</h2>
+
+<p>A point is for getting <em>past</em> a pair of pipes. The simplest way to
+notice that is to put something invisible in the gap and score a point when
+Bean touches it.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+FLAP = 520            # how hard a flap pushes Bean up
+GROUND = 60           # how tall the strip of grass is
+PIPE_WIDTH = 70
+MARGIN = 90           # how close to the top or the grass a gap may be
+GAP = 210             # the hole between the pipes
+SPEED = 190           # how fast the pipes slide, in pixels per second
+WAIT = 1.55           # seconds between pipes
+
+kaypy(width=800, height=600, background=[121, 189, 220])
+setGravity(1600)
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+bean = add([sprite(&quot;bean&quot;), pos(180, 240), anchor(&quot;center&quot;), area(), body(),
+            z(5)])
+
+# The grass. It is solid, so Bean lands on it.
+add([rect(width(), GROUND), pos(0, height() - GROUND),
+     color(96, 156, 76), area(), body(isStatic=True), &quot;ground&quot;])
+
+next_pipe = WAIT      # seconds until the next pair of pipes
+score = 0
+
+score_label = add([text(&quot;0&quot;, size=48), pos(width() / 2, 40),
+                   anchor(&quot;center&quot;), z(10)])
+
+
+def flap():
+    bean.jump(FLAP)
+
+
+onKeyPress(&quot;space&quot;, flap)
+onKeyPress(&quot;up&quot;, flap)
+onClick(flap)
+
+
+@onUpdate
+def each_frame():
+    global next_pipe
+
+    next_pipe = next_pipe - dt()
+    if next_pipe &lt;= 0:
+        add_pipes()
+        next_pipe = WAIT
+
+
+def add_pipes():
+    # Where the gap starts, picked at random.
+    top = rand(MARGIN, height() - GROUND - MARGIN - GAP)
+    bottom = top + GAP
+    x = width()             # just off the right-hand edge
+
+    # The pipe above the gap, from the top of the window down.
+    add([rect(PIPE_WIDTH, top), pos(x, 0), color(76, 145, 65),
+         outline(4, (46, 100, 40)), area(), &quot;pipe&quot;, &quot;slides&quot;])
+
+    # The pipe below the gap, from the gap down to the grass.
+    add([rect(PIPE_WIDTH, height() - GROUND - bottom), pos(x, bottom),
+         color(76, 145, 65), outline(4, (46, 100, 40)), area(),
+         &quot;pipe&quot;, &quot;slides&quot;])
+
+    # An invisible strip across the gap, at the BACK of the pipes.
+    # Touching it scores the point.
+    add([rect(6, GAP), pos(x + PIPE_WIDTH - 6, top), opacity(0),
+         area(), &quot;point&quot;, &quot;slides&quot;])
+
+
+@onUpdate(&quot;slides&quot;)
+def slide(thing):
+    thing.move(-SPEED, 0)
+
+    # Gone off the left-hand edge? Throw it away.
+    if thing.pos.x &lt; -PIPE_WIDTH - 20:
+        thing.destroy()
+
+
+@bean.onCollide(&quot;point&quot;)
+def scored(strip):
+    global score
+
+    strip.destroy()
+    score = score + 1
+    score_label.text = str(score)</code></pre>
+
+<p>The strip is a rectangle 6 pixels wide and as tall as the gap, with
+<code>opacity(0)</code> so you can't see it. It's tagged <code>"slides"</code>
+too, so it moves along with its pipes without any code of its own.</p>
+
+<p>It sits at the <em>back</em> of the pipes, <code>x + PIPE_WIDTH - 6</code>,
+not the front. Put it at the front and you'd get the point the moment you
+flew into the gap, and could then hit the pipe on the way through. That feels
+like the game cheating you. A point should mean "got past that one".</p>
+
+<p><code>@bean.onCollide("point")</code> runs once, at the moment Bean first
+touches a strip, not on every frame they overlap, so one strip is one point.
+Once it has scored, the strip has done its job, and
+<code>strip.destroy()</code> gets rid of it.</p>
+
+<div class="callout"><p><strong>Don't forget <code>global</code>.</strong>
+Take out <code>global score</code> and the first point crashes the game with
+<code>UnboundLocalError: cannot access local variable 'score' where it is not
+associated with a value</code>. Without <code>global</code>, Python thinks
+<code>score = score + 1</code> is about a new variable of
+<code>scored</code>'s own, and that one has no value yet to add 1 to.</p></div>
+
+<h2 id="step-4-game-over-and-again">Step 4 — game over, and again</h2>
+
+<p>Touching a pipe or the grass, or flying off the top of the window, now
+ends the game. Flap again and a new one starts.</p>
+
+<p>Starting again means throwing away every pipe and building everything
+fresh. That's what a <strong>scene</strong> is for. Everything from Bean down
+moves inside <code>@scene("game")</code>, one step further in, and
+<code>go("game")</code> builds it. Calling <code>go("game")</code> again
+throws the whole scene away and builds it from the start.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+FLAP = 520            # how hard a flap pushes Bean up
+GROUND = 60           # how tall the strip of grass is
+PIPE_WIDTH = 70
+MARGIN = 90           # how close to the top or the grass a gap may be
+
+GAP = 210             # the hole between the pipes
+SPEED = 190           # how fast the pipes slide, in pixels per second
+WAIT = 1.55           # seconds between pipes
+
+kaypy(width=800, height=600, background=[121, 189, 220])
+setGravity(1600)
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+score = 0
+alive = True
+next_pipe = 0
+
+
+@scene(&quot;game&quot;)
+def game():
+    global score, alive, next_pipe
+
+    score = 0
+    alive = True
+    next_pipe = WAIT
+
+    bean = add([sprite(&quot;bean&quot;), pos(180, 240), anchor(&quot;center&quot;), area(),
+                body(), z(5)])
+
+    add([rect(width(), GROUND), pos(0, height() - GROUND),
+         color(96, 156, 76), area(), body(isStatic=True), &quot;ground&quot;])
+
+    score_label = add([text(&quot;0&quot;, size=48), pos(width() / 2, 40),
+                       anchor(&quot;center&quot;), z(10)])
+
+    # width=520 wraps a long message onto more than one line.
+    message = add([text(&quot;Press SPACE to flap&quot;, size=26, width=520),
+                   pos(width() / 2, height() / 2 + 40), anchor(&quot;center&quot;),
+                   z(10)])
+
+    def flap():
+        if alive:
+            bean.jump(FLAP)
+        else:
+            go(&quot;game&quot;)
+
+    onKeyPress(&quot;space&quot;, flap)
+    onKeyPress(&quot;up&quot;, flap)
+    onClick(flap)
+
+    @onUpdate
+    def each_frame():
+        global next_pipe
+
+        if not alive:
+            return
+
+        # Flying off the top is losing too.
+        if bean.pos.y &lt; -40:
+            die()
+
+        next_pipe = next_pipe - dt()
+        if next_pipe &lt;= 0:
+            add_pipes()
+            next_pipe = WAIT
+
+    def add_pipes():
+        top = rand(MARGIN, height() - GROUND - MARGIN - GAP)
+        bottom = top + GAP
+        x = width()
+
+        add([rect(PIPE_WIDTH, top), pos(x, 0), color(76, 145, 65),
+             outline(4, (46, 100, 40)), area(), &quot;pipe&quot;, &quot;slides&quot;])
+
+        add([rect(PIPE_WIDTH, height() - GROUND - bottom), pos(x, bottom),
+             color(76, 145, 65), outline(4, (46, 100, 40)), area(),
+             &quot;pipe&quot;, &quot;slides&quot;])
+
+        add([rect(6, GAP), pos(x + PIPE_WIDTH - 6, top), opacity(0),
+             area(), &quot;point&quot;, &quot;slides&quot;])
+
+    @onUpdate(&quot;slides&quot;)
+    def slide(thing):
+        if not alive:
+            return
+        thing.move(-SPEED, 0)
+        if thing.pos.x &lt; -PIPE_WIDTH - 20:
+            thing.destroy()
+
+    @bean.onCollide(&quot;point&quot;)
+    def scored(strip):
+        global score
+
+        if not alive:
+            return
+
+        strip.destroy()
+        score = score + 1
+        score_label.text = str(score)
+
+        if score == 1:
+            message.text = &quot;&quot;
+
+    @bean.onCollide(&quot;pipe&quot;)
+    def hit_pipe(pipe):
+        die()
+
+    @bean.onCollide(&quot;ground&quot;)
+    def hit_ground(ground):
+        die()
+
+    def die():
+        global alive
+
+        if not alive:
+            return
+        alive = False
+
+        shake(10)
+
+        if score == 1:
+            message.text = &quot;1 point -- press SPACE to try again&quot;
+        else:
+            message.text = (str(score)
+                            + &quot; points -- press SPACE to try again&quot;)
+
+
+go(&quot;game&quot;)</code></pre>
+
+<p><strong><code>alive</code></strong> is <code>True</code> while you're
+flying. <code>die()</code> sets it to <code>False</code>, and everything else
+checks it:</p>
+
+<ul>
+<li><code>flap</code> starts a new game instead of flapping.</li>
+<li><code>slide</code> stops moving the pipes, so they freeze where they
+are.</li>
+<li><code>each_frame</code> stops counting down to more pipes.</li>
+<li><code>die</code> itself does nothing the second time. Hitting a pipe is
+nearly always followed by falling onto the grass, and that calls
+<code>die()</code> again. Without the check you would get a second shake, and
+the message written all over again.</li>
+</ul>
+
+<p>Bean still has its <code>body()</code>, so after dying it keeps falling
+until it lands on the grass. That reads as losing. If Bean froze in mid-air
+too, it would look as if the game had crashed.</p>
+
+<p>The variables are set back to their starting values at the top of the
+scene, because the scene is built again every game. Leave out
+<code>score = 0</code> and your next game would start with the last game's
+score.</p>
+
+<p><code>text(..., width=520)</code> wraps the message onto two lines when
+it is longer than 520 pixels, which the game-over message is.</p>
+
+<h2 id="step-5-harder-as-you-go">Step 5 — harder as you go</h2>
+
+<p>The gap, the speed and the time between pipes were fixed numbers. Now each
+one is worked out from the score by a small function.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+FLAP = 520            # how hard a flap pushes Bean up
+GROUND = 60           # how tall the strip of grass is
+PIPE_WIDTH = 70
+MARGIN = 90           # how close to the top or the grass a gap may be
+
+GAP_START = 210       # the hole between the pipes, to begin with
+GAP_SMALLEST = 130    # ...the smallest it ever gets
+GAP_SHRINK = 6        # ...and how much smaller each point makes it
+
+SPEED_START = 190     # how fast the pipes slide, in pixels per second
+SPEED_FASTEST = 420   # ...the fastest they ever go
+SPEED_GAIN = 9        # ...and how much faster each point makes them
+
+WAIT_START = 1.55     # seconds between pipes, to begin with
+WAIT_SHORTEST = 0.95  # ...the shortest wait there ever is
+WAIT_DROP = 0.02      # ...and how much shorter each point makes it
+
+kaypy(width=800, height=600, background=[121, 189, 220])
+setGravity(1600)
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+score = 0
+alive = True
+next_pipe = 0
+
+
+def gap_size():
+    gap = GAP_START - score * GAP_SHRINK
+    if gap &lt; GAP_SMALLEST:
+        gap = GAP_SMALLEST
+    return gap
+
+
+def pipe_speed():
+    speed = SPEED_START + score * SPEED_GAIN
+    if speed &gt; SPEED_FASTEST:
+        speed = SPEED_FASTEST
+    return speed
+
+
+def pipe_wait():
+    seconds = WAIT_START - score * WAIT_DROP
+    if seconds &lt; WAIT_SHORTEST:
+        seconds = WAIT_SHORTEST
+    return seconds
+
+
+@scene(&quot;game&quot;)
+def game():
+    global score, alive, next_pipe
+
+    score = 0
+    alive = True
+    next_pipe = pipe_wait()
+
+    bean = add([sprite(&quot;bean&quot;), pos(180, 240), anchor(&quot;center&quot;), area(),
+                body(), z(5)])
+
+    add([rect(width(), GROUND), pos(0, height() - GROUND),
+         color(96, 156, 76), area(), body(isStatic=True), &quot;ground&quot;])
+
+    score_label = add([text(&quot;0&quot;, size=48), pos(width() / 2, 40),
+                       anchor(&quot;center&quot;), z(10)])
+
+    # width=520 wraps a long message onto more than one line.
+    message = add([text(&quot;Press SPACE to flap&quot;, size=26, width=520),
+                   pos(width() / 2, height() / 2 + 40), anchor(&quot;center&quot;),
+                   z(10)])
+
+    def flap():
+        if alive:
+            bean.jump(FLAP)
+        else:
+            go(&quot;game&quot;)
+
+    onKeyPress(&quot;space&quot;, flap)
+    onKeyPress(&quot;up&quot;, flap)
+    onClick(flap)
+
+    @onUpdate
+    def each_frame():
+        global next_pipe
+
+        if not alive:
+            return
+
+        # Flying off the top is losing too.
+        if bean.pos.y &lt; -40:
+            die()
+
+        next_pipe = next_pipe - dt()
+        if next_pipe &lt;= 0:
+            add_pipes()
+            next_pipe = pipe_wait()
+
+    def add_pipes():
+        gap = gap_size()
+        top = rand(MARGIN, height() - GROUND - MARGIN - gap)
+        bottom = top + gap
+        x = width()
+
+        add([rect(PIPE_WIDTH, top), pos(x, 0), color(76, 145, 65),
+             outline(4, (46, 100, 40)), area(), &quot;pipe&quot;, &quot;slides&quot;])
+
+        add([rect(PIPE_WIDTH, height() - GROUND - bottom), pos(x, bottom),
+             color(76, 145, 65), outline(4, (46, 100, 40)), area(),
+             &quot;pipe&quot;, &quot;slides&quot;])
+
+        add([rect(6, gap), pos(x + PIPE_WIDTH - 6, top), opacity(0),
+             area(), &quot;point&quot;, &quot;slides&quot;])
+
+    @onUpdate(&quot;slides&quot;)
+    def slide(thing):
+        if not alive:
+            return
+        thing.move(-pipe_speed(), 0)
+        if thing.pos.x &lt; -PIPE_WIDTH - 20:
+            thing.destroy()
+
+    @bean.onCollide(&quot;point&quot;)
+    def scored(strip):
+        global score
+
+        if not alive:
+            return
+
+        strip.destroy()
+        score = score + 1
+        score_label.text = str(score)
+
+        if score == 1:
+            message.text = &quot;&quot;
+
+        if score == 5 or score == 10 or score == 20:
+            message.text = &quot;faster!&quot;
+
+            @wait(0.8)
+            def clear_message():
+                # Only if you are still flying -- otherwise this would wipe
+                # out the game-over message.
+                if alive:
+                    message.text = &quot;&quot;
+
+    @bean.onCollide(&quot;pipe&quot;)
+    def hit_pipe(pipe):
+        die()
+
+    @bean.onCollide(&quot;ground&quot;)
+    def hit_ground(ground):
+        die()
+
+    def die():
+        global alive
+
+        if not alive:
+            return
+        alive = False
+
+        shake(10)
+
+        if score == 1:
+            message.text = &quot;1 point -- press SPACE to try again&quot;
+        else:
+            message.text = (str(score)
+                            + &quot; points -- press SPACE to try again&quot;)
+
+
+go(&quot;game&quot;)</code></pre>
+
+<p>Take <code>gap_size()</code>. It starts at <code>GAP_START</code>, 210
+pixels, and takes off 6 for every point. At 10 points that's
+<code>210 - 10 * 6</code>, which is 150. At 20 points it would be 90, but the
+<code>if</code> stops it at <code>GAP_SMALLEST</code>, 130. The other two work
+the same way.</p>
+
+<p>Those stops matter. Without them, the gap keeps shrinking until Bean can't
+fit through it, and nobody could get past about thirty points. A game that gets
+harder and then levels off is one people keep playing.</p>
+
+<p>At 5, 10 and 20 points the message says "faster!" for 0.8 seconds.
+<code>clear_message</code> checks <code>alive</code> before clearing it. If
+you die within 0.8 seconds of reaching 5 points, the "faster!" timer is still
+counting, and without that check it would wipe out your game-over message.</p>
+
+<h2 id="step-6-the-whole-game">Step 6 — the whole game</h2>
+
+<p>This is the game exactly as it is on the <a href="../../games/">games
+page</a>. It adds two things to step 5:</p>
+
+<ul>
+<li><strong>Bean tilts.</strong> Nose up while rising, nose down while
+falling. It's not just for looks: it's the quickest way to see whether you
+are still going up or already coming down.</li>
+<li><strong>A best score that is remembered.</strong>
+<code>getData(BEST_KEY, 0)</code> reads the best score saved last time, or 0
+if there isn't one, and <code>setData</code> saves a new one when you beat
+it.</li>
+</ul>
+
+<p>The tilt needs to know how fast Bean is falling. Nothing tells the game
+that, so it works it out: <code>last_y</code> remembers where Bean was last
+frame, and how far Bean moved divided by how long the frame took is its
+speed, in pixels per second. Multiply by <code>0.06</code> and you get an
+angle, and <code>clamp()</code> keeps that angle between −28 (nose up) and 75
+(nose down). <code>rotate(0)</code> in Bean's list is what lets Bean turn at
+all; without it, setting <code>bean.angle</code> does nothing.</p>
+
+<p>It also has all the numbers worth changing in one settings block near the
+top, and comments that explain why each part is there.</p>
+
+<pre><code class="language-python">&quot;&quot;&quot;Flappy Bean -- flap through the gaps, and don&#x27;t touch anything.
+
+    space, up or click   flap
+
+Bean is always falling, and every flap pushes it back up. Fly through the
+gap between each pair of pipes for a point. The more points you have, the
+faster the pipes come and the smaller the gaps get. Touch a pipe or the
+grass, or fly off the top, and it is game over. Your best score is
+remembered.
+
+HOW THIS FILE IS PUT TOGETHER
+
+    1. the window and the picture
+    2. the settings
+    3. how hard the game is
+    4. the game scene: Bean, the grass, the pipes, points, dying
+    5. start the game
+
+The pipes are plain rectangles, so there is no art to find, and every number
+that shapes the game is in the settings, ready to be argued about.
+&quot;&quot;&quot;
+
+from kaypy import *
+
+# ----------------------------------------------------------------- 1. setup
+
+kaypy(width=800, height=600, background=[121, 189, 220])
+
+# How hard Bean falls. Lower it and Bean floats; raise it and Bean drops
+# like a stone.
+setGravity(1600)
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+
+# -------------------------------------------------------------- 2. settings
+#
+# Everything you would want to change is here. Change one at a time and
+# play it -- that is the whole point of having them in one place.
+
+FLAP = 520            # how hard a flap pushes Bean up
+GROUND = 60           # how tall the strip of grass is
+
+PIPE_WIDTH = 70
+MARGIN = 90           # how close to the top or the grass a gap may be
+
+GAP_START = 210       # the hole between the pipes, to begin with
+GAP_SMALLEST = 130    # ...the smallest it ever gets
+GAP_SHRINK = 6        # ...and how much smaller each point makes it
+
+SPEED_START = 190     # how fast the pipes slide, in pixels per second
+SPEED_FASTEST = 420   # ...the fastest they ever go
+SPEED_GAIN = 9        # ...and how much faster each point makes them
+
+WAIT_START = 1.55     # seconds between pipes, to begin with
+WAIT_SHORTEST = 0.95  # ...the shortest wait there ever is
+WAIT_DROP = 0.02      # ...and how much shorter each point makes it
+
+# The name the best score is saved under. Every game on a website shares
+# the same storage, so the game&#x27;s own name goes in it -- a plain &quot;best&quot;
+# would be overwritten by the next game that saved one.
+BEST_KEY = &quot;flappy_best&quot;
+
+
+# -------------------------------------------------- 3. how hard the game is
+#
+# Each of these works out a number from the score. They all get harder as
+# the score goes up, and they all stop somewhere, so the game ends up hard
+# but never impossible. Without the stops, nobody could get past about
+# thirty points.
+
+score = 0
+
+
+def gap_size():
+    gap = GAP_START - score * GAP_SHRINK
+    if gap &lt; GAP_SMALLEST:
+        gap = GAP_SMALLEST
+    return gap
+
+
+def pipe_speed():
+    speed = SPEED_START + score * SPEED_GAIN
+    if speed &gt; SPEED_FASTEST:
+        speed = SPEED_FASTEST
+    return speed
+
+
+def pipe_wait():
+    seconds = WAIT_START - score * WAIT_DROP
+    if seconds &lt; WAIT_SHORTEST:
+        seconds = WAIT_SHORTEST
+    return seconds
+
+
+# ------------------------------------------------------- 4. the game scene
+#
+# These change while you play. A function that CHANGES one has to say
+# `global` first, which means &quot;the one up here, not a new one of my own&quot;.
+
+alive = True
+next_pipe = 0       # seconds until the next pair of pipes
+last_y = 0          # where Bean was last frame, for the tilt
+
+
+@scene(&quot;game&quot;)
+def game():
+    global score, alive, next_pipe, last_y
+
+    # A new game, so everything starts again.
+    score = 0
+    alive = True
+    next_pipe = pipe_wait()
+    best = getData(BEST_KEY, 0)
+
+    # rotate(0) lets Bean tilt. It starts level. z(5) draws Bean in front
+    # of the pipes, which are added later and would otherwise cover it.
+    bean = add([sprite(&quot;bean&quot;), pos(180, 240), anchor(&quot;center&quot;), rotate(0),
+                area(), body(), z(5)])
+    last_y = bean.pos.y
+
+    # The grass. It is solid, so Bean lands on it -- and landing on it is
+    # losing.
+    add([rect(width(), GROUND), pos(0, height() - GROUND),
+         color(96, 156, 76), area(), body(isStatic=True), &quot;ground&quot;])
+
+    score_label = add([text(&quot;0&quot;, size=48), pos(width() / 2, 40),
+                       anchor(&quot;center&quot;), z(10)])
+    best_label = add([text(&quot;best &quot; + str(best), size=18), pos(12, 12),
+                      opacity(0.75), z(10)])
+
+    # width=520 wraps a long message onto more than one line.
+    message = add([text(&quot;Press SPACE to flap&quot;, size=26, width=520),
+                   pos(width() / 2, height() / 2 + 40), anchor(&quot;center&quot;),
+                   z(10)])
+
+    # ------------------------------------------------------------ flapping
+    #
+    # Three ways to flap, all doing the same thing. Once the game is over,
+    # a flap starts a new one.
+
+    def flap():
+        if alive:
+            bean.jump(FLAP)
+        else:
+            go(&quot;game&quot;)
+
+    onKeyPress(&quot;space&quot;, flap)
+    onKeyPress(&quot;up&quot;, flap)
+    onClick(flap)
+
+    # --------------------------------------------------------- every frame
+
+    @onUpdate
+    def each_frame():
+        global next_pipe, last_y
+
+        if not alive:
+            return
+
+        # Tilt Bean nose-up while it rises and nose-down while it falls. How
+        # far it moved this frame, divided by how long the frame took, is
+        # how fast it is going. (dt() is never 0 while the game runs, but
+        # dividing by 0 would crash it, so it is checked anyway.)
+        if dt() &gt; 0:
+            falling_speed = (bean.pos.y - last_y) / dt()
+            bean.angle = clamp(falling_speed * 0.06, -28, 75)
+        last_y = bean.pos.y
+
+        # Flying off the top is losing too. Without this you could fly
+        # above the pipes and score for ever.
+        if bean.pos.y &lt; -40:
+            die()
+
+        # Time for more pipes? dt() is how long this frame took, so taking
+        # it away every frame counts down in real seconds.
+        next_pipe = next_pipe - dt()
+        if next_pipe &lt;= 0:
+            add_pipes()
+            next_pipe = pipe_wait()
+
+    # --------------------------------------------------------------- pipes
+
+    def add_pipes():
+        gap = gap_size()
+
+        # Where the gap starts, picked at random -- but never so near the
+        # top, or the grass, that you could not fly through it.
+        top = rand(MARGIN, height() - GROUND - MARGIN - gap)
+        bottom = top + gap
+        x = width()             # just off the right-hand edge
+
+        # The pipes have area() but NOT body(). Bean flies into them rather
+        # than bouncing off, and touching one ends the game.
+
+        # The pipe above the gap, from the top of the window down.
+        add([rect(PIPE_WIDTH, top), pos(x, 0), color(76, 145, 65),
+             outline(4, (46, 100, 40)), area(), &quot;pipe&quot;, &quot;slides&quot;])
+
+        # The pipe below the gap, from the gap down to the grass.
+        add([rect(PIPE_WIDTH, height() - GROUND - bottom), pos(x, bottom),
+             color(76, 145, 65), outline(4, (46, 100, 40)), area(),
+             &quot;pipe&quot;, &quot;slides&quot;])
+
+        # An invisible strip across the gap. Touching it is what scores the
+        # point. It sits at the BACK of the pipes, so the point only comes
+        # once you are through -- not the moment you fly into the gap.
+        add([rect(6, gap), pos(x + PIPE_WIDTH - 6, top), opacity(0),
+             area(), &quot;point&quot;, &quot;slides&quot;])
+
+    # Everything tagged &quot;slides&quot; -- both pipes and the strip -- moves left.
+    @onUpdate(&quot;slides&quot;)
+    def slide(thing):
+        if not alive:
+            return
+        thing.move(-pipe_speed(), 0)
+
+        # Gone off the left-hand edge? Throw it away. Otherwise the game
+        # keeps every pipe it ever made, and after a few minutes there are
+        # hundreds of them out of sight, all still being moved.
+        if thing.pos.x &lt; -PIPE_WIDTH - 20:
+            thing.destroy()
+
+    # -------------------------------------------------------------- points
+
+    @bean.onCollide(&quot;point&quot;)
+    def scored(strip):
+        global score
+
+        if not alive:
+            return
+
+        strip.destroy()
+        score = score + 1
+        score_label.text = str(score)
+
+        if score == 1:
+            message.text = &quot;&quot;
+
+        if score == 5 or score == 10 or score == 20:
+            message.text = &quot;faster!&quot;
+
+            @wait(0.8)
+            def clear_message():
+                # Only if you are still flying -- otherwise this would wipe
+                # out the game-over message.
+                if alive:
+                    message.text = &quot;&quot;
+
+    # ------------------------------------------------------------- dying
+
+    @bean.onCollide(&quot;pipe&quot;)
+    def hit_pipe(pipe):
+        die()
+
+    @bean.onCollide(&quot;ground&quot;)
+    def hit_ground(ground):
+        die()
+
+    def die():
+        global alive
+
+        # Hit a pipe and Bean falls onto the grass -- that is a second call
+        # to die(), and only the first one should count.
+        if not alive:
+            return
+        alive = False
+
+        shake(10)
+
+        if score &gt; best:
+            setData(BEST_KEY, score)
+            best_label.text = &quot;best &quot; + str(score)
+
+        if score == 1:
+            message.text = &quot;1 point -- press SPACE to try again&quot;
+        else:
+            message.text = (str(score)
+                            + &quot; points -- press SPACE to try again&quot;)
+
+        # Nothing else is needed to stop the pipes: slide() does nothing
+        # once alive is False. Bean has a body(), so it keeps falling until
+        # it lands on the grass.
+
+
+# ------------------------------------------------------- 5. start the game
+
+go(&quot;game&quot;)</code></pre>
+
+<h2 id="make-it-yours">Make it yours</h2>
+
+<ul>
+<li><strong>Change the numbers.</strong> <code>FLAP</code> and the gravity
+together decide how Bean feels. Try <code>setGravity(800)</code> with
+<code>FLAP = 360</code> for a floatier Bean.</li>
+<li><strong>Change the steps.</strong> Make <code>GAP_SMALLEST</code> bigger
+and the game never gets as hard. Make <code>SPEED_GAIN</code> 0 and the pipes
+never speed up at all.</li>
+<li><strong>A sound for each point.</strong> <code>loadSound("point",
+"sounds/small_beep.wav")</code> near the top, and <code>play("point")</code>
+in <code>scored</code>. Then one in <code>die</code> as well.</li>
+<li><strong>Coloured pipes.</strong> Change <code>color(76, 145, 65)</code> to
+pick a colour at random for each pair, with <code>randi(0, 256)</code> for
+each of the three numbers. Work it out once in <code>add_pipes</code> so both
+pipes of a pair match.</li>
+</ul>
+
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>

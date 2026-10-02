@@ -1,300 +1,288 @@
-"""Flappy Bean — space (or click) to flap, don't touch anything.
+"""Flappy Bean -- flap through the gaps, and don't touch anything.
 
-Put this next to your images/ folder and run it:
+    space, up or click   flap
 
-    python game.py
+Bean is always falling, and every flap pushes it back up. Fly through the
+gap between each pair of pipes for a point. The more points you have, the
+faster the pipes come and the smaller the gaps get. Touch a pipe or the
+grass, or fly off the top, and it is game over. Your best score is
+remembered.
 
-The pipes are plain rectangles, so there is no art to find and every number
-that shapes the game is right here in the settings block, ready to be argued
-about.
+HOW THIS FILE IS PUT TOGETHER
+
+    1. the window and the picture
+    2. the settings
+    3. how hard the game is
+    4. the game scene: Bean, the grass, the pipes, points, dying
+    5. start the game
+
+The pipes are plain rectangles, so there is no art to find, and every number
+that shapes the game is in the settings, ready to be argued about.
 """
+
 from kaypy import *
+
+# ----------------------------------------------------------------- 1. setup
 
 kaypy(width=800, height=600, background=[121, 189, 220])
 
-loadSprite("bean", "images/bean.png")
+# How hard Bean falls. Lower it and Bean floats; raise it and Bean drops
+# like a stone.
 setGravity(1600)
 
-# ---------------------------------------------------------------- settings
+loadSprite("bean", "images/bean.png")
+
+
+# -------------------------------------------------------------- 2. settings
 #
-# Everything you would want to change is here. Change one at a time and play
-# it — that is the whole point of having them in one place.
+# Everything you would want to change is here. Change one at a time and
+# play it -- that is the whole point of having them in one place.
 
-FLAP = 520          # how hard a flap pushes upward
-GRAVITY = 1600      # set above, in setGravity()
-GROUND = 60         # the height of the grass strip
+FLAP = 520            # how hard a flap pushes Bean up
+GROUND = 60           # how tall the strip of grass is
 
-GAP_START = 210     # the hole between pipes, to begin with
-GAP_MIN = 130       # and the smallest it ever gets
-GAP_SHRINK = 6      # how much narrower each point makes it
+PIPE_WIDTH = 70
+MARGIN = 90           # how close to the top or the grass a gap may be
 
-SPEED_START = 190   # how fast the world slides past, in pixels per second
-SPEED_MAX = 420
-SPEED_GAIN = 9      # added per point
+GAP_START = 210       # the hole between the pipes, to begin with
+GAP_SMALLEST = 130    # ...the smallest it ever gets
+GAP_SHRINK = 6        # ...and how much smaller each point makes it
 
-SPACING = 1.55      # seconds between pipes at the start
-SPACING_MIN = 0.95
+SPEED_START = 190     # how fast the pipes slide, in pixels per second
+SPEED_FASTEST = 420   # ...the fastest they ever go
+SPEED_GAIN = 9        # ...and how much faster each point makes them
 
-PIPE_W = 70
-MARGIN = 90         # how close to the top or bottom a gap may sit
+WAIT_START = 1.55     # seconds between pipes, to begin with
+WAIT_SHORTEST = 0.95  # ...the shortest wait there ever is
+WAIT_DROP = 0.02      # ...and how much shorter each point makes it
+
+# The name the best score is saved under. Every game on a website shares
+# the same storage, so the game's own name goes in it -- a plain "best"
+# would be overwritten by the next game that saved one.
+BEST_KEY = "flappy_best"
 
 
-# ---------------------------------------------------------------- the state
+# -------------------------------------------------- 3. how hard the game is
 #
-# One dict rather than a pile of globals, so the handlers below can change
-# it without every one of them needing a `global` line. A student can read
-# `state["score"]` and know exactly what it is.
-state = {
-    "score": 0,
-    "alive": True,
-    "best": getData("flappy_best", 0),
-    # Which game this is. See next_pipe() — it is the whole reason restarting
-    # does not slowly turn the game into a pipe machine gun.
-    "run": 0,
-}
+# Each of these works out a number from the score. They all get harder as
+# the score goes up, and they all stop somewhere, so the game ends up hard
+# but never impossible. Without the stops, nobody could get past about
+# thirty points.
+
+score = 0
 
 
-def difficulty():
-    """How hard the game is right now, from the score.
-
-    Both numbers move together and both are clamped, so the game gets
-    harder for a while and then settles into something a person can
-    actually play. Without the clamp it becomes impossible at about
-    thirty points, which is a worse game than one that plateaus.
-    """
-    n = state["score"]
-    gap = max(GAP_MIN, GAP_START - n * GAP_SHRINK)
-    speed = min(SPEED_MAX, SPEED_START + n * SPEED_GAIN)
-    spacing = max(SPACING_MIN, SPACING - n * 0.02)
-    return gap, speed, spacing
+def gap_size():
+    gap = GAP_START - score * GAP_SHRINK
+    if gap < GAP_SMALLEST:
+        gap = GAP_SMALLEST
+    return gap
 
 
-# ------------------------------------------------------------------ the bird
-bird = add([
-    sprite("bean"),
-    pos(180, 240),
-    area(),
-    body(),
-    anchor("center"),
-    rotate(0),
-    "bird",
-])
-
-# The ground. It is solid, so landing on it is a collision like any other.
-add([
-    rect(width(), GROUND),
-    pos(0, height() - GROUND),
-    area(),
-    body(isStatic=True),
-    color(96, 156, 76),
-    "ground",
-])
+def pipe_speed():
+    speed = SPEED_START + score * SPEED_GAIN
+    if speed > SPEED_FASTEST:
+        speed = SPEED_FASTEST
+    return speed
 
 
-# ------------------------------------------------------------------- the HUD
-score_label = add([text("0", size=48), pos(width() / 2, 40),
-                   anchor("center"), color(255, 255, 255), fixed(), z(10)])
-
-best_label = add([text("best %d" % state["best"], size=18), pos(12, 12),
-                  color(255, 255, 255), opacity(0.75), fixed(), z(10)])
-
-message = add([text("", size=26, width=520), pos(width() / 2, height() / 2 + 40),
-               anchor("center"), color(255, 255, 255), fixed(), z(10)])
-
-message.text = "Press SPACE to flap"
+def pipe_wait():
+    seconds = WAIT_START - score * WAIT_DROP
+    if seconds < WAIT_SHORTEST:
+        seconds = WAIT_SHORTEST
+    return seconds
 
 
-# -------------------------------------------------------------------- pipes
-def spawn_pipe():
-    """One pair of rectangles with a hole between them.
+# ------------------------------------------------------- 4. the game scene
+#
+# These change while you play. A function that CHANGES one has to say
+# `global` first, which means "the one up here, not a new one of my own".
 
-    They carry area() but NOT body(), so they are triggers rather than
-    walls: the bird passes through them and the collision handler ends the
-    game. A body() here would shove the bird sideways instead, which looks
-    like the game is broken rather than like you lost.
-    """
-    if not state["alive"]:
-        return
+alive = True
+next_pipe = 0       # seconds until the next pair of pipes
+last_y = 0          # where Bean was last frame, for the tilt
 
-    gap, speed, _ = difficulty()
-    top = rand(MARGIN, height() - GROUND - MARGIN - gap)
-    x = width() + PIPE_W              # just off the right-hand edge
 
-    for y, h in [(0, top), (top + gap, height() - GROUND - top - gap)]:
-        add([
-            rect(PIPE_W, h),
-            pos(x, y),
-            area(),
-            color(76, 145, 65),
-            outline(4, rgb(46, 100, 40)),
-            move(vec2(-1, 0), speed),
-            "pipe",
-        ])
+@scene("game")
+def game():
+    global score, alive, next_pipe, last_y
 
-    # An invisible strip in the gap. Touching it is the point being scored,
-    # which is simpler and more reliable than watching a pipe's x go past
-    # the bird — a destroyed pipe cannot be asked where it is.
+    # A new game, so everything starts again.
+    score = 0
+    alive = True
+    next_pipe = pipe_wait()
+    best = getData(BEST_KEY, 0)
+
+    # rotate(0) lets Bean tilt. It starts level. z(5) draws Bean in front
+    # of the pipes, which are added later and would otherwise cover it.
+    bean = add([sprite("bean"), pos(180, 240), anchor("center"), rotate(0),
+                area(), body(), z(5)])
+    last_y = bean.pos.y
+
+    # The grass. It is solid, so Bean lands on it -- and landing on it is
+    # losing.
+    add([rect(width(), GROUND), pos(0, height() - GROUND),
+         color(96, 156, 76), area(), body(isStatic=True), "ground"])
+
+    score_label = add([text("0", size=48), pos(width() / 2, 40),
+                       anchor("center"), z(10)])
+    best_label = add([text("best " + str(best), size=18), pos(12, 12),
+                      opacity(0.75), z(10)])
+
+    # width=520 wraps a long message onto more than one line.
+    message = add([text("Press SPACE to flap", size=26, width=520),
+                   pos(width() / 2, height() / 2 + 40), anchor("center"),
+                   z(10)])
+
+    # ------------------------------------------------------------ flapping
     #
-    # It sits at the pipe's BACK edge, not its front. Put it at the front and
-    # the point lands the moment you enter the gap, so you can score and then
-    # clip the pipe on your way through — which reads as the game cheating
-    # you. A point should mean "got past that one".
-    add([
-        rect(6, gap),
-        pos(x + PIPE_W - 6, top),
-        area(),
-        opacity(0),
-        move(vec2(-1, 0), speed),
-        "point",
-    ])
+    # Three ways to flap, all doing the same thing. Once the game is over,
+    # a flap starts a new one.
 
+    def flap():
+        if alive:
+            bean.jump(FLAP)
+        else:
+            go("game")
 
-def next_pipe():
-    """Schedule the next pipe, at the spacing the current score asks for.
+    onKeyPress("space", flap)
+    onKeyPress("up", flap)
+    onClick(flap)
 
-    Each pipe schedules the one after it, so this is a chain rather than a
-    loop — that is what lets the spacing change as you score.
+    # --------------------------------------------------------- every frame
 
-    THE TICKET
+    @onUpdate
+    def each_frame():
+        global next_pipe, last_y
 
-    A chain that schedules itself has to be able to stop, and "stop" is not
-    just "am I alive". When you die there is almost always a wait() already
-    counting down. It fires a moment later, sees a living game again because
-    you have pressed space by then, and starts a SECOND chain — so the next
-    game gets pipes twice as fast, the one after that three times, and the
-    difficulty ramp appears to be broken.
-
-    So each chain carries the run number it was born in and stops the moment
-    that stops being the current one. Restart bumps the number, and every
-    chain from the previous game quietly retires.
-    """
-    if not state["alive"]:
-        return
-    mine = state["run"]
-    _, _, spacing = difficulty()
-
-    def tick():
-        if mine != state["run"] or not state["alive"]:
+        if not alive:
             return
-        spawn_pipe()
-        next_pipe()
 
-    wait(spacing, tick)
+        # Tilt Bean nose-up while it rises and nose-down while it falls. How
+        # far it moved this frame, divided by how long the frame took, is
+        # how fast it is going. (dt() is never 0 while the game runs, but
+        # dividing by 0 would crash it, so it is checked anyway.)
+        if dt() > 0:
+            falling_speed = (bean.pos.y - last_y) / dt()
+            bean.angle = clamp(falling_speed * 0.06, -28, 75)
+        last_y = bean.pos.y
 
+        # Flying off the top is losing too. Without this you could fly
+        # above the pipes and score for ever.
+        if bean.pos.y < -40:
+            die()
 
-# ------------------------------------------------------------------- playing
-def flap():
-    if state["alive"]:
-        bird.jump(FLAP)
-    else:
-        restart()
+        # Time for more pipes? dt() is how long this frame took, so taking
+        # it away every frame counts down in real seconds.
+        next_pipe = next_pipe - dt()
+        if next_pipe <= 0:
+            add_pipes()
+            next_pipe = pipe_wait()
 
+    # --------------------------------------------------------------- pipes
 
-onKeyPress("space", flap)
-onKeyPress("up", flap)
-onClick(flap)
+    def add_pipes():
+        gap = gap_size()
 
+        # Where the gap starts, picked at random -- but never so near the
+        # top, or the grass, that you could not fly through it.
+        top = rand(MARGIN, height() - GROUND - MARGIN - gap)
+        bottom = top + gap
+        x = width()             # just off the right-hand edge
 
-@onUpdate
-def tilt():
-    """Point the bird where it is going.
+        # The pipes have area() but NOT body(). Bean flies into them rather
+        # than bouncing off, and touching one ends the game.
 
-    Not decoration: it is the only feedback telling a player whether they
-    are still rising or already falling, which is most of what makes the
-    game readable.
-    """
-    if not state["alive"]:
-        return
-    speed = bird.comp("body").vel.y
-    bird.angle = max(-28, min(75, speed * 0.06))
+        # The pipe above the gap, from the top of the window down.
+        add([rect(PIPE_WIDTH, top), pos(x, 0), color(76, 145, 65),
+             outline(4, (46, 100, 40)), area(), "pipe", "slides"])
 
+        # The pipe below the gap, from the gap down to the grass.
+        add([rect(PIPE_WIDTH, height() - GROUND - bottom), pos(x, bottom),
+             color(76, 145, 65), outline(4, (46, 100, 40)), area(),
+             "pipe", "slides"])
 
-@onUpdate
-def tidy_up():
-    """Throw away pipes that have gone past the left edge.
+        # An invisible strip across the gap. Touching it is what scores the
+        # point. It sits at the BACK of the pipes, so the point only comes
+        # once you are through -- not the moment you fly into the gap.
+        add([rect(6, gap), pos(x + PIPE_WIDTH - 6, top), opacity(0),
+             area(), "point", "slides"])
 
-    Without this the game keeps every pipe it has ever made, and after a
-    few minutes there are hundreds of rectangles being moved and tested
-    for collision off-screen where nobody can see them.
+    # Everything tagged "slides" -- both pipes and the strip -- moves left.
+    @onUpdate("slides")
+    def slide(thing):
+        if not alive:
+            return
+        thing.move(-pipe_speed(), 0)
 
-    (kaypy has an `offscreen(destroy=True)` component for exactly this,
-    but in 0.13.0 it raises `TypeError: 'bool' object is not callable` the
-    moment it fires — the destroy flag shadows the component's own destroy
-    method. Four lines here instead.)
-    """
-    for junk in get("pipe") + get("point"):
-        if junk.pos.x < -PIPE_W - 20:
-            junk.destroy()
+        # Gone off the left-hand edge? Throw it away. Otherwise the game
+        # keeps every pipe it ever made, and after a few minutes there are
+        # hundreds of them out of sight, all still being moved.
+        if thing.pos.x < -PIPE_WIDTH - 20:
+            thing.destroy()
 
+    # -------------------------------------------------------------- points
 
-@onUpdate
-def check_bounds():
-    # Flying off the top is losing too. Without this you can park above the
-    # pipes and score for ever.
-    if state["alive"] and bird.pos.y < -40:
+    @bean.onCollide("point")
+    def scored(strip):
+        global score
+
+        if not alive:
+            return
+
+        strip.destroy()
+        score = score + 1
+        score_label.text = str(score)
+
+        if score == 1:
+            message.text = ""
+
+        if score == 5 or score == 10 or score == 20:
+            message.text = "faster!"
+
+            @wait(0.8)
+            def clear_message():
+                # Only if you are still flying -- otherwise this would wipe
+                # out the game-over message.
+                if alive:
+                    message.text = ""
+
+    # ------------------------------------------------------------- dying
+
+    @bean.onCollide("pipe")
+    def hit_pipe(pipe):
         die()
 
+    @bean.onCollide("ground")
+    def hit_ground(ground):
+        die()
 
-@bird.onCollide("pipe")
-def hit_pipe(pipe):
-    die()
+    def die():
+        global alive
 
+        # Hit a pipe and Bean falls onto the grass -- that is a second call
+        # to die(), and only the first one should count.
+        if not alive:
+            return
+        alive = False
 
-@bird.onCollide("ground")
-def hit_ground(ground):
-    die()
+        shake(10)
 
+        if score > best:
+            setData(BEST_KEY, score)
+            best_label.text = "best " + str(score)
 
-@bird.onCollide("point")
-def scored(marker):
-    if not state["alive"]:
-        return
-    marker.destroy()
-    state["score"] += 1
-    score_label.text = str(state["score"])
+        if score == 1:
+            message.text = "1 point -- press SPACE to try again"
+        else:
+            message.text = (str(score)
+                            + " points -- press SPACE to try again")
 
-    gap, speed, _ = difficulty()
-    if state["score"] in (5, 10, 20):
-        message.text = "faster!"
-        wait(0.8, lambda: setattr(message, "text", ""))
-
-
-def die():
-    if not state["alive"]:
-        return
-    state["alive"] = False
-    shake(10)
-
-    if state["score"] > state["best"]:
-        state["best"] = state["score"]
-        setData("flappy_best", state["best"])
-        best_label.text = "best %d" % state["best"]
-
-    message.text = "%d point%s — press SPACE to try again" % (
-        state["score"], "" if state["score"] == 1 else "s")
-
-    # Freeze the world. The pipes stop because their move() speed is zeroed;
-    # the bird keeps falling, which is what the original does and reads as
-    # losing rather than as the game hanging.
-    for pipe in get("pipe") + get("point"):
-        pipe.comp("move").speed = 0
+        # Nothing else is needed to stop the pipes: slide() does nothing
+        # once alive is False. Bean has a body(), so it keeps falling until
+        # it lands on the grass.
 
 
-def restart():
-    for junk in get("pipe") + get("point"):
-        junk.destroy()
+# ------------------------------------------------------- 5. start the game
 
-    state["score"] = 0
-    state["alive"] = True
-    state["run"] += 1            # retires every pipe chain from last game
-    score_label.text = "0"
-    message.text = ""
-
-    bird.pos = vec2(180, 240)
-    bird.comp("body").vel.y = 0
-    bird.angle = 0
-
-    next_pipe()
-
-
-next_pipe()
+go("game")
