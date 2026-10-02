@@ -1,0 +1,1295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Coin Dash · KayPy</title>
+<meta name="description" content="How Coin Dash was built, a step at a time: a room drawn as a picture, Bean running and jumping, a coin that moves, red blocks that bounce off the walls — in plain Python a student can copy.">
+<meta property="og:title" content="Building Coin Dash · KayPy">
+<meta property="og:description" content="How Coin Dash was built, a step at a time.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All eight lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li><li><a class="dropdown-item" href="../../learn/functions/">6 — Functions</a></li><li><a class="dropdown-item" href="../../learn/decorators/">7 — Decorators</a></li><li><a class="dropdown-item" href="../../learn/dictionaries/">8 — Dictionaries</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../../tutorials/" aria-current="page">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <article class="prose">
+<h1 id="building-coin-dash">Building Coin Dash</h1>
+
+<p><a href="../../static/games/coin_dash/">Play it first →</a> Bean runs and
+jumps around one room, grabbing a coin that moves somewhere new each time it is
+collected. Red blocks drop in through a gap in the ceiling and run about, and
+the higher your score, the faster they come. Touch one, or fall through the
+gap in the floor, and it's game over.</p>
+
+<p>This is how it was built, a step at a time. Every numbered step below is a
+whole program: copy it into
+<a href="../../play/">the playground</a>, press Run, and it works. Each step
+is the one before it with something added, so you can build the game the way
+it was built. Then break something on purpose and see what changes. That
+teaches you more than reading does.</p>
+
+<p>There is nothing clever in it. No list comprehensions, no tricks, and every
+kaypy function it uses is on the <a href="../../api/">API page</a>. Every
+picture and sound comes with the playground, so there is nothing to find or
+upload.</p>
+
+<p>If you have done <a href="../coin-rush/">Coin Rush</a>, a lot of this will
+look familiar. The big difference is that Coin Rush looks down on Bean from
+above, and Coin Dash looks at Bean from the side. Things fall, and Bean has
+to jump.</p>
+
+<h2 id="the-one-big-idea">The one big idea: a room is a picture</h2>
+
+<p>The room has over a hundred wall tiles in it. Typing a position for every
+one of them would take ages, and moving a platform would mean working out new
+numbers.</p>
+
+<p>So the room is a <strong>picture made of letters</strong>. One letter is
+one tile:</p>
+
+<pre><code class="language-python">LEVEL = [
+    "##########=====##########",
+    "#                       #",
+    "#                       #",
+    "#         #   #         #",
+    "#                       #",
+    "#  ######       ######  #",
+    ...
+]</code></pre>
+
+<p><code>#</code> is a wall and <code>=</code> is one of the red gaps, at the
+top and the bottom. To move a platform, move its <code>#</code>s. Nothing
+else in the game has to be told about it.</p>
+
+<h2 id="step-1-a-room">Step 1 — a room</h2>
+
+<p><code>addLevel()</code> reads the picture. Every time it meets a letter it
+looks it up in <code>TILES</code> and builds whatever it finds there. A letter
+that isn't listed is ignored, which is why a space does nothing.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 40          # one tile is 40 pixels square
+
+kaypy(width=TILE * 25, height=TILE * 17, background=[52, 152, 219])
+
+LEVEL = [
+    &quot;##########=====##########&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#         #   #         #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#  ######       ######  #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#####   #########   #####&quot;,
+    &quot;#       #       #       #&quot;,
+    &quot;#       #       #       #&quot;,
+    &quot;#      ##       ##      #&quot;,
+    &quot;#    ###         ###    #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;##########=====##########&quot;,
+]
+
+TILES = {
+    &quot;#&quot;: lambda: [rect(TILE, TILE), color(52, 73, 94), area(),
+                  body(isStatic=True), &quot;wall&quot;],
+    &quot;=&quot;: lambda: [rect(TILE, TILE), color(231, 76, 60)],
+}
+
+addLevel(LEVEL, {
+    &quot;tileWidth&quot;: TILE,
+    &quot;tileHeight&quot;: TILE,
+    &quot;tiles&quot;: TILES,
+})</code></pre>
+
+<p>Run it and you get an empty room with dark walls and a red gap at the top
+and the bottom.</p>
+
+<ul>
+<li>The window is <code>TILE * 25</code> wide and <code>TILE * 17</code>
+tall, because the picture is 25 letters across and 17 rows down. Change the
+size of a tile and the window changes with it.</li>
+<li><code>body(isStatic=True)</code> is what makes a wall solid. It never
+moves, and anything with a <code>body()</code> stands on it and bumps into
+it.</li>
+<li>A red gap has no <code>area()</code> at all, so nothing can touch it. It
+is only there to be looked at. Later, things fall straight through it.</li>
+<li>The <code>lambda:</code> in front of each list means "build a new one of
+these every time you find this letter," so every <code>#</code> is a wall of
+its own. Leave it off and the game stops with <code>TypeError: 'list' object
+is not callable</code>: <code>addLevel</code> wants something it can call to
+make each tile, and a plain list is not that.</li>
+</ul>
+
+<p>Every row of the picture must be the same length, 25 letters here. If one
+row is shorter, there's no error message. The walls on the right just
+don't line up.</p>
+
+<h2 id="step-2-bean-runs-and-jumps">Step 2 — Bean runs and jumps</h2>
+
+<p>This is a platform game, so the first new line is
+<code>setGravity(1000)</code>. Anything with a <code>body()</code> now falls
+until it lands on something.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 40
+RUN_SPEED = 400       # how fast Bean runs, in pixels per second
+JUMP = 640            # how hard Bean jumps
+BEAN_SIZE = 0.6       # Bean&#x27;s picture is bigger than a tile, so shrink it
+
+kaypy(width=TILE * 25, height=TILE * 17, background=[52, 152, 219])
+setGravity(1000)
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSound(&quot;jump&quot;, &quot;sounds/swoosh.wav&quot;)
+
+LEVEL = [
+    &quot;##########=====##########&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#         #   #         #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#  ######       ######  #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#####   #########   #####&quot;,
+    &quot;#       #       #       #&quot;,
+    &quot;#       #       #       #&quot;,
+    &quot;#      ##       ##      #&quot;,
+    &quot;#    ###         ###    #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;##########=====##########&quot;,
+]
+
+TILES = {
+    &quot;#&quot;: lambda: [rect(TILE, TILE), color(52, 73, 94), area(),
+                  body(isStatic=True), &quot;wall&quot;],
+    &quot;=&quot;: lambda: [rect(TILE, TILE), color(231, 76, 60)],
+}
+
+addLevel(LEVEL, {
+    &quot;tileWidth&quot;: TILE,
+    &quot;tileHeight&quot;: TILE,
+    &quot;tiles&quot;: TILES,
+})
+
+bean = add([sprite(&quot;bean&quot;), scale(BEAN_SIZE), pos(500, 340),
+            anchor(&quot;center&quot;), area(), body(), &quot;player&quot;])
+
+
+@onUpdate
+def each_frame():
+    if isKeyDown(&quot;left&quot;):
+        bean.move(-RUN_SPEED, 0)
+        bean.flipX = True
+    if isKeyDown(&quot;right&quot;):
+        bean.move(RUN_SPEED, 0)
+        bean.flipX = False
+
+    if isKeyDown(&quot;up&quot;) or isKeyDown(&quot;space&quot;):
+        if bean.isGrounded():
+            bean.jump(JUMP)
+            play(&quot;jump&quot;)</code></pre>
+
+<p>Arrow keys to run, <strong>up</strong> or <strong>space</strong> to jump.</p>
+
+<ul>
+<li><code>scale(BEAN_SIZE)</code> shrinks Bean. The bean picture is 64 pixels
+wide and a tile is only 40, and a Bean bigger than a tile looks squashed into
+the room.</li>
+<li><code>anchor("center")</code> means <code>pos(500, 340)</code> is the
+middle of Bean, not its top-left corner. The coin positions in the next step
+work the same way.</li>
+<li><code>bean.move(-RUN_SPEED, 0)</code> moves Bean left at
+<code>RUN_SPEED</code> pixels per second. It is per second, not per frame, so
+Bean runs at the same speed on a fast computer and a slow one.</li>
+<li><code>bean.flipX = True</code> turns the picture round, so Bean faces the
+way it is running.</li>
+</ul>
+
+<p><code>bean.isGrounded()</code> asks whether Bean is standing on
+something. Take that <code>if</code> away and Bean can jump again in mid-air,
+which means you can fly up the screen by tapping the key. Because the game
+checks the key every frame, holding <strong>up</strong> down makes Bean jump
+again the moment it lands.</p>
+
+<div class="callout"><p><strong>Try running into the gap in the
+floor.</strong> Bean falls out of the bottom of the window and keeps falling
+for ever. Nothing in the game is watching for it yet. Step 5 fixes that.</p></div>
+
+<h2 id="step-3-a-coin-that-moves">Step 3 — a coin that moves</h2>
+
+<p>There is only ever one coin. When Bean touches it, it moves to another
+spot. The spots are in a list, <code>COIN_SPOTS</code>.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 40
+RUN_SPEED = 400       # how fast Bean runs, in pixels per second
+JUMP = 640            # how hard Bean jumps
+BEAN_SIZE = 0.6       # Bean&#x27;s picture is bigger than a tile, so shrink it
+COIN_SIZE = 0.7
+POINTS = 5            # points for each coin
+
+# Where the coin can be.
+COIN_SPOTS = [
+    vec2(120, 300),
+    vec2(840, 300),
+    vec2(800, 160),
+    vec2(200, 160),
+    vec2(140, 600),
+    vec2(900, 600),
+    vec2(230, 490),
+    vec2(760, 490),
+]
+
+kaypy(width=TILE * 25, height=TILE * 17, background=[52, 152, 219])
+setGravity(1000)
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSound(&quot;jump&quot;, &quot;sounds/swoosh.wav&quot;)
+loadSound(&quot;coin&quot;, &quot;sounds/small_beep.wav&quot;)
+
+LEVEL = [
+    &quot;##########=====##########&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#         #   #         #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#  ######       ######  #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#####   #########   #####&quot;,
+    &quot;#       #       #       #&quot;,
+    &quot;#       #       #       #&quot;,
+    &quot;#      ##       ##      #&quot;,
+    &quot;#    ###         ###    #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;##########=====##########&quot;,
+]
+
+TILES = {
+    &quot;#&quot;: lambda: [rect(TILE, TILE), color(52, 73, 94), area(),
+                  body(isStatic=True), &quot;wall&quot;],
+    &quot;=&quot;: lambda: [rect(TILE, TILE), color(231, 76, 60)],
+}
+
+addLevel(LEVEL, {
+    &quot;tileWidth&quot;: TILE,
+    &quot;tileHeight&quot;: TILE,
+    &quot;tiles&quot;: TILES,
+})
+
+bean = add([sprite(&quot;bean&quot;), scale(BEAN_SIZE), pos(500, 340),
+            anchor(&quot;center&quot;), area(), body(), &quot;player&quot;])
+
+coin = add([sprite(&quot;coin&quot;), scale(COIN_SIZE), pos(COIN_SPOTS[0]),
+            anchor(&quot;center&quot;), area(), opacity(1), &quot;coin&quot;])
+
+score = 0
+label = add([text(&quot;Score: 0&quot;, size=36), pos(60, 50), z(100)])
+
+
+@onUpdate
+def each_frame():
+    if isKeyDown(&quot;left&quot;):
+        bean.move(-RUN_SPEED, 0)
+        bean.flipX = True
+    if isKeyDown(&quot;right&quot;):
+        bean.move(RUN_SPEED, 0)
+        bean.flipX = False
+
+    if isKeyDown(&quot;up&quot;) or isKeyDown(&quot;space&quot;):
+        if bean.isGrounded():
+            bean.jump(JUMP)
+            play(&quot;jump&quot;)
+
+
+@bean.onCollide(&quot;coin&quot;)
+def got_coin(c):
+    global score
+
+    score = score + POINTS
+    label.text = &quot;Score: &quot; + str(score)
+    play(&quot;coin&quot;)
+    move_coin()
+
+
+def move_coin():
+    # Every spot except the one the coin is at now.
+    spots = []
+    for spot in COIN_SPOTS:
+        if spot.x != coin.pos.x or spot.y != coin.pos.y:
+            spots.append(spot)
+
+    coin.pos = choose(spots)
+
+    # Fade in at the new spot, so you can see where it went.
+    tween(0, 1, 0.3, fade_coin)
+
+
+def fade_coin(amount):
+    coin.opacity = amount</code></pre>
+
+<p>The coin has an <code>area()</code> but no <code>body()</code>. An
+<code>area()</code> on its own is something you can touch but walk straight
+through, which is what a coin should be. It also has no gravity, so it hangs
+in the air.</p>
+
+<p><code>@bean.onCollide("coin")</code> runs <code>got_coin</code> whenever
+Bean touches something tagged <code>"coin"</code>. The tag is the
+<code>"coin"</code> at the end of the coin's list. If the two are spelled even
+slightly differently, there is no error message. Bean just walks through
+the coin and nothing happens.</p>
+
+<p><code>move_coin</code> has to pick a new spot that isn't the one the coin
+is already at, or sometimes the coin would "move" without moving. So it makes
+a new, empty list, goes through <code>COIN_SPOTS</code> one at a time, and
+adds every spot that isn't where the coin is now. Then <code>choose()</code>
+picks one of those.</p>
+
+<p><code>tween(0, 1, 0.3, fade_coin)</code> counts smoothly from 0 to 1 over
+0.3 seconds, and calls <code>fade_coin</code> with each number along the way.
+<code>fade_coin</code> sets the coin's opacity, so the coin fades in at its new
+spot and your eye catches where it went.</p>
+
+<div class="callout"><p><strong>Don't forget <code>global</code>.</strong>
+Take out <code>global score</code> and the first coin you grab crashes the
+game with <code>UnboundLocalError: cannot access local variable 'score' where
+it is not associated with a value</code>. Without <code>global</code>,
+Python thinks <code>score = score + POINTS</code> is about a new variable of
+<code>got_coin</code>'s own, and that one has no value yet to add to.</p></div>
+
+<h2 id="step-4-red-blocks">Step 4 — red blocks</h2>
+
+<p>Now something to dodge. Every few seconds a red block drops in through the
+gap in the ceiling and runs about the room.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 40
+RUN_SPEED = 400       # how fast Bean runs, in pixels per second
+JUMP = 640            # how hard Bean jumps
+BEAN_SIZE = 0.6       # Bean&#x27;s picture is bigger than a tile, so shrink it
+COIN_SIZE = 0.7
+POINTS = 5            # points for each coin
+ENEMY_SPEED = 200     # how fast a red block runs once it gets going
+ENEMY_WAIT = 3        # seconds between red blocks
+
+# Where the coin can be.
+COIN_SPOTS = [
+    vec2(120, 300),
+    vec2(840, 300),
+    vec2(800, 160),
+    vec2(200, 160),
+    vec2(140, 600),
+    vec2(900, 600),
+    vec2(230, 490),
+    vec2(760, 490),
+]
+
+kaypy(width=TILE * 25, height=TILE * 17, background=[52, 152, 219])
+setGravity(1000)
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSound(&quot;jump&quot;, &quot;sounds/swoosh.wav&quot;)
+loadSound(&quot;coin&quot;, &quot;sounds/small_beep.wav&quot;)
+
+LEVEL = [
+    &quot;##########=====##########&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#         #   #         #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#  ######       ######  #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#####   #########   #####&quot;,
+    &quot;#       #       #       #&quot;,
+    &quot;#       #       #       #&quot;,
+    &quot;#      ##       ##      #&quot;,
+    &quot;#    ###         ###    #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;##########=====##########&quot;,
+]
+
+TILES = {
+    &quot;#&quot;: lambda: [rect(TILE, TILE), color(52, 73, 94), area(),
+                  body(isStatic=True), &quot;wall&quot;],
+    &quot;=&quot;: lambda: [rect(TILE, TILE), color(231, 76, 60)],
+}
+
+addLevel(LEVEL, {
+    &quot;tileWidth&quot;: TILE,
+    &quot;tileHeight&quot;: TILE,
+    &quot;tiles&quot;: TILES,
+})
+
+bean = add([sprite(&quot;bean&quot;), scale(BEAN_SIZE), pos(500, 340),
+            anchor(&quot;center&quot;), area(), body(), &quot;player&quot;])
+
+coin = add([sprite(&quot;coin&quot;), scale(COIN_SIZE), pos(COIN_SPOTS[0]),
+            anchor(&quot;center&quot;), area(), opacity(1), &quot;coin&quot;])
+
+score = 0
+next_enemy = 0      # seconds until the next red block drops in
+label = add([text(&quot;Score: 0&quot;, size=36), pos(60, 50), z(100)])
+
+
+@onUpdate
+def each_frame():
+    global next_enemy
+
+    if isKeyDown(&quot;left&quot;):
+        bean.move(-RUN_SPEED, 0)
+        bean.flipX = True
+    if isKeyDown(&quot;right&quot;):
+        bean.move(RUN_SPEED, 0)
+        bean.flipX = False
+
+    if isKeyDown(&quot;up&quot;) or isKeyDown(&quot;space&quot;):
+        if bean.isGrounded():
+            bean.jump(JUMP)
+            play(&quot;jump&quot;)
+
+    # Time for another red block? dt() is how long this frame took, so
+    # taking it away every frame counts down in real seconds.
+    next_enemy = next_enemy - dt()
+    if next_enemy &lt;= 0:
+        add_enemy()
+        next_enemy = ENEMY_WAIT
+
+
+@bean.onCollide(&quot;coin&quot;)
+def got_coin(c):
+    global score
+
+    score = score + POINTS
+    label.text = &quot;Score: &quot; + str(score)
+    play(&quot;coin&quot;)
+    move_coin()
+
+
+def move_coin():
+    # Every spot except the one the coin is at now.
+    spots = []
+    for spot in COIN_SPOTS:
+        if spot.x != coin.pos.x or spot.y != coin.pos.y:
+            spots.append(spot)
+
+    coin.pos = choose(spots)
+
+    # Fade in at the new spot, so you can see where it went.
+    tween(0, 1, 0.3, fade_coin)
+
+
+def fade_coin(amount):
+    coin.opacity = amount
+
+
+def add_enemy():
+    # In through the gap in the ceiling. lifespan(15) clears it away
+    # after 15 seconds, so they never pile up.
+    enemy = add([rect(40, 40), color(231, 76, 60), pos(500, -20),
+                 anchor(&quot;center&quot;), area(), body(), lifespan(15),
+                 &quot;enemy&quot;,
+                 {&quot;speed&quot;: choose([-200, 200, 60, -60]), &quot;last_x&quot;: 0}])
+
+    # After two seconds it stops dawdling and picks a direction.
+    @wait(2)
+    def get_going():
+        enemy.speed = choose([-ENEMY_SPEED, ENEMY_SPEED])
+
+
+@onUpdate(&quot;enemy&quot;)
+def run_about(enemy):
+    # If it got nowhere since last frame, a wall is in the way -- so
+    # turn round.
+    if abs(enemy.pos.x - enemy.last_x) &lt; 0.1:
+        enemy.speed = -enemy.speed
+    enemy.last_x = enemy.pos.x
+    enemy.move(enemy.speed, 0)</code></pre>
+
+<p>The red blocks don't hurt yet. They just shove Bean about. That's the
+next step.</p>
+
+<p><strong>The countdown.</strong> <code>next_enemy</code> is how many
+seconds until the next block. <code>dt()</code> is how long the last frame
+took, so taking it away every frame counts down in real seconds. When it gets
+to zero, a block is added and the countdown starts again from
+<code>ENEMY_WAIT</code>. It starts at 0, so the first block arrives straight
+away.</p>
+
+<p><strong>Each block's own values.</strong> The <code>{"speed": ...,
+"last_x": 0}</code> at the end of the list gives each block two variables of
+its own, read as <code>enemy.speed</code> and <code>enemy.last_x</code>. Each
+block runs at its own speed, so they need one each.</p>
+
+<p><strong>Getting going.</strong> A new block wanders slowly or quickly
+for two seconds, then <code>@wait(2)</code> gives it a proper speed in one
+direction or the other. Because <code>get_going</code> is written
+<em>inside</em> <code>add_enemy</code>, the <code>enemy</code> it changes is
+the block that was just made, not some other one.</p>
+
+<p><strong>Turning round at walls.</strong> This is the one bit of thinking
+in the game. A block runs into a wall and the wall stops it, but nothing
+tells the block it hit anything. So every frame it asks: <em>did I get
+anywhere since last frame?</em> If its <code>x</code> is the same as
+<code>last_x</code> (to within a tenth of a pixel), something must be in the
+way, so it turns round. <code>abs()</code> is the size of a number without its
+minus sign, so <code>abs(enemy.pos.x - enemy.last_x)</code> is how far it moved
+either way.</p>
+
+<p><code>last_x</code> starts at 0, far away from where a block appears.
+Start it at 500 instead and every new block would think it was stuck on its
+very first frame, and turn round before it had moved.</p>
+
+<p><code>lifespan(15)</code> removes a block after fifteen seconds, so they
+don't pile up for ever. Plenty of them fall out through the gap in the floor
+long before that.</p>
+
+<h2 id="step-5-game-over-and-again">Step 5 — game over, and again</h2>
+
+<p>Touching a red block, or falling out through a gap, now ends the game. A
+second later it starts again.</p>
+
+<p>Starting again means throwing away every wall, coin and block and building
+them all fresh. That is what a <strong>scene</strong> is for. Everything from
+<code>addLevel</code> down moves inside <code>@scene("game")</code>, one step
+further in, and <code>go("game")</code> builds it. Calling
+<code>go("game")</code> again throws the whole scene away and builds it from
+the start.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 40
+RUN_SPEED = 400       # how fast Bean runs, in pixels per second
+JUMP = 640            # how hard Bean jumps
+BEAN_SIZE = 0.6       # Bean&#x27;s picture is bigger than a tile, so shrink it
+COIN_SIZE = 0.7
+POINTS = 5            # points for each coin
+ENEMY_SPEED = 200     # how fast a red block runs once it gets going
+ENEMY_WAIT = 3        # seconds between red blocks
+
+# Where the coin can be.
+COIN_SPOTS = [
+    vec2(120, 300),
+    vec2(840, 300),
+    vec2(800, 160),
+    vec2(200, 160),
+    vec2(140, 600),
+    vec2(900, 600),
+    vec2(230, 490),
+    vec2(760, 490),
+]
+
+kaypy(width=TILE * 25, height=TILE * 17, background=[52, 152, 219])
+setGravity(1000)
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSound(&quot;jump&quot;, &quot;sounds/swoosh.wav&quot;)
+loadSound(&quot;coin&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;dead&quot;, &quot;sounds/small_boom.wav&quot;)
+
+LEVEL = [
+    &quot;##########=====##########&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#         #   #         #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#  ######       ######  #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#####   #########   #####&quot;,
+    &quot;#       #       #       #&quot;,
+    &quot;#       #       #       #&quot;,
+    &quot;#      ##       ##      #&quot;,
+    &quot;#    ###         ###    #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;##########=====##########&quot;,
+]
+
+TILES = {
+    &quot;#&quot;: lambda: [rect(TILE, TILE), color(52, 73, 94), area(),
+                  body(isStatic=True), &quot;wall&quot;],
+    &quot;=&quot;: lambda: [rect(TILE, TILE), color(231, 76, 60)],
+}
+
+
+score = 0
+next_enemy = 0
+dead = False
+
+
+@scene(&quot;game&quot;)
+def game():
+    global score, next_enemy, dead
+
+    # Back to the start, every time the scene is built.
+    score = 0
+    next_enemy = 0
+    dead = False
+
+    addLevel(LEVEL, {
+        &quot;tileWidth&quot;: TILE,
+        &quot;tileHeight&quot;: TILE,
+        &quot;tiles&quot;: TILES,
+    })
+
+    bean = add([sprite(&quot;bean&quot;), scale(BEAN_SIZE), pos(500, 340),
+                anchor(&quot;center&quot;), area(), body(), z(10), &quot;player&quot;])
+
+    coin = add([sprite(&quot;coin&quot;), scale(COIN_SIZE), pos(COIN_SPOTS[0]),
+                anchor(&quot;center&quot;), area(), opacity(1), &quot;coin&quot;])
+
+    label = add([text(&quot;Score: 0&quot;, size=36), pos(60, 50), z(100)])
+
+    @onUpdate
+    def each_frame():
+        global next_enemy
+
+        if dead:
+            return
+
+        if isKeyDown(&quot;left&quot;):
+            bean.move(-RUN_SPEED, 0)
+            bean.flipX = True
+        if isKeyDown(&quot;right&quot;):
+            bean.move(RUN_SPEED, 0)
+            bean.flipX = False
+
+        if isKeyDown(&quot;up&quot;) or isKeyDown(&quot;space&quot;):
+            if bean.isGrounded():
+                bean.jump(JUMP)
+                play(&quot;jump&quot;)
+
+        # Out through the gap in the floor, or the one in the ceiling.
+        if bean.pos.y &gt; height() or bean.pos.y &lt; 0:
+            die()
+
+        next_enemy = next_enemy - dt()
+        if next_enemy &lt;= 0:
+            add_enemy()
+            next_enemy = ENEMY_WAIT
+
+    @bean.onCollide(&quot;coin&quot;)
+    def got_coin(c):
+        global score
+
+        if dead:
+            return
+
+        score = score + POINTS
+        label.text = &quot;Score: &quot; + str(score)
+        play(&quot;coin&quot;)
+        move_coin()
+
+    def move_coin():
+        spots = []
+        for spot in COIN_SPOTS:
+            if spot.x != coin.pos.x or spot.y != coin.pos.y:
+                spots.append(spot)
+
+        coin.pos = choose(spots)
+        tween(0, 1, 0.3, fade_coin)
+
+    def fade_coin(amount):
+        coin.opacity = amount
+
+    def add_enemy():
+        enemy = add([rect(40, 40), color(231, 76, 60), pos(500, -20),
+                     anchor(&quot;center&quot;), area(), body(), lifespan(15),
+                     &quot;enemy&quot;,
+                     {&quot;speed&quot;: choose([-200, 200, 60, -60]), &quot;last_x&quot;: 0}])
+
+        @wait(2)
+        def get_going():
+            enemy.speed = choose([-ENEMY_SPEED, ENEMY_SPEED])
+
+    @onUpdate(&quot;enemy&quot;)
+    def run_about(enemy):
+        if abs(enemy.pos.x - enemy.last_x) &lt; 0.1:
+            enemy.speed = -enemy.speed
+        enemy.last_x = enemy.pos.x
+        enemy.move(enemy.speed, 0)
+
+    @bean.onCollide(&quot;enemy&quot;)
+    def hit(enemy):
+        die()
+
+    def die():
+        global dead
+
+        # Touching two red blocks at once would otherwise die twice.
+        if dead:
+            return
+        dead = True
+
+        play(&quot;dead&quot;)
+        shake(12)
+
+        # A red flash over the whole window, gone in a third of a second.
+        add([rect(width(), height()), color(255, 50, 35), opacity(0.6),
+             lifespan(0.3, fade=0.3), z(200)])
+
+        # Bean bursts into little white squares.
+        for i in range(40):
+            direction = vec2(rand(-1, 1), rand(-1, 1))
+            add([rect(8, 8), pos(bean.pos), color(255, 255, 255),
+                 opacity(1), move(direction, rand(50, 300)),
+                 lifespan(1, fade=0.5), z(150)])
+
+        bean.destroy()
+
+        # Start again, a second later.
+        @wait(1)
+        def start_again():
+            go(&quot;game&quot;)
+
+
+go(&quot;game&quot;)</code></pre>
+
+<p>The variables that change during a game are set back to their starting
+values at the top of the scene, because the scene is built again every game.
+If <code>score = 0</code> wasn't there, your next game would start with the
+last game's score.</p>
+
+<p><strong>Why <code>dead</code>?</strong> Without it, <code>die()</code>
+would run more than once. Touch two red blocks at once and that's two calls.
+And Bean is still below the window after falling out, so
+<code>each_frame</code> would call <code>die()</code> again on every frame
+until the game restarted, playing the sound and starting a new restart timer
+each time. So <code>die()</code> sets <code>dead = True</code> the first time
+and does nothing after that, and <code>each_frame</code> and
+<code>got_coin</code> stop working once it is set.</p>
+
+<p><strong>The burst.</strong> A <code>for</code> loop makes forty small
+white squares where Bean was. Each gets its own random direction and speed
+from <code>move()</code>, and <code>lifespan(1, fade=0.5)</code> fades it out
+and removes it after a second. The fade needs <code>opacity(1)</code> in the
+list. Leave it out and the squares vanish all at once instead of fading, and
+kaypy prints <code>note: lifespan(fade=...) needs an opacity() component to
+fade</code> for every one of them.</p>
+
+<div class="callout"><p><strong>Don't call the scene function
+<code>play</code>.</strong> kaypy already has a <code>play()</code> for
+sounds. Write <code>def play():</code> and you have replaced it, so every
+<code>play("coin")</code> afterwards tries to start your scene instead of
+making a noise. That's why the scene is called <code>"game"</code> and its
+function is <code>game()</code>.</p></div>
+
+<h2 id="step-6-the-whole-game">Step 6 — the whole game</h2>
+
+<p>This is the game exactly as it is on the <a href="../../games/">games
+page</a>. It adds three things to step 5:</p>
+
+<ul>
+<li><strong>A menu.</strong> A second scene, <code>"menu"</code>, with the
+title, "Press Up to Start" and your score. Dying now does
+<code>go("menu", score)</code>, and the score is handed to the menu as
+<code>last_score</code>. The game starts on the menu with
+<code>go("menu", 0)</code>, since there is no last game yet.</li>
+<li><strong>A best score that is remembered.</strong>
+<code>getData(BEST_KEY, 0)</code> reads the best score saved last time, or 0
+if there isn't one. <code>setData</code> saves a new one. The key is
+<code>"coin_dash_best"</code> rather than just <code>"best"</code>, because
+every game on a website shares the same storage, and another game saving its
+own <code>"best"</code> would overwrite yours.</li>
+<li><strong>Red blocks that speed up.</strong> <code>enemy_wait()</code>
+works out the wait from your score. At 0 points it is 5 seconds; at 25 points,
+halfway to <code>HARDEST_AT</code>, it is 2.75; at 50 points and above it is
+half a second.</li>
+</ul>
+
+<p>The title drops in with <code>tween</code> again, this time moving the
+title's <code>y</code> from above the window down to 160, with
+<code>easings.easeOutBounce</code> so it bounces as it lands. "Press Up to
+Start" rocks from side to side because <code>wave(-2, 2, time() * 3)</code>
+swings between −2 and 2 degrees for ever.</p>
+
+<p>It also has all the numbers worth changing in one settings block near the
+top, and comments that explain why each part is there.</p>
+
+<pre><code class="language-python">&quot;&quot;&quot;Coin Dash -- grab the coin, dodge the red blocks, don&#x27;t fall in the hole.
+
+    left / right   run
+    up or space    jump
+
+One coin at a time. Grab it and it pops up somewhere else, worth 5 points.
+Red blocks drop in through the gap in the ceiling and run about, and the
+higher your score, the faster they come. Touch one, or fall through the gap
+in the floor, and it is game over. Your best score is remembered.
+
+HOW THIS FILE IS PUT TOGETHER
+
+    1. the window, the pictures and the sounds
+    2. the settings
+    3. the level
+    4. the menu scene
+    5. the game scene: Bean, the coin, the red blocks, dying
+    6. start the game
+
+The level is a picture made of letters. Change a &#x27;#&#x27; and you have moved a
+wall -- you never have to touch the code to change the level.
+&quot;&quot;&quot;
+
+from kaypy import *
+
+# ----------------------------------------------------------------- 1. setup
+
+TILE = 40          # one tile is 40 pixels square
+ACROSS = 25        # tiles across
+DOWN = 17          # tiles down
+
+kaypy(width=TILE * ACROSS, height=TILE * DOWN, background=[52, 152, 219])
+
+# A platform game, so things fall. Without this line nothing would.
+setGravity(1000)
+
+# Every picture and sound here comes with the playground, so you can paste
+# this whole file in and press Run. The red blocks are not pictures at all
+# -- they are plain rectangles, made with rect().
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+
+# The name before the comma is the name the game uses. The file after it is
+# the one that gets played -- swap it for any sound in the playground.
+loadSound(&quot;jump&quot;, &quot;sounds/swoosh.wav&quot;)
+loadSound(&quot;coin&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;dead&quot;, &quot;sounds/small_boom.wav&quot;)
+
+
+# -------------------------------------------------------------- 2. settings
+#
+# Every number worth changing is here.
+
+BEAN_SIZE = 0.6       # Bean&#x27;s picture is bigger than a tile, so shrink it
+COIN_SIZE = 0.7       # ...and the coin a little less
+RUN_SPEED = 400       # how fast you run, in pixels per second
+JUMP = 640            # how hard you jump
+ENEMY_SPEED = 200     # how fast a red block runs once it gets going
+POINTS = 5            # points for each coin
+
+# A new red block every 5 seconds to begin with. The more points you have,
+# the shorter the wait, until at 50 points there is one every half second.
+SLOWEST = 5
+FASTEST = 0.5
+HARDEST_AT = 50
+
+# Where the coin can be. Each time you grab it, it moves to one of these --
+# never the one it was just at.
+COIN_SPOTS = [
+    vec2(120, 300),
+    vec2(840, 300),
+    vec2(800, 160),
+    vec2(200, 160),
+    vec2(140, 600),
+    vec2(900, 600),
+    vec2(230, 490),
+    vec2(760, 490),
+]
+
+# The name the best score is saved under. Every game on a website shares
+# the same storage, so the game&#x27;s own name goes in it -- a plain &quot;best&quot;
+# would be overwritten by the next game that saved one.
+BEST_KEY = &quot;coin_dash_best&quot;
+
+
+# ----------------------------------------------------------------- 3. level
+#
+# One letter is one tile.
+#
+#   #  wall
+#   =  the red gaps, top and bottom. Red blocks drop in through the top
+#      one, and you can fall out through the bottom one.
+#
+# A space is empty. Every row has to be 25 letters long.
+
+LEVEL = [
+    &quot;##########=====##########&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#         #   #         #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#  ######       ######  #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#####   #########   #####&quot;,
+    &quot;#       #       #       #&quot;,
+    &quot;#       #       #       #&quot;,
+    &quot;#      ##       ##      #&quot;,
+    &quot;#    ###         ###    #&quot;,
+    &quot;#                       #&quot;,
+    &quot;#                       #&quot;,
+    &quot;##########=====##########&quot;,
+]
+
+# What each letter turns into. A wall has body(isStatic=True), so things
+# stand on it and bump into it. A gap has no area(), so nothing touches it
+# -- it is only there to be looked at.
+TILES = {
+    &quot;#&quot;: lambda: [rect(TILE, TILE), color(52, 73, 94), area(),
+                  body(isStatic=True), &quot;wall&quot;],
+    &quot;=&quot;: lambda: [rect(TILE, TILE), color(231, 76, 60)],
+}
+
+
+# ------------------------------------------------------------ 4. the menu
+#
+# last_score is what you got last time. The very first time, there is no
+# last time, so it starts at 0.
+
+@scene(&quot;menu&quot;)
+def menu(last_score):
+    best = getData(BEST_KEY, 0)
+    if last_score &gt; best:
+        best = last_score
+        setData(BEST_KEY, best)
+
+    # The title starts above the top of the window and drops in, bouncing.
+    # tween() changes a number smoothly from -100 to 160 over one second,
+    # and calls drop_title with each new number along the way.
+    title = add([text(&quot;Coin Dash&quot;, size=120), pos(width() / 2, -100),
+                 anchor(&quot;center&quot;)])
+
+    def drop_title(y):
+        title.pos.y = y
+
+    tween(-100, 160, 1, drop_title, easings.easeOutBounce)
+
+    start = add([text(&quot;Press Up to Start&quot;, size=60), pos(center()),
+                 anchor(&quot;center&quot;), rotate(0)])
+
+    add([text(&quot;Score: &quot; + str(last_score) + &quot;\nBest Score: &quot; + str(best),
+              size=44),
+         pos(width() / 2, 520), anchor(&quot;center&quot;)])
+
+    # wave() swings between two numbers for ever, so the words rock from
+    # side to side.
+    @onUpdate
+    def rock():
+        start.angle = wave(-2, 2, time() * 3)
+
+    @onKeyPress(&quot;up&quot;)
+    def start_game():
+        go(&quot;game&quot;)
+
+    @onKeyPress(&quot;space&quot;)
+    def start_game_too():
+        go(&quot;game&quot;)
+
+    @onClick
+    def clicked():
+        go(&quot;game&quot;)
+
+
+# ------------------------------------------------------- 5. the game scene
+#
+# The scene is CALLED &quot;game&quot;. The function is NOT called play(), because
+# kaypy already has a play() for sounds -- name your function play() and
+# every play(&quot;coin&quot;) would start a game instead of making a noise.
+#
+# These change while you play. A function that CHANGES one has to say
+# `global` first, which means &quot;the one up here, not a new one of my own&quot;.
+
+score = 0
+next_enemy = 0      # seconds until the next red block drops in
+dead = False
+
+
+@scene(&quot;game&quot;)
+def game():
+    global score, next_enemy, dead
+
+    score = 0
+    next_enemy = 0
+    dead = False
+
+    addLevel(LEVEL, {
+        &quot;tileWidth&quot;: TILE,
+        &quot;tileHeight&quot;: TILE,
+        &quot;tiles&quot;: TILES,
+    })
+
+    bean = add([sprite(&quot;bean&quot;), scale(BEAN_SIZE), pos(500, 340),
+                anchor(&quot;center&quot;), area(), body(), z(10), &quot;player&quot;])
+
+    coin = add([sprite(&quot;coin&quot;), scale(COIN_SIZE), pos(COIN_SPOTS[0]),
+                anchor(&quot;center&quot;), area(), opacity(1), &quot;coin&quot;])
+
+    label = add([text(&quot;Score: 0&quot;, size=36), pos(60, 50), z(100)])
+
+    # ------------------------------------------------------- every frame
+
+    @onUpdate
+    def each_frame():
+        global next_enemy
+
+        if dead:
+            return
+
+        # Running. flipX turns the picture round, so Bean faces the way
+        # it is going.
+        if isKeyDown(&quot;left&quot;):
+            bean.move(-RUN_SPEED, 0)
+            bean.flipX = True
+        if isKeyDown(&quot;right&quot;):
+            bean.move(RUN_SPEED, 0)
+            bean.flipX = False
+
+        # Jumping. Only from the ground, or you could fly by tapping.
+        if isKeyDown(&quot;up&quot;) or isKeyDown(&quot;space&quot;):
+            if bean.isGrounded():
+                bean.jump(JUMP)
+                play(&quot;jump&quot;)
+
+        # Out through the gap in the floor, or the one in the ceiling.
+        if bean.pos.y &gt; height() or bean.pos.y &lt; 0:
+            die()
+
+        # Time for another red block? dt() is how long this frame took, so
+        # taking it away every frame counts down in real seconds.
+        next_enemy = next_enemy - dt()
+        if next_enemy &lt;= 0:
+            add_enemy()
+            next_enemy = enemy_wait()
+
+    # -------------------------------------------------------------- coins
+
+    @bean.onCollide(&quot;coin&quot;)
+    def got_coin(c):
+        global score
+
+        if dead:
+            return
+
+        score = score + POINTS
+        label.text = &quot;Score: &quot; + str(score)
+        play(&quot;coin&quot;)
+        move_coin()
+
+    def move_coin():
+        # Every spot except the one the coin is at now.
+        spots = []
+        for spot in COIN_SPOTS:
+            if spot.x != coin.pos.x or spot.y != coin.pos.y:
+                spots.append(spot)
+
+        coin.pos = choose(spots)
+
+        # Fade in at the new spot, so you can see where it went.
+        tween(0, 1, 0.3, fade_coin)
+
+    def fade_coin(amount):
+        coin.opacity = amount
+
+    # -------------------------------------------------------- red blocks
+
+    # The longer you survive, the less time between red blocks.
+    def enemy_wait():
+        progress = score / HARDEST_AT
+        if progress &gt; 1:
+            progress = 1
+        return SLOWEST - (SLOWEST - FASTEST) * progress
+
+    def add_enemy():
+        # In through the gap in the ceiling. lifespan(15) clears it away
+        # after 15 seconds, so they never pile up.
+        enemy = add([rect(40, 40), color(231, 76, 60), pos(500, -20),
+                     anchor(&quot;center&quot;), area(), body(), lifespan(15),
+                     &quot;enemy&quot;,
+                     {&quot;speed&quot;: choose([-200, 200, 60, -60]), &quot;last_x&quot;: 0}])
+
+        # After two seconds it stops dawdling and picks a direction.
+        @wait(2)
+        def get_going():
+            enemy.speed = choose([-ENEMY_SPEED, ENEMY_SPEED])
+
+    @onUpdate(&quot;enemy&quot;)
+    def run_about(enemy):
+        # If it got nowhere since last frame, a wall is in the way -- so
+        # turn round. abs() is the size of a number without its sign, so
+        # this asks &quot;did it move less than a tenth of a pixel either way?&quot;
+        # (last_x starts at 0, far from where a block starts, so a brand
+        # new block does not turn round before it has had a chance to move.)
+        if abs(enemy.pos.x - enemy.last_x) &lt; 0.1:
+            enemy.speed = -enemy.speed
+        enemy.last_x = enemy.pos.x
+        enemy.move(enemy.speed, 0)
+
+    @bean.onCollide(&quot;enemy&quot;)
+    def hit(enemy):
+        die()
+
+    # ------------------------------------------------------------ dying
+
+    def die():
+        global dead
+
+        # Touching two red blocks at once would otherwise die twice.
+        if dead:
+            return
+        dead = True
+
+        play(&quot;dead&quot;)
+        shake(12)
+
+        # A red flash over the whole window, gone in a third of a second.
+        add([rect(width(), height()), color(255, 50, 35), opacity(0.6),
+             lifespan(0.3, fade=0.3), z(200)])
+
+        # Bean bursts into little white squares, each flying off in
+        # its own direction and fading away.
+        for i in range(40):
+            direction = vec2(rand(-1, 1), rand(-1, 1))
+            add([rect(8, 8), pos(bean.pos), color(255, 255, 255),
+                 opacity(1), move(direction, rand(50, 300)),
+                 lifespan(1, fade=0.5),
+                 z(150)])
+
+        bean.destroy()
+
+        @wait(1)
+        def back_to_menu():
+            go(&quot;menu&quot;, score)
+
+
+# ------------------------------------------------------- 6. start the game
+
+go(&quot;menu&quot;, 0)</code></pre>
+
+<h2 id="make-it-yours">Make it yours</h2>
+
+<ul>
+<li><strong>Change the numbers.</strong> <code>RUN_SPEED</code>,
+<code>JUMP</code>, <code>ENEMY_SPEED</code>, <code>HARDEST_AT</code>. Try
+<code>setGravity(500)</code> with the same <code>JUMP</code> and Bean
+floats like it's on the moon.</li>
+<li><strong>Redraw the room.</strong> Move the <code>#</code>s around. Check
+the <code>COIN_SPOTS</code> afterwards: a spot that is now inside a wall
+puts the coin where Bean can never reach it. Each tile is 40 pixels, so the
+tile in column <code>c</code> and row <code>r</code> has its middle at
+<code>vec2(c * 40 + 20, r * 40 + 20)</code>, counting from 0.</li>
+<li><strong>Add a second kind of block.</strong> Copy
+<code>add_enemy</code> into <code>add_fast_enemy</code>, make the block
+purple and give it twice the speed. Keep the <code>"enemy"</code> tag and it
+already turns at walls and kills Bean, because both of those work from the
+tag.</li>
+<li><strong>Use WASD as well.</strong> Change
+<code>isKeyDown("left")</code> to
+<code>isKeyDown("left") or isKeyDown("a")</code>, and the same for the
+others.</li>
+</ul>
+
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>

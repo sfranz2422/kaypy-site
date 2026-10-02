@@ -100,6 +100,22 @@ clever: the levels are pictures made of letters, where a <code>#</code> is a
 wall, an <code>o</code> is a coin and a <code>^</code> is a spike, and every
 function it calls is on the <a href="../api/">API page</a>.
 <a href="../tutorials/coin-rush/">How it was built, step by step →</a></p>
+<h2 id="coin-dash">Coin Dash</h2>
+<p>Left and right to run, <strong>up</strong> or <strong>space</strong> to
+jump. Click the picture first so the keys reach it.</p>
+<p><a href="../static/games/coin_dash/">Play Coin Dash →</a></p>
+<p>Bean, one room, one coin, and red blocks dropping in through the gap in
+the ceiling. Grab the coin and it pops up somewhere else; the higher your score,
+the faster the red blocks come. Touch one, or fall through the gap in the
+floor, and it is over. Your best score is remembered.</p>
+<p>Like Coin Rush it is written to be copied: no list comprehensions, the room
+is a picture made of letters, every function it calls is on the
+<a href="../api/">API page</a>, and every picture and sound comes with the
+<a href="../play/">playground</a>, so the whole file can be pasted in there and
+run. The red blocks have no special code for walls
+— each frame one asks whether it actually got anywhere since the last, and if
+it did not, something is in the way and it turns round.
+<a href="../tutorials/coin-dash/">How it was built, step by step →</a></p>
 <h2 id="turn-based-battle">Turn-Based Battle</h2>
 <p>Up and down to move the cursor, <strong>space</strong> to choose,
 <strong>x</strong> to go back. Click the picture first so the keys reach it.</p>
@@ -161,6 +177,7 @@ classroom. Games get played before they go up, so allow a few days.</p>
       <a class="toc-link toc-d1" href="#games">Games</a>
       <a class="toc-link toc-d2" href="#flappy-bean">Flappy Bean</a>
       <a class="toc-link toc-d2" href="#coin-rush">Coin Rush</a>
+      <a class="toc-link toc-d2" href="#coin-dash">Coin Dash</a>
       <a class="toc-link toc-d2" href="#turn-based-battle">Turn-Based Battle</a>
       <a class="toc-link toc-d2" href="#dungeon-dash">Dungeon Dash</a>
       <a class="toc-link toc-d2" href="#dino-quest">Dino Quest</a>
