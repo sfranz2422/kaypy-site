@@ -82,6 +82,7 @@ PAGES = [
     "tutorials/dark-blue/index.html",
     "tutorials/spike-runner/index.html",
     "tutorials/block-slide/index.html",
+    "tutorials/knights-hall/index.html",
     "tutorials/dungeon-dash/index.html",
     "tutorials/rpg-battle/index.html",
     "games/index.html",

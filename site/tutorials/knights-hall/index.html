@@ -1,0 +1,1916 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Knight&#x27;s Hall · KayPy</title>
+<meta name="description" content="How Knight&#x27;s Hall was built, a step at a time: an on-screen d-pad and buttons, walking in eight directions, a sword that points the way you face, monsters through the doors, waves and a dash — in plain Python a student can copy.">
+<meta property="og:title" content="Building Knight&#x27;s Hall · KayPy">
+<meta property="og:description" content="How Knight&#x27;s Hall was built, a step at a time.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All eight lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li><li><a class="dropdown-item" href="../../learn/functions/">6 — Functions</a></li><li><a class="dropdown-item" href="../../learn/decorators/">7 — Decorators</a></li><li><a class="dropdown-item" href="../../learn/dictionaries/">8 — Dictionaries</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../../tutorials/" aria-current="page">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <article class="prose">
+<h1 id="building-knights-hall">Building Knight's Hall</h1>
+
+<p><a href="../../static/games/knights_hall/">Play it first →</a> Monsters
+come through the doors of a hall, and a knight holds it with a sword. On a
+phone you play with your thumbs: a d-pad on the left, two buttons on the
+right. On a computer you use the arrow keys, <strong>space</strong> and
+<strong>z</strong>.</p>
+
+<p>This is how it was built, a step at a time. Every numbered step below is a
+whole program: copy it into
+<a href="../../play/">the playground</a>, press Run, and it works. Each step
+is the one before it with something added, so you can build the game the way
+it was built. Then break something on purpose and see what changes. That
+teaches you more than reading does.</p>
+
+<p>There is nothing clever in it. No list comprehensions, no tricks, and every
+kaypy function it uses is on the <a href="../../api/">API page</a>.</p>
+
+<h2 id="the-one-big-idea">The one big idea: the buttons pretend to be keys</h2>
+
+<p>The d-pad and the buttons take one word, on the very first line:</p>
+
+<pre><code class="language-python">kaypy(width=576, height=864, joystick=True)</code></pre>
+
+<p>That draws a d-pad in the bottom-left corner and two buttons in the
+bottom-right, and they <em>pretend to be the keyboard</em>. A thumb on the
+left of the d-pad is exactly the same as holding the left arrow. The two
+buttons are <code>space</code> and <code>z</code>. So nothing else in the
+game knows the buttons are there. It asks <code>isKeyDown("left")</code> and
+<code>onKeyPress("space")</code> like any other game, and a thumb answers.</p>
+
+<p>Three things come with it for free:</p>
+
+<ul>
+<li><strong>Diagonals.</strong> A thumb between up and right holds
+<em>both</em> keys, so the game sees up and right together.</li>
+<li><strong>Two thumbs at once.</strong> Each finger is tracked on its own,
+so you can hold the d-pad and tap a button without letting go of the
+d-pad.</li>
+<li><strong>The mouse counts as a finger</strong>, so you can try it all on
+a computer by clicking on the d-pad.</li>
+</ul>
+
+<p>The one thing you have to think about is where your thumbs go. They cover
+the bottom corners of the screen, so a monster down there is a monster you
+can't see. This game is tall, like a phone held upright: the hall is at the
+top, and underneath it is a strip that holds only the controls.</p>
+
+<h2 id="step-1-a-hall-a-knight-and-a-d-pad">Step 1 — a hall, a knight and a d-pad</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 48          # a tile is 48 pixels: the 16-pixel art, times 3
+
+# 12 tiles across. 18 down: 12 for the hall, 6 under it for the controls.
+kaypy(width=TILE * 12, height=TILE * 18, background=[20, 17, 26],
+      joystick=True)
+
+IDLE_RUN = {&quot;idle&quot;: {&quot;from&quot;: 0, &quot;to&quot;: 3, &quot;speed&quot;: 8, &quot;loop&quot;: True},
+            &quot;run&quot;: {&quot;from&quot;: 4, &quot;to&quot;: 7, &quot;speed&quot;: 10, &quot;loop&quot;: True}}
+
+loadSprite(&quot;knight&quot;, &quot;dungeon/knight_m.png&quot;, sliceX=9, anims=IDLE_RUN)
+loadSprite(&quot;floor_1&quot;, &quot;dungeon/floor_1.png&quot;)
+loadSprite(&quot;floor_2&quot;, &quot;dungeon/floor_2.png&quot;)
+loadSprite(&quot;floor_3&quot;, &quot;dungeon/floor_3.png&quot;)
+loadSprite(&quot;wall_top&quot;, &quot;dungeon/wall_top_mid.png&quot;)
+loadSprite(&quot;wall&quot;, &quot;dungeon/wall_mid.png&quot;)
+loadSprite(&quot;banner&quot;, &quot;dungeon/wall_banner_red.png&quot;)
+loadSprite(&quot;door&quot;, &quot;dungeon/doors_leaf_open.png&quot;)
+
+SPEED = 220        # pixels per second
+
+HALL = [
+    &quot;^D^^^D^^^D^^&quot;,
+    &quot;#dd#BddB#dd#&quot;,
+    &quot;#..,....:..#&quot;,
+    &quot;#.:...,....#&quot;,
+    &quot;#....,...,.#&quot;,
+    &quot;#,.:.......#&quot;,
+    &quot;#.....:..,.#&quot;,
+    &quot;#..,.......#&quot;,
+    &quot;#.....,.:..#&quot;,
+    &quot;#.:.,......#&quot;,
+    &quot;#.......,..#&quot;,
+    &quot;############&quot;,
+]
+
+TILES = {
+    &quot;^&quot;: lambda: [sprite(&quot;wall_top&quot;), scale(3)],
+    &quot;#&quot;: lambda: [sprite(&quot;wall&quot;), scale(3)],
+    &quot;B&quot;: lambda: [sprite(&quot;banner&quot;), scale(3)],
+    &quot;D&quot;: lambda: [sprite(&quot;door&quot;), scale(3)],
+    &quot;.&quot;: lambda: [sprite(&quot;floor_1&quot;), scale(3)],
+    &quot;,&quot;: lambda: [sprite(&quot;floor_2&quot;), scale(3)],
+    &quot;:&quot;: lambda: [sprite(&quot;floor_3&quot;), scale(3)],
+}
+
+# The floor, in pixels: everything inside the walls.
+LEFT = TILE * 1
+RIGHT = TILE * 11
+TOP = TILE * 2
+BOTTOM = TILE * 11
+
+
+@scene(&quot;hall&quot;)
+def hall():
+    addLevel(HALL, {&quot;tileWidth&quot;: TILE, &quot;tileHeight&quot;: TILE,
+                    &quot;pos&quot;: vec2(0, 0), &quot;tiles&quot;: TILES})
+
+    knight = add([
+        sprite(&quot;knight&quot;, anim=&quot;idle&quot;),
+        pos((LEFT + RIGHT) / 2, (TOP + BOTTOM) / 2),
+        anchor(&quot;center&quot;),
+        scale(2.5),
+        area(),
+        z(10),
+        &quot;knight&quot;,
+    ])
+
+    @onUpdate
+    def walk():
+        dx = 0
+        dy = 0
+        if isKeyDown(&quot;left&quot;):
+            dx = dx - 1
+        if isKeyDown(&quot;right&quot;):
+            dx = dx + 1
+        if isKeyDown(&quot;up&quot;):
+            dy = dy - 1
+        if isKeyDown(&quot;down&quot;):
+            dy = dy + 1
+
+        if dx != 0 or dy != 0:
+            way = vec2(dx, dy).unit()
+            knight.move(way.x * SPEED, way.y * SPEED)
+            if dx != 0:
+                knight.flipX = dx &lt; 0
+            if knight.curAnim() != &quot;run&quot;:
+                knight.play(&quot;run&quot;)
+        elif knight.curAnim() != &quot;idle&quot;:
+            knight.play(&quot;idle&quot;)
+
+        # Stay on the floor.
+        knight.pos.x = clamp(knight.pos.x, LEFT + 20, RIGHT - 20)
+        knight.pos.y = clamp(knight.pos.y, TOP, BOTTOM - 35)
+
+
+go(&quot;hall&quot;)</code></pre>
+
+<p>A knight in a hall, walking in eight directions. On a phone, put your
+thumb on the d-pad. On a computer, use the arrow keys, or click and drag on
+the d-pad.</p>
+
+<p><strong>The window.</strong> A tile is 48 pixels, the 16-pixel dungeon art
+drawn three times as big. The window is 12 tiles across and 18 down: 12 for
+the hall and 6 under it for the controls.</p>
+
+<p><strong>The hall is a picture.</strong> Each letter in <code>HALL</code>
+is one tile, and <code>TILES</code> says what each letter turns into.
+<code>addLevel</code> walks the picture and builds them. There are three
+kinds of floor, <code>.</code> <code>,</code> and <code>:</code>, so it
+doesn't look like wallpaper. A door picture is two tiles wide and two tall,
+drawn from the top-left of the <code>D</code>'s tile, so it covers three
+more tiles than its own. Those are the <code>d</code>s. They aren't in
+<code>TILES</code>, so nothing is drawn there. Put a <code>#</code> there
+instead and a piece of wall is drawn over a corner of the door.</p>
+
+<p><strong>Why a scene already?</strong> Everything goes inside
+<code>hall()</code>, and <code>go("hall")</code> at the bottom starts it.
+That doesn't do anything useful yet. In step 4 the knight can die, and
+<code>go("hall")</code> again is how the game starts over.</p>
+
+<p><strong>Walking.</strong> Every frame, <code>walk</code> asks which arrows
+are held and adds them up into <code>dx</code> (left is −1, right is +1) and
+<code>dy</code> (up is −1, down is +1). Up and right together make
+<code>(1, −1)</code>, a diagonal.</p>
+
+<p><strong>Why <code>.unit()</code>?</strong> The arrow <code>(1, 1)</code> is
+longer than <code>(1, 0)</code>, about 1.4 times longer. Multiply it by
+<code>SPEED</code> and the knight walks 1.4 times faster on a diagonal. Try
+it: change those two lines to
+<code>knight.move(dx * SPEED, dy * SPEED)</code>. There's no error message,
+and in a test the knight went 140 pixels diagonally in the time it went
+99 straight. <code>.unit()</code> keeps the direction but makes the length
+1, so every direction is the same speed.</p>
+
+<p><strong>Staying in.</strong> There are no walls to bump into. Every frame
+<code>clamp</code> just puts the knight back inside the floor:
+<code>LEFT</code>, <code>RIGHT</code>, <code>TOP</code> and
+<code>BOTTOM</code> are its edges, in pixels.</p>
+
+<h2 id="step-2-facing-and-the-sword">Step 2 — facing, and the sword</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 48          # a tile is 48 pixels: the 16-pixel art, times 3
+
+# 12 tiles across. 18 down: 12 for the hall, 6 under it for the controls.
+kaypy(width=TILE * 12, height=TILE * 18, background=[20, 17, 26],
+      joystick=True)
+
+IDLE_RUN = {&quot;idle&quot;: {&quot;from&quot;: 0, &quot;to&quot;: 3, &quot;speed&quot;: 8, &quot;loop&quot;: True},
+            &quot;run&quot;: {&quot;from&quot;: 4, &quot;to&quot;: 7, &quot;speed&quot;: 10, &quot;loop&quot;: True}}
+
+loadSprite(&quot;knight&quot;, &quot;dungeon/knight_m.png&quot;, sliceX=9, anims=IDLE_RUN)
+loadSprite(&quot;sword&quot;, &quot;dungeon/weapon_regular_sword.png&quot;)
+loadSprite(&quot;floor_1&quot;, &quot;dungeon/floor_1.png&quot;)
+loadSprite(&quot;floor_2&quot;, &quot;dungeon/floor_2.png&quot;)
+loadSprite(&quot;floor_3&quot;, &quot;dungeon/floor_3.png&quot;)
+loadSprite(&quot;wall_top&quot;, &quot;dungeon/wall_top_mid.png&quot;)
+loadSprite(&quot;wall&quot;, &quot;dungeon/wall_mid.png&quot;)
+loadSprite(&quot;banner&quot;, &quot;dungeon/wall_banner_red.png&quot;)
+loadSprite(&quot;door&quot;, &quot;dungeon/doors_leaf_open.png&quot;)
+
+SPEED = 220        # pixels per second
+SWORD_REACH = 42   # how far in front of the knight the blade appears
+SWORD_TIME = 0.15  # how long a swing lasts, in seconds
+
+HALL = [
+    &quot;^D^^^D^^^D^^&quot;,
+    &quot;#dd#BddB#dd#&quot;,
+    &quot;#..,....:..#&quot;,
+    &quot;#.:...,....#&quot;,
+    &quot;#....,...,.#&quot;,
+    &quot;#,.:.......#&quot;,
+    &quot;#.....:..,.#&quot;,
+    &quot;#..,.......#&quot;,
+    &quot;#.....,.:..#&quot;,
+    &quot;#.:.,......#&quot;,
+    &quot;#.......,..#&quot;,
+    &quot;############&quot;,
+]
+
+TILES = {
+    &quot;^&quot;: lambda: [sprite(&quot;wall_top&quot;), scale(3)],
+    &quot;#&quot;: lambda: [sprite(&quot;wall&quot;), scale(3)],
+    &quot;B&quot;: lambda: [sprite(&quot;banner&quot;), scale(3)],
+    &quot;D&quot;: lambda: [sprite(&quot;door&quot;), scale(3)],
+    &quot;.&quot;: lambda: [sprite(&quot;floor_1&quot;), scale(3)],
+    &quot;,&quot;: lambda: [sprite(&quot;floor_2&quot;), scale(3)],
+    &quot;:&quot;: lambda: [sprite(&quot;floor_3&quot;), scale(3)],
+}
+
+# The floor, in pixels: everything inside the walls.
+LEFT = TILE * 1
+RIGHT = TILE * 11
+TOP = TILE * 2
+BOTTOM = TILE * 11
+
+facing = (0, 1)    # which way the knight faces, as (x, y): (0, 1) is down
+
+# The sword picture points up, so up is 0 degrees, and the rest go round
+# clockwise.
+SWORD_ANGLE = {
+    (0, -1): 0, (1, -1): 45, (1, 0): 90, (1, 1): 135,
+    (0, 1): 180, (-1, 1): 225, (-1, 0): 270, (-1, -1): 315,
+}
+
+
+@scene(&quot;hall&quot;)
+def hall():
+    global facing
+    facing = (0, 1)
+
+    addLevel(HALL, {&quot;tileWidth&quot;: TILE, &quot;tileHeight&quot;: TILE,
+                    &quot;pos&quot;: vec2(0, 0), &quot;tiles&quot;: TILES})
+
+    knight = add([
+        sprite(&quot;knight&quot;, anim=&quot;idle&quot;),
+        pos((LEFT + RIGHT) / 2, (TOP + BOTTOM) / 2),
+        anchor(&quot;center&quot;),
+        scale(2.5),
+        area(),
+        z(10),
+        &quot;knight&quot;,
+    ])
+
+    @onUpdate
+    def walk():
+        global facing
+
+        dx = 0
+        dy = 0
+        if isKeyDown(&quot;left&quot;):
+            dx = dx - 1
+        if isKeyDown(&quot;right&quot;):
+            dx = dx + 1
+        if isKeyDown(&quot;up&quot;):
+            dy = dy - 1
+        if isKeyDown(&quot;down&quot;):
+            dy = dy + 1
+
+        if dx != 0 or dy != 0:
+            facing = (dx, dy)
+            way = vec2(dx, dy).unit()
+            knight.move(way.x * SPEED, way.y * SPEED)
+            if dx != 0:
+                knight.flipX = dx &lt; 0
+            if knight.curAnim() != &quot;run&quot;:
+                knight.play(&quot;run&quot;)
+        elif knight.curAnim() != &quot;idle&quot;:
+            knight.play(&quot;idle&quot;)
+
+        # Stay on the floor.
+        knight.pos.x = clamp(knight.pos.x, LEFT + 20, RIGHT - 20)
+        knight.pos.y = clamp(knight.pos.y, TOP, BOTTOM - 35)
+
+    @onKeyPress(&quot;space&quot;)
+    def swing():
+        if get(&quot;sword&quot;):       # one swing at a time
+            return
+        add([
+            sprite(&quot;sword&quot;),
+            pos(sword_spot()),
+            anchor(&quot;center&quot;),
+            scale(2.5),
+            rotate(SWORD_ANGLE[facing]),
+            area(),
+            lifespan(SWORD_TIME),
+            z(11),
+            &quot;sword&quot;,
+        ])
+
+    def sword_spot():
+        way = vec2(facing[0], facing[1]).unit()
+        return knight.pos + way * SWORD_REACH
+
+    @onUpdate(&quot;sword&quot;)
+    def follow_knight(sword):
+        sword.pos = sword_spot()
+
+
+go(&quot;hall&quot;)</code></pre>
+
+<p>Press <strong>S</strong> (or space) and the sword flashes out the way
+you're facing, in any of the eight directions. Hold the d-pad with one thumb
+and tap S with the other. The knight keeps walking while it swings.</p>
+
+<p><strong>Which way you face.</strong> <code>facing</code> is a pair of
+numbers, <code>(dx, dy)</code>, saved whenever you walk. It isn't changed
+when you stop, so the knight still faces the way it was last going.</p>
+
+<p><strong>Pointing the sword.</strong> The sword picture points straight up.
+<code>SWORD_ANGLE</code> is a dictionary that turns a direction into how far
+to turn the picture: up is 0, right is 90, and so on round the clock.
+<code>rotate()</code> turns it. A pair of numbers like <code>(1, 1)</code>
+can be a dictionary key because it's a tuple, which can't change.</p>
+
+<p><strong>Where the sword goes.</strong> <code>sword_spot()</code> is the
+knight's position plus <code>SWORD_REACH</code> pixels the way it faces.
+<code>follow_knight</code> puts the sword back there every frame, so it moves
+with you. <code>lifespan(SWORD_TIME)</code> destroys it after 0.15 seconds,
+and <code>get("sword")</code> stops a second swing until then: an empty list
+counts as <code>False</code>.</p>
+
+<p><strong>Break it on purpose.</strong> Take <code>global facing</code> out
+of <code>walk</code>. There's no error message. But now
+<code>facing = (dx, dy)</code> makes a new variable that only lives inside
+<code>walk</code>, and the one at the top of the file stays
+<code>(0, 1)</code>. The sword always points down, whichever way you walk.
+Put it back, then delete <code>(1, 1): 135,</code> from
+<code>SWORD_ANGLE</code> and swing while walking down and right. The game
+stops with <code>KeyError: (1, 1)</code>, pointing at
+<code>rotate(SWORD_ANGLE[facing])</code>. It means the dictionary has
+nothing for <code>(1, 1)</code>.</p>
+
+<h2 id="step-3-goblins-through-the-doors">Step 3 — goblins through the doors</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 48          # a tile is 48 pixels: the 16-pixel art, times 3
+
+# 12 tiles across. 18 down: 12 for the hall, 6 under it for the controls.
+kaypy(width=TILE * 12, height=TILE * 18, background=[20, 17, 26],
+      joystick=True)
+
+IDLE_RUN = {&quot;idle&quot;: {&quot;from&quot;: 0, &quot;to&quot;: 3, &quot;speed&quot;: 8, &quot;loop&quot;: True},
+            &quot;run&quot;: {&quot;from&quot;: 4, &quot;to&quot;: 7, &quot;speed&quot;: 10, &quot;loop&quot;: True}}
+
+loadSprite(&quot;knight&quot;, &quot;dungeon/knight_m.png&quot;, sliceX=9, anims=IDLE_RUN)
+loadSprite(&quot;goblin&quot;, &quot;dungeon/goblin.png&quot;, sliceX=8, anims=IDLE_RUN)
+loadSprite(&quot;sword&quot;, &quot;dungeon/weapon_regular_sword.png&quot;)
+loadSprite(&quot;floor_1&quot;, &quot;dungeon/floor_1.png&quot;)
+loadSprite(&quot;floor_2&quot;, &quot;dungeon/floor_2.png&quot;)
+loadSprite(&quot;floor_3&quot;, &quot;dungeon/floor_3.png&quot;)
+loadSprite(&quot;wall_top&quot;, &quot;dungeon/wall_top_mid.png&quot;)
+loadSprite(&quot;wall&quot;, &quot;dungeon/wall_mid.png&quot;)
+loadSprite(&quot;banner&quot;, &quot;dungeon/wall_banner_red.png&quot;)
+loadSprite(&quot;door&quot;, &quot;dungeon/doors_leaf_open.png&quot;)
+
+SPEED = 220        # pixels per second
+SWORD_REACH = 42   # how far in front of the knight the blade appears
+SWORD_TIME = 0.15  # how long a swing lasts, in seconds
+KNOCKBACK = 40     # how far a monster is shoved when the sword hits it
+GOBLIN_SPEED = 80
+SPAWN_GAP = 2      # seconds between goblins
+
+HALL = [
+    &quot;^D^^^D^^^D^^&quot;,
+    &quot;#dd#BddB#dd#&quot;,
+    &quot;#..,....:..#&quot;,
+    &quot;#.:...,....#&quot;,
+    &quot;#....,...,.#&quot;,
+    &quot;#,.:.......#&quot;,
+    &quot;#.....:..,.#&quot;,
+    &quot;#..,.......#&quot;,
+    &quot;#.....,.:..#&quot;,
+    &quot;#.:.,......#&quot;,
+    &quot;#.......,..#&quot;,
+    &quot;############&quot;,
+]
+
+TILES = {
+    &quot;^&quot;: lambda: [sprite(&quot;wall_top&quot;), scale(3)],
+    &quot;#&quot;: lambda: [sprite(&quot;wall&quot;), scale(3)],
+    &quot;B&quot;: lambda: [sprite(&quot;banner&quot;), scale(3)],
+    &quot;D&quot;: lambda: [sprite(&quot;door&quot;), scale(3)],
+    &quot;.&quot;: lambda: [sprite(&quot;floor_1&quot;), scale(3)],
+    &quot;,&quot;: lambda: [sprite(&quot;floor_2&quot;), scale(3)],
+    &quot;:&quot;: lambda: [sprite(&quot;floor_3&quot;), scale(3)],
+}
+
+# The floor, in pixels: everything inside the walls.
+LEFT = TILE * 1
+RIGHT = TILE * 11
+TOP = TILE * 2
+BOTTOM = TILE * 11
+
+# Where the monsters come in: just inside each door in the picture.
+DOORS = []
+for col in range(len(HALL[0])):
+    if HALL[0][col] == &quot;D&quot;:
+        DOORS.append(vec2(col * TILE + TILE, TOP + 10))
+
+facing = (0, 1)    # which way the knight faces, as (x, y): (0, 1) is down
+
+# The sword picture points up, so up is 0 degrees, and the rest go round
+# clockwise.
+SWORD_ANGLE = {
+    (0, -1): 0, (1, -1): 45, (1, 0): 90, (1, 1): 135,
+    (0, 1): 180, (-1, 1): 225, (-1, 0): 270, (-1, -1): 315,
+}
+
+
+@scene(&quot;hall&quot;)
+def hall():
+    global facing
+    facing = (0, 1)
+
+    addLevel(HALL, {&quot;tileWidth&quot;: TILE, &quot;tileHeight&quot;: TILE,
+                    &quot;pos&quot;: vec2(0, 0), &quot;tiles&quot;: TILES})
+
+    knight = add([
+        sprite(&quot;knight&quot;, anim=&quot;idle&quot;),
+        pos((LEFT + RIGHT) / 2, (TOP + BOTTOM) / 2),
+        anchor(&quot;center&quot;),
+        scale(2.5),
+        area(),
+        z(10),
+        &quot;knight&quot;,
+    ])
+
+    @onUpdate
+    def walk():
+        global facing
+
+        dx = 0
+        dy = 0
+        if isKeyDown(&quot;left&quot;):
+            dx = dx - 1
+        if isKeyDown(&quot;right&quot;):
+            dx = dx + 1
+        if isKeyDown(&quot;up&quot;):
+            dy = dy - 1
+        if isKeyDown(&quot;down&quot;):
+            dy = dy + 1
+
+        if dx != 0 or dy != 0:
+            facing = (dx, dy)
+            way = vec2(dx, dy).unit()
+            knight.move(way.x * SPEED, way.y * SPEED)
+            if dx != 0:
+                knight.flipX = dx &lt; 0
+            if knight.curAnim() != &quot;run&quot;:
+                knight.play(&quot;run&quot;)
+        elif knight.curAnim() != &quot;idle&quot;:
+            knight.play(&quot;idle&quot;)
+
+        # Stay on the floor.
+        knight.pos.x = clamp(knight.pos.x, LEFT + 20, RIGHT - 20)
+        knight.pos.y = clamp(knight.pos.y, TOP, BOTTOM - 35)
+
+    @onKeyPress(&quot;space&quot;)
+    def swing():
+        if get(&quot;sword&quot;):       # one swing at a time
+            return
+        add([
+            sprite(&quot;sword&quot;),
+            pos(sword_spot()),
+            anchor(&quot;center&quot;),
+            scale(2.5),
+            rotate(SWORD_ANGLE[facing]),
+            area(),
+            lifespan(SWORD_TIME),
+            z(11),
+            &quot;sword&quot;,
+        ])
+
+    def sword_spot():
+        way = vec2(facing[0], facing[1]).unit()
+        return knight.pos + way * SWORD_REACH
+
+    @onUpdate(&quot;sword&quot;)
+    def follow_knight(sword):
+        sword.pos = sword_spot()
+
+    @onCollide(&quot;sword&quot;, &quot;enemy&quot;)
+    def sword_hits(sword, enemy):
+        enemy.hurt(1)
+        away = (enemy.pos - knight.pos).unit()
+        enemy.pos = enemy.pos + away * KNOCKBACK
+
+    def add_goblin():
+        door = choose(DOORS)
+        monster = add([
+            sprite(&quot;goblin&quot;, anim=&quot;run&quot;),
+            pos(door.x, door.y),
+            anchor(&quot;center&quot;),
+            scale(2.5),
+            area(),
+            health(1),
+            z(5),
+            &quot;enemy&quot;,
+        ])
+
+        @monster.onUpdate
+        def chase():
+            toward = (knight.pos - monster.pos).unit()
+            monster.move(toward.x * GOBLIN_SPEED, toward.y * GOBLIN_SPEED)
+            monster.flipX = toward.x &lt; 0
+            monster.pos.x = clamp(monster.pos.x, LEFT + 16, RIGHT - 16)
+            monster.pos.y = clamp(monster.pos.y, TOP, BOTTOM - 20)
+
+        @monster.onDeath
+        def beaten():
+            addKaboom(monster.pos, scale=0.5)
+            monster.destroy()
+
+    loop(SPAWN_GAP, add_goblin)
+
+
+go(&quot;hall&quot;)</code></pre>
+
+<p>Every two seconds a goblin comes in through one of the doors and heads
+straight for you. One hit of the sword and it's gone. They can't hurt you
+yet. That's step 4.</p>
+
+<p><strong>Where the doors are.</strong> The loop near the top looks along
+the first row of the picture for each <code>D</code>. A door is two tiles
+wide and starts at that column, so its middle is <code>col * TILE +
+TILE</code>. Move the <code>D</code>s in the picture and the goblins come
+in through the new doors. Nothing else needs changing.</p>
+
+<p><strong>One every two seconds.</strong> <code>loop(SPAWN_GAP,
+add_goblin)</code> calls <code>add_goblin</code> every
+<code>SPAWN_GAP</code> seconds, forever. <code>choose(DOORS)</code> picks
+one of the doors at random.</p>
+
+<p><strong>Chasing.</strong> <code>knight.pos - monster.pos</code> is an
+arrow from the goblin to the knight. <code>.unit()</code> makes it one long,
+the same trick as step 1, so every goblin walks at the same speed however
+far away it is. Every goblin gets its own <code>chase</code>, made inside
+its own call of <code>add_goblin</code>. That's why <code>monster</code>
+inside it always means <em>that</em> goblin, even with ten of them on the
+floor.</p>
+
+<p><strong>The hit.</strong> <code>onCollide("sword", "enemy")</code> runs
+once, at the moment a sword starts touching a monster, so one swing is one
+hit. <code>enemy.hurt(1)</code> takes away one hit point. The goblin then
+gets shoved <code>KNOCKBACK</code> pixels straight away from the knight.</p>
+
+<p><strong>Break it on purpose.</strong> Take <code>health(1),</code> out of
+the goblin. The game stops when the first goblin is made, with
+<code>AttributeError: GameObj has no attribute 'onDeath' — did you forget a
+component that provides it?</code> <code>onDeath</code>, <code>hurt</code>
+and <code>hp</code> all come from the <code>health()</code> component.
+Without it, the goblin has none of them.</p>
+
+<h2 id="step-4-getting-hurt">Step 4 — getting hurt</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 48          # a tile is 48 pixels: the 16-pixel art, times 3
+
+# 12 tiles across. 18 down: 12 for the hall, 6 under it for the controls.
+kaypy(width=TILE * 12, height=TILE * 18, background=[20, 17, 26],
+      joystick=True)
+
+IDLE_RUN = {&quot;idle&quot;: {&quot;from&quot;: 0, &quot;to&quot;: 3, &quot;speed&quot;: 8, &quot;loop&quot;: True},
+            &quot;run&quot;: {&quot;from&quot;: 4, &quot;to&quot;: 7, &quot;speed&quot;: 10, &quot;loop&quot;: True}}
+
+loadSprite(&quot;knight&quot;, &quot;dungeon/knight_m.png&quot;, sliceX=9, anims=IDLE_RUN)
+loadSprite(&quot;goblin&quot;, &quot;dungeon/goblin.png&quot;, sliceX=8, anims=IDLE_RUN)
+loadSprite(&quot;heart_full&quot;, &quot;dungeon/ui_heart_full.png&quot;)
+loadSprite(&quot;heart_empty&quot;, &quot;dungeon/ui_heart_empty.png&quot;)
+loadSprite(&quot;sword&quot;, &quot;dungeon/weapon_regular_sword.png&quot;)
+loadSprite(&quot;floor_1&quot;, &quot;dungeon/floor_1.png&quot;)
+loadSprite(&quot;floor_2&quot;, &quot;dungeon/floor_2.png&quot;)
+loadSprite(&quot;floor_3&quot;, &quot;dungeon/floor_3.png&quot;)
+loadSprite(&quot;wall_top&quot;, &quot;dungeon/wall_top_mid.png&quot;)
+loadSprite(&quot;wall&quot;, &quot;dungeon/wall_mid.png&quot;)
+loadSprite(&quot;banner&quot;, &quot;dungeon/wall_banner_red.png&quot;)
+loadSprite(&quot;door&quot;, &quot;dungeon/doors_leaf_open.png&quot;)
+
+SPEED = 220        # pixels per second
+HEARTS = 3
+HURT_TIME = 1.2    # after a hit, how long before you can be hurt again
+SWORD_REACH = 42   # how far in front of the knight the blade appears
+SWORD_TIME = 0.15  # how long a swing lasts, in seconds
+KNOCKBACK = 40     # how far a monster is shoved when the sword hits it
+GOBLIN_SPEED = 80
+SPAWN_GAP = 2      # seconds between goblins
+
+HALL = [
+    &quot;^D^^^D^^^D^^&quot;,
+    &quot;#dd#BddB#dd#&quot;,
+    &quot;#..,....:..#&quot;,
+    &quot;#.:...,....#&quot;,
+    &quot;#....,...,.#&quot;,
+    &quot;#,.:.......#&quot;,
+    &quot;#.....:..,.#&quot;,
+    &quot;#..,.......#&quot;,
+    &quot;#.....,.:..#&quot;,
+    &quot;#.:.,......#&quot;,
+    &quot;#.......,..#&quot;,
+    &quot;############&quot;,
+]
+
+TILES = {
+    &quot;^&quot;: lambda: [sprite(&quot;wall_top&quot;), scale(3)],
+    &quot;#&quot;: lambda: [sprite(&quot;wall&quot;), scale(3)],
+    &quot;B&quot;: lambda: [sprite(&quot;banner&quot;), scale(3)],
+    &quot;D&quot;: lambda: [sprite(&quot;door&quot;), scale(3)],
+    &quot;.&quot;: lambda: [sprite(&quot;floor_1&quot;), scale(3)],
+    &quot;,&quot;: lambda: [sprite(&quot;floor_2&quot;), scale(3)],
+    &quot;:&quot;: lambda: [sprite(&quot;floor_3&quot;), scale(3)],
+}
+
+# The floor, in pixels: everything inside the walls.
+LEFT = TILE * 1
+RIGHT = TILE * 11
+TOP = TILE * 2
+BOTTOM = TILE * 11
+
+# Where the monsters come in: just inside each door in the picture.
+DOORS = []
+for col in range(len(HALL[0])):
+    if HALL[0][col] == &quot;D&quot;:
+        DOORS.append(vec2(col * TILE + TILE, TOP + 10))
+
+facing = (0, 1)    # which way the knight faces, as (x, y): (0, 1) is down
+hurt_left = 0      # seconds of safety left after being hit
+game_over = False
+
+# The sword picture points up, so up is 0 degrees, and the rest go round
+# clockwise.
+SWORD_ANGLE = {
+    (0, -1): 0, (1, -1): 45, (1, 0): 90, (1, 1): 135,
+    (0, 1): 180, (-1, 1): 225, (-1, 0): 270, (-1, -1): 315,
+}
+
+
+@scene(&quot;hall&quot;)
+def hall():
+    global facing, hurt_left, game_over
+    facing = (0, 1)
+    hurt_left = 0
+    game_over = False
+
+    addLevel(HALL, {&quot;tileWidth&quot;: TILE, &quot;tileHeight&quot;: TILE,
+                    &quot;pos&quot;: vec2(0, 0), &quot;tiles&quot;: TILES})
+
+    knight = add([
+        sprite(&quot;knight&quot;, anim=&quot;idle&quot;),
+        pos((LEFT + RIGHT) / 2, (TOP + BOTTOM) / 2),
+        anchor(&quot;center&quot;),
+        scale(2.5),
+        area(),
+        opacity(1),
+        health(HEARTS),
+        z(10),
+        &quot;knight&quot;,
+    ])
+
+    @onUpdate
+    def walk():
+        global facing, hurt_left
+
+        if game_over:
+            return
+
+        if hurt_left &gt; 0:
+            hurt_left = hurt_left - dt()
+
+        dx = 0
+        dy = 0
+        if isKeyDown(&quot;left&quot;):
+            dx = dx - 1
+        if isKeyDown(&quot;right&quot;):
+            dx = dx + 1
+        if isKeyDown(&quot;up&quot;):
+            dy = dy - 1
+        if isKeyDown(&quot;down&quot;):
+            dy = dy + 1
+
+        if dx != 0 or dy != 0:
+            facing = (dx, dy)
+            way = vec2(dx, dy).unit()
+            knight.move(way.x * SPEED, way.y * SPEED)
+            if dx != 0:
+                knight.flipX = dx &lt; 0
+            if knight.curAnim() != &quot;run&quot;:
+                knight.play(&quot;run&quot;)
+        elif knight.curAnim() != &quot;idle&quot;:
+            knight.play(&quot;idle&quot;)
+
+        # Stay on the floor.
+        knight.pos.x = clamp(knight.pos.x, LEFT + 20, RIGHT - 20)
+        knight.pos.y = clamp(knight.pos.y, TOP, BOTTOM - 35)
+
+        # Flicker while you are safe after a hit.
+        if hurt_left &gt; 0:
+            knight.opacity = wave(0.2, 1, time() * 20)
+        else:
+            knight.opacity = 1
+
+    @onKeyPress(&quot;space&quot;)
+    def swing():
+        if game_over:
+            return
+        if get(&quot;sword&quot;):       # one swing at a time
+            return
+        add([
+            sprite(&quot;sword&quot;),
+            pos(sword_spot()),
+            anchor(&quot;center&quot;),
+            scale(2.5),
+            rotate(SWORD_ANGLE[facing]),
+            area(),
+            lifespan(SWORD_TIME),
+            z(11),
+            &quot;sword&quot;,
+        ])
+
+    def sword_spot():
+        way = vec2(facing[0], facing[1]).unit()
+        return knight.pos + way * SWORD_REACH
+
+    @onUpdate(&quot;sword&quot;)
+    def follow_knight(sword):
+        sword.pos = sword_spot()
+
+    @onCollide(&quot;sword&quot;, &quot;enemy&quot;)
+    def sword_hits(sword, enemy):
+        enemy.hurt(1)
+        away = (enemy.pos - knight.pos).unit()
+        enemy.pos = enemy.pos + away * KNOCKBACK
+
+    def add_goblin():
+        door = choose(DOORS)
+        monster = add([
+            sprite(&quot;goblin&quot;, anim=&quot;run&quot;),
+            pos(door.x, door.y),
+            anchor(&quot;center&quot;),
+            scale(2.5),
+            area(),
+            health(1),
+            z(5),
+            &quot;enemy&quot;,
+        ])
+
+        @monster.onUpdate
+        def chase():
+            if game_over:
+                return
+            toward = (knight.pos - monster.pos).unit()
+            monster.move(toward.x * GOBLIN_SPEED, toward.y * GOBLIN_SPEED)
+            monster.flipX = toward.x &lt; 0
+            monster.pos.x = clamp(monster.pos.x, LEFT + 16, RIGHT - 16)
+            monster.pos.y = clamp(monster.pos.y, TOP, BOTTOM - 20)
+
+        @monster.onDeath
+        def beaten():
+            addKaboom(monster.pos, scale=0.5)
+            monster.destroy()
+
+    loop(SPAWN_GAP, add_goblin)
+
+    @knight.onCollideUpdate(&quot;enemy&quot;)
+    def touched(enemy):
+        global hurt_left
+
+        if game_over or hurt_left &gt; 0:
+            return
+        knight.hurt(1)
+        hurt_left = HURT_TIME
+        shake(8)
+
+    @knight.onDeath
+    def knight_died():
+        global game_over
+
+        game_over = True
+        addKaboom(knight.pos)
+        knight.destroy()
+
+        @say(&quot;The hall has fallen.&quot;, button=&quot;Play again&quot;)
+        def again():
+            go(&quot;hall&quot;)
+
+    @onDraw
+    def hearts():
+        hp = 0
+        if knight.exists():
+            hp = knight.hp
+        i = 0
+        while i &lt; HEARTS:
+            if i &lt; hp:
+                name = &quot;heart_full&quot;
+            else:
+                name = &quot;heart_empty&quot;
+            drawSprite(sprite=name, pos=vec2(width() - 150 + i * 46,
+                                             TILE * 12 + 8),
+                       width=39, height=36)
+            i = i + 1
+
+
+go(&quot;hall&quot;)</code></pre>
+
+<p>Now the goblins bite. You have three hearts, drawn under the hall. After a
+hit the knight flickers for a moment and can't be hurt again until it stops.
+Lose all three and the hall falls. Press <strong>Play again</strong> and it
+starts over.</p>
+
+<p><strong>Every frame, not just once.</strong>
+<code>knight.onCollideUpdate("enemy")</code> runs every frame that a monster
+is touching the knight. <code>onCollide</code> would only run at the moment
+they <em>start</em> touching, so a goblin that walked into you while you
+were flickering and then stayed there would never hurt you again. Try it:
+change it to <code>knight.onCollide("enemy")</code> and stand still. In a
+test, the knight standing still lasted almost twice as long.</p>
+
+<p><strong>A countdown.</strong> <code>hurt_left</code> is how many seconds
+of safety are left. A hit sets it to <code>HURT_TIME</code>, and every frame
+<code>walk</code> takes away <code>dt()</code>, how long that frame took.
+While it's above zero, <code>touched</code> does nothing, and
+<code>wave()</code> swings the knight's opacity up and down to make it
+flicker.</p>
+
+<p><strong>Starting over.</strong> When the knight's hit points reach zero,
+<code>onDeath</code> runs. <code>game_over</code> stops everything moving,
+and <code>say</code> shows a message. When it's closed,
+<code>go("hall")</code> runs <code>hall()</code> again from the top. That's
+why the start of <code>hall()</code> sets every variable back: the ones at
+the top of the file aren't run again, so without those lines the new game
+would start with the old game's <code>game_over</code> still
+<code>True</code>. The old scene's <code>loop</code> stops by itself, so
+the goblins don't start coming twice as fast.</p>
+
+<p><strong>The hearts</strong> are drawn every frame with
+<code>drawSprite</code>, full or empty, under the hall. A heart is a mark on
+the screen, not a thing in the hall, so it doesn't need to be a game
+object.</p>
+
+<h2 id="step-5-waves">Step 5 — waves</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+TILE = 48          # a tile is 48 pixels: the 16-pixel art, times 3
+
+# 12 tiles across. 18 down: 12 for the hall, 6 under it for the controls.
+kaypy(width=TILE * 12, height=TILE * 18, background=[20, 17, 26],
+      joystick=True)
+
+IDLE_RUN = {&quot;idle&quot;: {&quot;from&quot;: 0, &quot;to&quot;: 3, &quot;speed&quot;: 8, &quot;loop&quot;: True},
+            &quot;run&quot;: {&quot;from&quot;: 4, &quot;to&quot;: 7, &quot;speed&quot;: 10, &quot;loop&quot;: True}}
+
+loadSprite(&quot;knight&quot;, &quot;dungeon/knight_m.png&quot;, sliceX=9, anims=IDLE_RUN)
+loadSprite(&quot;goblin&quot;, &quot;dungeon/goblin.png&quot;, sliceX=8, anims=IDLE_RUN)
+loadSprite(&quot;imp&quot;, &quot;dungeon/imp.png&quot;, sliceX=8, anims=IDLE_RUN)
+loadSprite(&quot;orc&quot;, &quot;dungeon/orc_warrior.png&quot;, sliceX=8, anims=IDLE_RUN)
+loadSprite(&quot;heart_full&quot;, &quot;dungeon/ui_heart_full.png&quot;)
+loadSprite(&quot;heart_empty&quot;, &quot;dungeon/ui_heart_empty.png&quot;)
+loadSprite(&quot;sword&quot;, &quot;dungeon/weapon_regular_sword.png&quot;)
+loadSprite(&quot;floor_1&quot;, &quot;dungeon/floor_1.png&quot;)
+loadSprite(&quot;floor_2&quot;, &quot;dungeon/floor_2.png&quot;)
+loadSprite(&quot;floor_3&quot;, &quot;dungeon/floor_3.png&quot;)
+loadSprite(&quot;wall_top&quot;, &quot;dungeon/wall_top_mid.png&quot;)
+loadSprite(&quot;wall&quot;, &quot;dungeon/wall_mid.png&quot;)
+loadSprite(&quot;banner&quot;, &quot;dungeon/wall_banner_red.png&quot;)
+loadSprite(&quot;door&quot;, &quot;dungeon/doors_leaf_open.png&quot;)
+
+SPEED = 220        # pixels per second
+HEARTS = 3
+HURT_TIME = 1.2    # after a hit, how long before you can be hurt again
+SWORD_REACH = 42   # how far in front of the knight the blade appears
+SWORD_TIME = 0.15  # how long a swing lasts, in seconds
+KNOCKBACK = 40     # how far a monster is shoved when the sword hits it
+SPAWN_GAP = 0.8    # seconds between monsters coming through a door
+WAVE_PAUSE = 2.0   # seconds of quiet between waves
+
+MONSTERS = {
+    &quot;goblin&quot;: {&quot;hp&quot;: 1, &quot;speed&quot;: 80},
+    &quot;imp&quot;: {&quot;hp&quot;: 1, &quot;speed&quot;: 140},
+    &quot;orc&quot;: {&quot;hp&quot;: 3, &quot;speed&quot;: 60},
+}
+
+HALL = [
+    &quot;^D^^^D^^^D^^&quot;,
+    &quot;#dd#BddB#dd#&quot;,
+    &quot;#..,....:..#&quot;,
+    &quot;#.:...,....#&quot;,
+    &quot;#....,...,.#&quot;,
+    &quot;#,.:.......#&quot;,
+    &quot;#.....:..,.#&quot;,
+    &quot;#..,.......#&quot;,
+    &quot;#.....,.:..#&quot;,
+    &quot;#.:.,......#&quot;,
+    &quot;#.......,..#&quot;,
+    &quot;############&quot;,
+]
+
+TILES = {
+    &quot;^&quot;: lambda: [sprite(&quot;wall_top&quot;), scale(3)],
+    &quot;#&quot;: lambda: [sprite(&quot;wall&quot;), scale(3)],
+    &quot;B&quot;: lambda: [sprite(&quot;banner&quot;), scale(3)],
+    &quot;D&quot;: lambda: [sprite(&quot;door&quot;), scale(3)],
+    &quot;.&quot;: lambda: [sprite(&quot;floor_1&quot;), scale(3)],
+    &quot;,&quot;: lambda: [sprite(&quot;floor_2&quot;), scale(3)],
+    &quot;:&quot;: lambda: [sprite(&quot;floor_3&quot;), scale(3)],
+}
+
+# The floor, in pixels: everything inside the walls.
+LEFT = TILE * 1
+RIGHT = TILE * 11
+TOP = TILE * 2
+BOTTOM = TILE * 11
+
+# Where the monsters come in: just inside each door in the picture.
+DOORS = []
+for col in range(len(HALL[0])):
+    if HALL[0][col] == &quot;D&quot;:
+        DOORS.append(vec2(col * TILE + TILE, TOP + 10))
+
+facing = (0, 1)    # which way the knight faces, as (x, y): (0, 1) is down
+hurt_left = 0      # seconds of safety left after being hit
+wave_number = 0
+score = 0
+queue = []         # the monsters still to come in this wave
+spawn_wait = 0     # seconds until the next one comes through a door
+game_over = False
+
+# The sword picture points up, so up is 0 degrees, and the rest go round
+# clockwise.
+SWORD_ANGLE = {
+    (0, -1): 0, (1, -1): 45, (1, 0): 90, (1, 1): 135,
+    (0, 1): 180, (-1, 1): 225, (-1, 0): 270, (-1, -1): 315,
+}
+
+
+@scene(&quot;hall&quot;)
+def hall():
+    global facing, hurt_left, game_over
+    global wave_number, score, queue, spawn_wait
+    facing = (0, 1)
+    hurt_left = 0
+    wave_number = 0
+    score = 0
+    queue = []
+    spawn_wait = WAVE_PAUSE
+    game_over = False
+
+    addLevel(HALL, {&quot;tileWidth&quot;: TILE, &quot;tileHeight&quot;: TILE,
+                    &quot;pos&quot;: vec2(0, 0), &quot;tiles&quot;: TILES})
+
+    knight = add([
+        sprite(&quot;knight&quot;, anim=&quot;idle&quot;),
+        pos((LEFT + RIGHT) / 2, (TOP + BOTTOM) / 2),
+        anchor(&quot;center&quot;),
+        scale(2.5),
+        area(),
+        opacity(1),
+        health(HEARTS),
+        z(10),
+        &quot;knight&quot;,
+    ])
+
+    @onUpdate
+    def walk():
+        global facing, hurt_left
+
+        if game_over:
+            return
+
+        if hurt_left &gt; 0:
+            hurt_left = hurt_left - dt()
+
+        dx = 0
+        dy = 0
+        if isKeyDown(&quot;left&quot;):
+            dx = dx - 1
+        if isKeyDown(&quot;right&quot;):
+            dx = dx + 1
+        if isKeyDown(&quot;up&quot;):
+            dy = dy - 1
+        if isKeyDown(&quot;down&quot;):
+            dy = dy + 1
+
+        if dx != 0 or dy != 0:
+            facing = (dx, dy)
+            way = vec2(dx, dy).unit()
+            knight.move(way.x * SPEED, way.y * SPEED)
+            if dx != 0:
+                knight.flipX = dx &lt; 0
+            if knight.curAnim() != &quot;run&quot;:
+                knight.play(&quot;run&quot;)
+        elif knight.curAnim() != &quot;idle&quot;:
+            knight.play(&quot;idle&quot;)
+
+        # Stay on the floor.
+        knight.pos.x = clamp(knight.pos.x, LEFT + 20, RIGHT - 20)
+        knight.pos.y = clamp(knight.pos.y, TOP, BOTTOM - 35)
+
+        # Flicker while you are safe after a hit.
+        if hurt_left &gt; 0:
+            knight.opacity = wave(0.2, 1, time() * 20)
+        else:
+            knight.opacity = 1
+
+    @onKeyPress(&quot;space&quot;)
+    def swing():
+        if game_over:
+            return
+        if get(&quot;sword&quot;):       # one swing at a time
+            return
+        add([
+            sprite(&quot;sword&quot;),
+            pos(sword_spot()),
+            anchor(&quot;center&quot;),
+            scale(2.5),
+            rotate(SWORD_ANGLE[facing]),
+            area(),
+            lifespan(SWORD_TIME),
+            z(11),
+            &quot;sword&quot;,
+        ])
+
+    def sword_spot():
+        way = vec2(facing[0], facing[1]).unit()
+        return knight.pos + way * SWORD_REACH
+
+    @onUpdate(&quot;sword&quot;)
+    def follow_knight(sword):
+        sword.pos = sword_spot()
+
+    @onCollide(&quot;sword&quot;, &quot;enemy&quot;)
+    def sword_hits(sword, enemy):
+        enemy.hurt(1)
+        away = (enemy.pos - knight.pos).unit()
+        enemy.pos = enemy.pos + away * KNOCKBACK
+
+    def add_monster(kind):
+        details = MONSTERS[kind]
+        door = choose(DOORS)
+        monster = add([
+            sprite(kind, anim=&quot;run&quot;),
+            pos(door.x, door.y),
+            anchor(&quot;center&quot;),
+            scale(2.5),
+            area(),
+            health(details[&quot;hp&quot;]),
+            z(5),
+            &quot;enemy&quot;,
+        ])
+
+        speed = details[&quot;speed&quot;] * rand(0.85, 1.15)
+
+        @monster.onUpdate
+        def chase():
+            if game_over:
+                return
+            toward = (knight.pos - monster.pos).unit()
+            monster.move(toward.x * speed, toward.y * speed)
+            monster.flipX = toward.x &lt; 0
+            monster.pos.x = clamp(monster.pos.x, LEFT + 16, RIGHT - 16)
+            monster.pos.y = clamp(monster.pos.y, TOP, BOTTOM - 20)
+
+        @monster.onDeath
+        def beaten():
+            global score
+            score = score + 1
+            addKaboom(monster.pos, scale=0.5)
+            monster.destroy()
+
+    def next_wave():
+        global wave_number, queue
+
+        wave_number = wave_number + 1
+        queue = []
+        for i in range(wave_number + 2):
+            queue.append(&quot;goblin&quot;)
+        for i in range(wave_number - 1):
+            queue.append(&quot;imp&quot;)
+        for i in range(wave_number // 3):
+            queue.append(&quot;orc&quot;)
+
+    @onUpdate
+    def waves():
+        global spawn_wait
+
+        if game_over:
+            return
+        spawn_wait = spawn_wait - dt()
+        if spawn_wait &gt; 0:
+            return
+
+        if len(queue) &gt; 0:
+            kind = choose(queue)
+            queue.remove(kind)
+            add_monster(kind)
+            spawn_wait = SPAWN_GAP
+        elif len(get(&quot;enemy&quot;)) == 0:
+            next_wave()
+            spawn_wait = WAVE_PAUSE
+
+    @knight.onCollideUpdate(&quot;enemy&quot;)
+    def touched(enemy):
+        global hurt_left
+
+        if game_over or hurt_left &gt; 0:
+            return
+        knight.hurt(1)
+        hurt_left = HURT_TIME
+        shake(8)
+
+    @knight.onDeath
+    def knight_died():
+        global game_over
+
+        game_over = True
+        addKaboom(knight.pos)
+        knight.destroy()
+
+        @say(&quot;The hall has fallen.\n\nYou reached wave &quot;
+             + str(wave_number) + &quot; and beat &quot; + str(score) + &quot; monsters.&quot;,
+             button=&quot;Play again&quot;)
+        def again():
+            go(&quot;hall&quot;)
+
+    @onDraw
+    def panel():
+        drawText(text=&quot;WAVE &quot; + str(wave_number),
+                 pos=vec2(310, TILE * 12 + 10), size=24,
+                 color=(240, 220, 160))
+        drawText(text=&quot;SCORE &quot; + str(score),
+                 pos=vec2(310, TILE * 12 + 54), size=16,
+                 color=(200, 200, 210))
+
+        if len(queue) == 0 and len(get(&quot;enemy&quot;)) == 0 and not game_over:
+            drawText(text=&quot;Wave &quot; + str(wave_number + 1) + &quot; is coming...&quot;,
+                     pos=vec2(width() / 2 - 120, TOP + 190), size=24,
+                     color=(255, 255, 255))
+
+        hp = 0
+        if knight.exists():
+            hp = knight.hp
+        i = 0
+        while i &lt; HEARTS:
+            if i &lt; hp:
+                name = &quot;heart_full&quot;
+            else:
+                name = &quot;heart_empty&quot;
+            drawSprite(sprite=name, pos=vec2(width() - 150 + i * 46,
+                                             TILE * 12 + 8),
+                       width=39, height=36)
+            i = i + 1
+
+
+go(&quot;hall&quot;)</code></pre>
+
+<p>Now the monsters come in waves, and each wave is bigger than the last.
+Imps arrive from wave 2: they're fast. Orcs arrive from wave 3, one more
+every three waves: they're slow, but each takes three hits. The wave number and the score are drawn
+above the buttons.</p>
+
+<p><strong>Three kinds, one dictionary.</strong> <code>MONSTERS</code> holds
+each kind's hit points and speed. <code>add_monster(kind)</code> looks them
+up, and the sprite has the same name as the kind. Each monster also gets a
+speed a little above or below the usual (<code>rand(0.85, 1.15)</code>), so
+a wave spreads out instead of walking in as one lump.</p>
+
+<p><strong>The wave is a list.</strong> <code>next_wave</code> fills
+<code>queue</code> with the names of every monster in the wave: wave 1 is
+three goblins, wave 2 is four goblins and an imp, wave 3 adds an orc. Every
+<code>SPAWN_GAP</code> seconds, <code>waves</code> picks one at random with
+<code>choose</code>, takes it out of the list with <code>remove</code>, and
+lets it in. When the list is empty <em>and</em> the floor is clear, the next
+wave starts after a short pause.</p>
+
+<p><strong>No more <code>loop</code>.</strong> A loop goes on forever, and
+here the gap depends on what's happening: short between monsters, longer
+between waves. So <code>spawn_wait</code> is a countdown, like
+<code>hurt_left</code>.</p>
+
+<p><strong>Break it on purpose.</strong> Take <code>global spawn_wait</code>
+out of <code>waves</code>. The game stops at once, with
+<code>UnboundLocalError: cannot access local variable 'spawn_wait' where it
+is not associated with a value</code>. Python sees <code>spawn_wait = ...</code> in the function and decides
+<code>spawn_wait</code> must be a new variable of its own. Then the right
+side asks for its value before it has one. It's the same mistake as in step
+2, but this time there's an error message, because here the variable is
+read before it's set.</p>
+
+<h2 id="step-6-the-whole-game">Step 6 — the whole game</h2>
+
+<p>This is the game exactly as it is on the <a href="../../games/">games
+page</a>. It adds:</p>
+
+<ul>
+<li><strong>The dash</strong>, on the second button. For 0.18 seconds the
+knight shoots forward the way it's facing and can't be hurt, so you can
+dash <em>through</em> a monster. Then it has to wait a second before it can
+dash again, and the word DASH goes grey until it can. The dash speed was
+700 at first, and in a test a dash through a goblin ended with the knight
+still on top of it, and it got hurt anyway. At 900 the knight comes out the
+other side.</li>
+<li><strong>Healing flasks.</strong> Now and then a monster leaves one
+behind. Walk over it for a heart back (never more than three). It fades
+away after eight seconds. Fading needs <code>opacity(1)</code> on the
+flask. Without it, kaypy prints<br>
+<code>note: lifespan(fade=...) needs an opacity() component to fade — add
+opacity(1) to this object, or drop the fade argument.</code><br>
+and the flask just vanishes.</li>
+<li><strong>Your best score</strong>, kept with <code>setData</code> and read
+back with <code>getData</code>, so it's still there next time.</li>
+<li><strong>Sounds</strong> for swinging, hitting, dashing, getting hurt,
+drinking and a new wave.</li>
+<li><strong>Labels for the buttons.</strong> kaypy labels each button with
+the first letter of its key, S and Z. The game writes SWORD and DASH under
+them, so you know what they're <em>for</em>.</li>
+<li><strong>A message at the start</strong> saying how to play.</li>
+</ul>
+
+<p>It also has every number worth changing in one settings block near the
+top, and comments that explain why each part is there.</p>
+
+<pre><code class="language-python">&quot;&quot;&quot;Knight&#x27;s Hall -- hold the hall against wave after wave of monsters.
+
+    d-pad / arrow keys   walk, in eight directions
+    S button / space     swing your sword the way you are facing
+    Z button / z         dash -- you cannot be hurt while you dash
+
+Made for a phone held upright, like a handheld game: the hall at the top,
+the d-pad and the two buttons underneath it, where your thumbs are. On a
+computer the arrow keys, space and z do exactly the same thing.
+
+HOW THE BUTTONS GET ON THE SCREEN
+
+One word, on the first line of the program:
+
+    kaypy(width=576, height=864, joystick=True)
+
+joystick=True draws a d-pad and two buttons, and they PRETEND TO BE KEYS.
+Holding the left of the d-pad is the left arrow being held down; the two
+buttons are space and z. So nothing else in this file knows about the
+buttons at all. It asks isKeyDown(&quot;left&quot;) and onKeyPress(&quot;space&quot;), the same
+as any game, and a thumb answers.
+
+HOW THIS FILE IS PUT TOGETHER
+
+    1. the window and the pictures
+    2. the settings
+    3. the hall, drawn as a picture made of letters
+    4. what the game has to remember
+    5. the knight: walking, the sword, the dash, getting hurt
+    6. the monsters, and the waves they come in
+    7. the score, the hearts and the button labels
+    8. start the game
+&quot;&quot;&quot;
+
+from kaypy import *
+
+# --------------------------------------------------------------- 1. setup
+
+TILE = 48          # a tile is 48 pixels square: the 16-pixel art, times 3
+
+# The hall is 12 tiles square, and the window is taller than that. The
+# extra 6 tiles at the bottom are where the d-pad and the buttons go, so a
+# thumb on the controls never covers a monster.
+kaypy(width=TILE * 12, height=TILE * 18, background=[20, 17, 26],
+      joystick=True)
+
+# Sprites. Every path is written out in full, on purpose: the playground
+# reads this file for the names of the pictures it needs, and it only finds
+# them if they are plain text.
+IDLE_RUN = {&quot;idle&quot;: {&quot;from&quot;: 0, &quot;to&quot;: 3, &quot;speed&quot;: 8, &quot;loop&quot;: True},
+            &quot;run&quot;: {&quot;from&quot;: 4, &quot;to&quot;: 7, &quot;speed&quot;: 10, &quot;loop&quot;: True}}
+
+loadSprite(&quot;knight&quot;, &quot;dungeon/knight_m.png&quot;, sliceX=9, anims=IDLE_RUN)
+loadSprite(&quot;goblin&quot;, &quot;dungeon/goblin.png&quot;, sliceX=8, anims=IDLE_RUN)
+loadSprite(&quot;imp&quot;, &quot;dungeon/imp.png&quot;, sliceX=8, anims=IDLE_RUN)
+loadSprite(&quot;orc&quot;, &quot;dungeon/orc_warrior.png&quot;, sliceX=8, anims=IDLE_RUN)
+loadSprite(&quot;sword&quot;, &quot;dungeon/weapon_regular_sword.png&quot;)
+loadSprite(&quot;flask&quot;, &quot;dungeon/flask_red.png&quot;)
+loadSprite(&quot;heart_full&quot;, &quot;dungeon/ui_heart_full.png&quot;)
+loadSprite(&quot;heart_empty&quot;, &quot;dungeon/ui_heart_empty.png&quot;)
+
+loadSprite(&quot;floor_1&quot;, &quot;dungeon/floor_1.png&quot;)
+loadSprite(&quot;floor_2&quot;, &quot;dungeon/floor_2.png&quot;)
+loadSprite(&quot;floor_3&quot;, &quot;dungeon/floor_3.png&quot;)
+loadSprite(&quot;wall_top&quot;, &quot;dungeon/wall_top_mid.png&quot;)
+loadSprite(&quot;wall&quot;, &quot;dungeon/wall_mid.png&quot;)
+loadSprite(&quot;banner&quot;, &quot;dungeon/wall_banner_red.png&quot;)
+loadSprite(&quot;door&quot;, &quot;dungeon/doors_leaf_open.png&quot;)
+
+loadSound(&quot;swing&quot;, &quot;sounds/swing.wav&quot;)
+loadSound(&quot;hit&quot;, &quot;sounds/thump.wav&quot;)
+loadSound(&quot;dash&quot;, &quot;sounds/swoosh.wav&quot;)
+loadSound(&quot;hurt&quot;, &quot;sounds/lazer_punch.wav&quot;)
+loadSound(&quot;drink&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;wave&quot;, &quot;sounds/rising_beep.wav&quot;)
+loadSound(&quot;boom&quot;, &quot;sounds/small_boom.wav&quot;)
+
+
+# --------------------------------------------------------- 2. the settings
+
+SPEED = 220             # how fast the knight walks, pixels per second
+HEARTS = 3
+
+SWORD_REACH = 42        # how far in front of the knight the blade appears
+SWORD_TIME = 0.15       # how long a swing lasts, in seconds
+KNOCKBACK = 40          # how far a monster is shoved when the sword hits it
+
+DASH_SPEED = 900
+DASH_TIME = 0.18        # how long a dash lasts
+DASH_RECHARGE = 1.0     # how long until you can dash again
+HURT_TIME = 1.2         # after a hit, how long before you can be hurt again
+
+SPAWN_GAP = 0.8         # seconds between monsters coming through a door
+WAVE_PAUSE = 2.0        # seconds of quiet between waves
+FLASK_CHANCE = 0.1      # how likely a monster is to drop a healing flask
+
+# The three kinds of monster. Each one is a dictionary, so adding a fourth
+# is one more line here (and a loadSprite above).
+MONSTERS = {
+    &quot;goblin&quot;: {&quot;hp&quot;: 1, &quot;speed&quot;: 80},
+    &quot;imp&quot;: {&quot;hp&quot;: 1, &quot;speed&quot;: 140},
+    &quot;orc&quot;: {&quot;hp&quot;: 3, &quot;speed&quot;: 60},
+}
+
+BEST_KEY = &quot;knights_hall_best&quot;
+
+
+# ----------------------------------------------------------- 3. the hall
+#
+# One letter is one tile.
+#
+#   ^  top of the wall     #  wall      B  wall with a banner
+#   D  a doorway, two tiles wide and two tall. The &#x27;d&#x27;s beside and under
+#      it are the rest of the same door, so they draw nothing.
+#   .  ,  :  three kinds of floor, so it does not look like wallpaper
+#
+# The monsters come in through the doors, so a door can be moved by moving
+# its letters -- nothing in the code knows where they are.
+
+HALL = [
+    &quot;^D^^^D^^^D^^&quot;,
+    &quot;#dd#BddB#dd#&quot;,
+    &quot;#..,....:..#&quot;,
+    &quot;#.:...,....#&quot;,
+    &quot;#....,...,.#&quot;,
+    &quot;#,.:.......#&quot;,
+    &quot;#.....:..,.#&quot;,
+    &quot;#..,.......#&quot;,
+    &quot;#.....,.:..#&quot;,
+    &quot;#.:.,......#&quot;,
+    &quot;#.......,..#&quot;,
+    &quot;############&quot;,
+]
+
+# A door is drawn from the top-left of its tile, and the picture is two
+# tiles wide and two tall, so it covers three more tiles than its own. Those
+# are the &#x27;d&#x27;s. Put a &#x27;#&#x27; there instead and that wall gets drawn over a
+# corner of the door.
+
+TILES = {
+    &quot;^&quot;: lambda: [sprite(&quot;wall_top&quot;), scale(3)],
+    &quot;#&quot;: lambda: [sprite(&quot;wall&quot;), scale(3)],
+    &quot;B&quot;: lambda: [sprite(&quot;banner&quot;), scale(3)],
+    &quot;D&quot;: lambda: [sprite(&quot;door&quot;), scale(3)],
+    &quot;.&quot;: lambda: [sprite(&quot;floor_1&quot;), scale(3)],
+    &quot;,&quot;: lambda: [sprite(&quot;floor_2&quot;), scale(3)],
+    &quot;:&quot;: lambda: [sprite(&quot;floor_3&quot;), scale(3)],
+}
+
+# The floor, in pixels: everything inside the walls. Nothing that walks may
+# leave it. There are no walls to bump into -- each frame the knight and the
+# monsters are simply put back inside this box with clamp().
+LEFT = TILE * 1
+RIGHT = TILE * 11
+TOP = TILE * 2
+BOTTOM = TILE * 11
+
+# Where the monsters appear: just inside each door. Worked out from the
+# picture, so they move with the doors.
+DOORS = []
+for col in range(len(HALL[0])):
+    if HALL[0][col] == &quot;D&quot;:
+        DOORS.append(vec2(col * TILE + TILE, TOP + 10))
+
+
+# --------------------------------------------- 4. what the game remembers
+#
+# These change while you play, so any function that CHANGES one has to say
+# `global` first. They all go back to the start in the scene below.
+
+facing = (0, 1)     # which way the knight faces, as (x, y): (0, 1) is down
+dash_left = 0       # seconds of dash still to go
+dash_wait = 0       # seconds until the next dash is allowed
+hurt_left = 0       # seconds of safety left after being hit
+wave_number = 0     # not called `wave`: that would hide kaypy&#x27;s wave()
+score = 0
+queue = []          # the monsters still to come in this wave
+spawn_wait = 0      # seconds until the next one comes through a door
+game_over = False
+
+best = getData(BEST_KEY, 0)
+
+# The way the sword points for each of the eight ways the knight can face.
+# The picture of the sword points straight up, so up is 0 degrees and the
+# rest go round clockwise.
+SWORD_ANGLE = {
+    (0, -1): 0, (1, -1): 45, (1, 0): 90, (1, 1): 135,
+    (0, 1): 180, (-1, 1): 225, (-1, 0): 270, (-1, -1): 315,
+}
+
+
+@scene(&quot;hall&quot;)
+def hall():
+    global facing, dash_left, dash_wait, hurt_left
+    global wave_number, score, queue, spawn_wait, game_over
+
+    facing = (0, 1)
+    dash_left = 0
+    dash_wait = 0
+    hurt_left = 0
+    wave_number = 0
+    score = 0
+    queue = []
+    spawn_wait = WAVE_PAUSE
+    game_over = False
+
+    addLevel(HALL, {&quot;tileWidth&quot;: TILE, &quot;tileHeight&quot;: TILE,
+                    &quot;pos&quot;: vec2(0, 0), &quot;tiles&quot;: TILES})
+
+    # ------------------------------------------------------- 5. the knight
+
+    knight = add([
+        sprite(&quot;knight&quot;, anim=&quot;idle&quot;),
+        pos((LEFT + RIGHT) / 2, (TOP + BOTTOM) / 2),
+        anchor(&quot;center&quot;),
+        scale(2.5),
+        area(),
+        opacity(1),
+        health(HEARTS),
+        z(10),
+        &quot;knight&quot;,
+    ])
+
+    @onUpdate
+    def walk():
+        global facing, dash_left, dash_wait, hurt_left
+
+        if game_over:
+            return
+
+        # Count the timers down. dt() is how long this frame took, so
+        # taking it off every frame counts real seconds.
+        if dash_left &gt; 0:
+            dash_left = dash_left - dt()
+        if dash_wait &gt; 0:
+            dash_wait = dash_wait - dt()
+        if hurt_left &gt; 0:
+            hurt_left = hurt_left - dt()
+
+        # Which arrows are held. The d-pad holds these too, and a thumb
+        # between two arrows holds both -- that is a diagonal.
+        dx = 0
+        dy = 0
+        if isKeyDown(&quot;left&quot;):
+            dx = dx - 1
+        if isKeyDown(&quot;right&quot;):
+            dx = dx + 1
+        if isKeyDown(&quot;up&quot;):
+            dy = dy - 1
+        if isKeyDown(&quot;down&quot;):
+            dy = dy + 1
+
+        if dash_left &gt; 0:
+            # A dash goes the way you were facing when it started, fast,
+            # whatever you do with the d-pad meanwhile.
+            way = vec2(facing[0], facing[1]).unit()
+            knight.move(way.x * DASH_SPEED, way.y * DASH_SPEED)
+        elif dx != 0 or dy != 0:
+            facing = (dx, dy)
+            # unit() makes the arrow one long whichever way it points.
+            # Without it, (1, 1) is about 1.4 long and the knight would
+            # walk faster diagonally than straight.
+            way = vec2(dx, dy).unit()
+            knight.move(way.x * SPEED, way.y * SPEED)
+            if dx != 0:
+                knight.flipX = dx &lt; 0
+            if knight.curAnim() != &quot;run&quot;:
+                knight.play(&quot;run&quot;)
+        elif knight.curAnim() != &quot;idle&quot;:
+            knight.play(&quot;idle&quot;)
+
+        # Stay on the floor.
+        knight.pos.x = clamp(knight.pos.x, LEFT + 20, RIGHT - 20)
+        knight.pos.y = clamp(knight.pos.y, TOP, BOTTOM - 35)
+
+        # See-through while dashing, flickering while safe after a hit, and
+        # solid the rest of the time.
+        if dash_left &gt; 0:
+            knight.opacity = 0.4
+        elif hurt_left &gt; 0:
+            knight.opacity = wave(0.2, 1, time() * 20)
+        else:
+            knight.opacity = 1
+
+    # ---- the sword
+
+    @onKeyPress(&quot;space&quot;)
+    def swing():
+        if game_over or isShowing():
+            return
+        # One swing at a time. get() gives back a list, and an empty list
+        # counts as False, so this asks &quot;is a sword out already?&quot;
+        if get(&quot;sword&quot;):
+            return
+        add([
+            sprite(&quot;sword&quot;),
+            pos(sword_spot()),
+            anchor(&quot;center&quot;),
+            scale(2.5),
+            rotate(SWORD_ANGLE[facing]),
+            area(),
+            lifespan(SWORD_TIME),
+            z(11),
+            &quot;sword&quot;,
+        ])
+        play(&quot;swing&quot;)
+
+    def sword_spot():
+        way = vec2(facing[0], facing[1]).unit()
+        return knight.pos + way * SWORD_REACH
+
+    @onUpdate(&quot;sword&quot;)
+    def follow_knight(sword):
+        # The sword stays in the knight&#x27;s hand as the knight moves.
+        sword.pos = sword_spot()
+
+    @onCollide(&quot;sword&quot;, &quot;enemy&quot;)
+    def sword_hits(sword, enemy):
+        enemy.hurt(1)
+        play(&quot;hit&quot;)
+        # Shove it away from the knight, so one monster cannot stand on you.
+        away = (enemy.pos - knight.pos).unit()
+        enemy.pos = enemy.pos + away * KNOCKBACK
+
+    # ---- the dash
+
+    @onKeyPress(&quot;z&quot;)
+    def dash():
+        global dash_left, dash_wait
+
+        if game_over or isShowing():
+            return
+        if dash_wait &gt; 0:
+            return
+        dash_left = DASH_TIME
+        dash_wait = DASH_RECHARGE
+        play(&quot;dash&quot;)
+
+    # ---- getting hurt
+
+    # onCollideUpdate, not onCollide: onCollide only happens at the moment
+    # two things START touching. A goblin that walks into you while you are
+    # safe after a hit, and then just stays there, would never hurt you
+    # again. This one asks every frame they are touching.
+    @knight.onCollideUpdate(&quot;enemy&quot;)
+    def touched(enemy):
+        global hurt_left
+
+        if game_over or dash_left &gt; 0 or hurt_left &gt; 0:
+            return
+        knight.hurt(1)
+        hurt_left = HURT_TIME
+        shake(8)
+        play(&quot;hurt&quot;)
+
+    @knight.onDeath
+    def knight_died():
+        global game_over, best
+
+        game_over = True
+        play(&quot;boom&quot;)
+        addKaboom(knight.pos)
+        knight.destroy()
+
+        if score &gt; best:
+            best = score
+            setData(BEST_KEY, best)
+
+        @say(&quot;The hall has fallen.\n\nYou reached wave &quot;
+             + str(wave_number) + &quot; and beat &quot; + str(score) + &quot; monsters.&quot;,
+             button=&quot;Play again&quot;)
+        def again():
+            go(&quot;hall&quot;)
+
+    @knight.onCollide(&quot;flask&quot;)
+    def drink(flask):
+        flask.destroy()
+        knight.heal(1)
+        play(&quot;drink&quot;)
+
+    # ------------------------------------------------------ 6. the monsters
+
+    def add_monster(kind):
+        details = MONSTERS[kind]
+        door = choose(DOORS)
+        monster = add([
+            sprite(kind, anim=&quot;run&quot;),
+            pos(door.x, door.y),
+            anchor(&quot;center&quot;),
+            scale(2.5),
+            area(),
+            health(details[&quot;hp&quot;]),
+            z(5),
+            &quot;enemy&quot;,
+        ])
+
+        # Not quite all the same speed, so they spread out instead of
+        # walking in one lump.
+        speed = details[&quot;speed&quot;] * rand(0.85, 1.15)
+
+        # Every monster gets its own chase(), made fresh inside this call of
+        # add_monster(). So `monster` and `speed` in it mean THIS monster and
+        # THIS speed, even when there are ten of them.
+        @monster.onUpdate
+        def chase():
+            if game_over:
+                return
+            toward = (knight.pos - monster.pos).unit()
+            monster.move(toward.x * speed, toward.y * speed)
+            monster.flipX = toward.x &lt; 0
+            monster.pos.x = clamp(monster.pos.x, LEFT + 16, RIGHT - 16)
+            monster.pos.y = clamp(monster.pos.y, TOP, BOTTOM - 20)
+
+        @monster.onDeath
+        def beaten():
+            global score
+            score = score + 1
+            addKaboom(monster.pos, scale=0.5)
+            if chance(FLASK_CHANCE):
+                # opacity(1) is what lets lifespan() fade it out. Without
+                # it kaypy prints a note and the flask just vanishes.
+                add([sprite(&quot;flask&quot;), pos(monster.pos), anchor(&quot;center&quot;),
+                     scale(2.5), area(), opacity(1), lifespan(8, fade=1),
+                     z(4), &quot;flask&quot;])
+            monster.destroy()
+
+    def next_wave():
+        global wave_number, queue
+
+        wave_number = wave_number + 1
+        # More goblins every wave, imps from wave 2, an orc every third.
+        queue = []
+        for i in range(wave_number + 2):
+            queue.append(&quot;goblin&quot;)
+        for i in range(wave_number - 1):
+            queue.append(&quot;imp&quot;)
+        for i in range(wave_number // 3):
+            queue.append(&quot;orc&quot;)
+        play(&quot;wave&quot;)
+
+    @onUpdate
+    def waves():
+        global spawn_wait
+
+        if game_over:
+            return
+        spawn_wait = spawn_wait - dt()
+        if spawn_wait &gt; 0:
+            return
+
+        if len(queue) &gt; 0:
+            # Let the next one in, chosen at random from those left.
+            kind = choose(queue)
+            queue.remove(kind)
+            add_monster(kind)
+            spawn_wait = SPAWN_GAP
+        elif len(get(&quot;enemy&quot;)) == 0:
+            # Everyone beaten and nobody waiting: the next wave.
+            next_wave()
+            spawn_wait = WAVE_PAUSE
+
+    # ----------------------------------------- 7. the score, hearts, labels
+    #
+    # The bottom of the window, under the hall, is the control panel. The
+    # d-pad and buttons are drawn there by kaypy, on top of everything; all
+    # this draws is the writing around them.
+
+    PANEL = TILE * 12
+
+    @onDraw
+    def panel():
+        # Everything is on the right, above the buttons. The d-pad takes up
+        # the whole of the left.
+        drawText(text=&quot;WAVE &quot; + str(wave_number), pos=vec2(310, PANEL + 10),
+                 size=24, color=(240, 220, 160))
+        drawText(text=&quot;SCORE &quot; + str(score) + &quot;   BEST &quot; + str(best),
+                 pos=vec2(310, PANEL + 54), size=16, color=(200, 200, 210))
+
+        # A full heart for every hit you can still take.
+        hp = 0
+        if knight.exists():
+            hp = knight.hp
+        i = 0
+        while i &lt; HEARTS:
+            if i &lt; hp:
+                name = &quot;heart_full&quot;
+            else:
+                name = &quot;heart_empty&quot;
+            drawSprite(sprite=name, pos=vec2(width() - 150 + i * 46,
+                                             PANEL + 8),
+                       width=39, height=36)
+            i = i + 1
+
+        # What the two buttons do. kaypy labels them with their keys, S and
+        # Z, so the game says what they are FOR.
+        drawText(text=&quot;SWORD&quot;, pos=vec2(width() - 130, PANEL + 242),
+                 size=16, color=(200, 200, 210))
+        if dash_wait &gt; 0:
+            dash_colour = (110, 110, 120)
+        else:
+            dash_colour = (200, 200, 210)
+        drawText(text=&quot;DASH&quot;, pos=vec2(width() - 243, PANEL + 186),
+                 size=16, color=dash_colour)
+
+        # A note about the next wave, while it is waiting to start.
+        if len(queue) == 0 and len(get(&quot;enemy&quot;)) == 0 and not game_over:
+            drawText(text=&quot;Wave &quot; + str(wave_number + 1) + &quot; is coming...&quot;,
+                     pos=vec2(width() / 2 - 120, TOP + 190), size=24,
+                     color=(255, 255, 255))
+
+
+# ------------------------------------------------------- 8. start the game
+
+go(&quot;hall&quot;)
+
+say(&quot;Monsters are coming through the doors.\n\n&quot;
+    &quot;Walk with the d-pad. S swings your sword the way you are facing. &quot;
+    &quot;Z dashes, and you can&#x27;t be hurt while you dash.\n\n&quot;
+    &quot;On a computer: arrow keys, space and z.&quot;, button=&quot;Play&quot;)</code></pre>
+
+<h2 id="make-it-yours">Make it yours</h2>
+
+<p><a href="../../play/?game=knights_hall">Open the whole game in the playground →</a>
+It goes straight into the editor, ready to change and run.</p>
+
+<ul>
+<li><strong>A new monster.</strong> Add a line to <code>MONSTERS</code>, say
+<code>"skelet": {"hp": 2, "speed": 100},</code>, load its picture with
+<code>loadSprite("skelet", "dungeon/skelet.png", sliceX=8,
+anims=IDLE_RUN)</code>, and put some in the wave in
+<code>next_wave</code>. Forget the <code>loadSprite</code> and the first
+skeleton stops the game with<br>
+<code>KeyError: 'no sprite called \'skelet\' — loadSprite("skelet", ...) must
+run before it is used'</code></li>
+<li><strong>A different hero.</strong> The elves, wizards, dwarves and the
+other knight all have the same nine frames as the knight, so changing
+<code>"dungeon/knight_m.png"</code> to <code>"dungeon/elf_f.png"</code> is
+all it takes.</li>
+<li><strong>A different button.</strong> <code>joystick=["space",
+"x"]</code> makes the second button send <code>x</code> instead of
+<code>z</code>, and it says X. Change <code>onKeyPress("z")</code> to
+<code>onKeyPress("x")</code> as well, or the button does nothing.</li>
+<li><strong>Move the doors.</strong> Move the <code>D</code>s and
+<code>d</code>s in <code>HALL</code>. The monsters follow.</li>
+<li><strong>Harder or easier.</strong> <code>HEARTS</code>,
+<code>HURT_TIME</code>, <code>SPAWN_GAP</code> and the speeds in
+<code>MONSTERS</code> are where to start.</li>
+</ul>
+
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>
