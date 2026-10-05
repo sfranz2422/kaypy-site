@@ -231,6 +231,7 @@
     spike_runner: { title: "Spike Runner", file: "spike_runner/spike_runner.py" },
     block_slide: { title: "Block Slide", file: "block_slide/block_slide.py" },
     knights_hall: { title: "Knight's Hall", file: "knights_hall/knights_hall.py" },
+    pop_drop: { title: "Pop Drop", file: "pop_drop/pop_drop.py" },
     rpg_battle: { title: "Turn-Based Battle", file: "rpg_battle/rpg_battle.py" },
     dungeon_dash: { title: "Dungeon Dash", file: "dungeon_dash/dungeon_dash.py" }
   };

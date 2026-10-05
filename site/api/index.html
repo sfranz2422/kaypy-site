@@ -873,6 +873,20 @@ a.lerp(b, 0.5)
 if isinstance(p, Vec2):
     pass
 </code></pre>
+<h3 id="vec2fromangledegrees">Vec2.fromAngle(degrees)</h3>
+<p>A direction: a <code>vec2</code> one pixel long, pointing that many degrees
+round from straight right. Multiply it by a speed to move that way. The
+screen's y goes <em>down</em>, so the angles go round clockwise, the same way
+<code>rotate()</code> turns: <code>0</code> is right, <code>90</code> is down,
+<code>180</code> is left, and straight up is <code>-90</code> (or
+<code>270</code>, which is the same thing).</p>
+<pre><code class="language-python">arrow = add([rect(60, 8), pos(400, 300), anchor(&quot;center&quot;), rotate(-45)])
+
+@onUpdate
+def fly():
+    # up and to the right, the way the arrow is pointing
+    arrow.move(Vec2.fromAngle(arrow.angle) * 200)
+</code></pre>
 <h3 id="randa-b">rand(a, b)</h3>
 <p>A random float. One argument means from zero.</p>
 <pre><code class="language-python">x = rand(0, width())
@@ -1327,6 +1341,7 @@ arrow.rotateTo(90)
       <a class="toc-link toc-d2" href="#maths-and-helpers">Maths and helpers</a>
       <a class="toc-link toc-d3" href="#vec2x-y">vec2(x, y)</a>
       <a class="toc-link toc-d3" href="#vec2">Vec2</a>
+      <a class="toc-link toc-d3" href="#vec2fromangledegrees">Vec2.fromAngle(degrees)</a>
       <a class="toc-link toc-d3" href="#randa-b">rand(a, b)</a>
       <a class="toc-link toc-d3" href="#randia-b">randi(a, b)</a>
       <a class="toc-link toc-d3" href="#chooseseq">choose(seq)</a>
