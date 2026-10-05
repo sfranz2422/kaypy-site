@@ -1,0 +1,2446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Garden Guard · KayPy</title>
+<meta name="description" content="How Garden Guard was built, a step at a time: a lawn, suns to collect, plants that cost sun, zombies that eat them, peas, waves, lawnmowers and levels — in plain Python a student can copy.">
+<meta property="og:title" content="Building Garden Guard · KayPy">
+<meta property="og:description" content="How Garden Guard was built, a step at a time.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All eight lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li><li><a class="dropdown-item" href="../../learn/functions/">6 — Functions</a></li><li><a class="dropdown-item" href="../../learn/decorators/">7 — Decorators</a></li><li><a class="dropdown-item" href="../../learn/dictionaries/">8 — Dictionaries</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../../tutorials/" aria-current="page">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <article class="prose">
+<h1 id="building-garden-guard">Building Garden Guard</h1>
+
+<p><a href="../../static/games/garden_guard/">Play it first →</a> Zombies
+walk across a lawn towards your house, and you stop them with plants. Plants
+cost sun, so you collect the suns that fall from the sky and plant
+pineapples to make more. Beans shoot peas down their row. Every level brings
+a new plant and a new kind of zombie. It's a game in the style of
+<em>Plants vs. Zombies</em>, and it's played entirely by clicking, or by
+tapping on a phone or tablet held sideways.</p>
+
+<p>This is how it was built, a step at a time. Every numbered step below is a
+whole program: copy it into
+<a href="../../play/">the playground</a>, press Run, and it works. Each step
+is the one before it with something added, so you can build the game the way
+it was built. Then break something on purpose and see what changes. That
+teaches you more than reading does.</p>
+
+<p>There is nothing clever in it. No list comprehensions, no tricks, and every
+kaypy function it uses is on the <a href="../../api/">API page</a>.</p>
+
+<h2 id="the-one-big-idea">The one big idea: objects that carry their own values</h2>
+
+<p>Everything that moves is a game object, made with <code>add()</code>: the
+plants, the zombies, the peas and the suns. And each one carries a few
+values of its own, stored on it with a dot, as if it were a variable:</p>
+
+<pre><code class="language-python">zombie.row = 2
+zombie.walk_speed = 16
+plant.timer = 1.4</code></pre>
+
+<p>So a zombie knows which row it's in, and a plant knows how long until it
+shoots again. Then one <code>@onUpdate("zombie")</code> function runs for
+every zombie each frame and reads that zombie's own values. A hundred
+zombies, one function.</p>
+
+<p>Pick names that kaypy isn't already using for something. Components put
+values on an object too: <code>move()</code> gives it a <code>speed</code>,
+<code>health()</code> gives it <code>hp</code>. Set
+<code>pea.speed</code> and you've changed how fast <code>move()</code> moves
+it. That's why the zombies use <code>walk_speed</code>.</p>
+
+<p>The lawn itself is a list of lists, <code>grid[row][col]</code>, with the
+plant in each square or <code>None</code>. It answers the question the
+zombies keep asking: <em>is there a plant in front of me?</em></p>
+
+<h2 id="step-1-the-lawn">Step 1 — the lawn</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+COLS = 9           # squares across the lawn
+ROWS = 5           # rows of lawn
+CELL = 80          # a square is 80 pixels wide
+ROW_H = 90         # and 90 tall
+
+LAWN_X = 90        # the lawn starts here; left of it is the house
+LAWN_Y = 120       # and here, under the top bar
+
+kaypy(width=LAWN_X + COLS * CELL + 50, height=LAWN_Y + ROWS * ROW_H + 20,
+      background=[60, 45, 35])
+
+loadSprite(&quot;sun&quot;, &quot;images/sun.png&quot;)
+
+sun = 50
+
+# The lawn is made of rectangles that are game objects, not drawn in
+# onDraw. onDraw draws on top of every object, so a lawn drawn there would
+# cover the plants and the zombies. z(-10) puts these behind everything.
+for row in range(ROWS):
+    for col in range(COLS):
+        if (row + col) % 2 == 0:
+            green = (90, 170, 70)
+        else:
+            green = (80, 155, 62)
+        add([rect(CELL, ROW_H), pos(LAWN_X + col * CELL, LAWN_Y + row * ROW_H),
+             color(green[0], green[1], green[2]), z(-10)])
+
+
+@onDraw
+def draw_everything():
+    # The top bar, and how much sun you have.
+    drawRect(pos=vec2(0, 0), width=width(), height=LAWN_Y - 8,
+             color=(110, 75, 45))
+    drawRect(pos=vec2(8, 8), width=78, height=96, color=(80, 55, 35),
+             radius=8)
+    drawSprite(sprite=&quot;sun&quot;, pos=vec2(47, 42), width=50, height=50,
+               anchor=&quot;center&quot;)
+    drawText(text=str(sun), pos=vec2(47, 88), size=22, anchor=&quot;center&quot;)</code></pre>
+
+<p>Run it, and there's a striped lawn and a top bar showing 50 sun.</p>
+
+<ul>
+<li>The lawn is 45 rectangles, one per square, made with <code>add()</code>
+in two loops. <code>(row + col) % 2</code> is <code>0</code> or
+<code>1</code> by turns along a row <em>and</em> down a column, which is what
+makes the squares alternate like a chessboard.</li>
+<li>The top bar is drawn in <code>@onDraw</code>, which runs every frame,
+after everything else.</li>
+</ul>
+
+<p><strong>Why the lawn isn't drawn in <code>onDraw</code> too.</strong>
+<code>onDraw</code> draws <em>on top of</em> every game object. A lawn drawn
+there would cover the plants and the zombies, and the screen would show
+nothing but grass. So the lawn is made of objects, and <code>z(-10)</code>
+puts them behind everything else. The top bar is fine in
+<code>onDraw</code>, because nothing should ever be drawn over it.</p>
+
+<h2 id="step-2-sun">Step 2 — sun</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+COLS = 9           # squares across the lawn
+ROWS = 5           # rows of lawn
+CELL = 80          # a square is 80 pixels wide
+ROW_H = 90         # and 90 tall
+
+LAWN_X = 90        # the lawn starts here; left of it is the house
+LAWN_Y = 120       # and here, under the top bar
+
+kaypy(width=LAWN_X + COLS * CELL + 50, height=LAWN_Y + ROWS * ROW_H + 20,
+      background=[60, 45, 35])
+
+loadSprite(&quot;sun&quot;, &quot;images/sun.png&quot;)
+
+SUN_VALUE = 25          # what one sun is worth
+SKY_SUN_EVERY = 9       # seconds between suns falling from the sky
+SUN_LIFE = 12           # seconds a sun stays before it fades away
+
+sun = 50
+
+# The lawn is made of rectangles that are game objects, not drawn in
+# onDraw. onDraw draws on top of every object, so a lawn drawn there would
+# cover the plants and the zombies. z(-10) puts these behind everything.
+for row in range(ROWS):
+    for col in range(COLS):
+        if (row + col) % 2 == 0:
+            green = (90, 170, 70)
+        else:
+            green = (80, 155, 62)
+        add([rect(CELL, ROW_H), pos(LAWN_X + col * CELL, LAWN_Y + row * ROW_H),
+             color(green[0], green[1], green[2]), z(-10)])
+
+
+def make_sun(x, start_y, land_y):
+    &quot;&quot;&quot;A sun that drifts down to land_y, waits, and fades away.&quot;&quot;&quot;
+    s = add([sprite(&quot;sun&quot;), pos(x, start_y), anchor(&quot;center&quot;), scale(0.8),
+             opacity(1), lifespan(SUN_LIFE, fade=2), z(20), &quot;sun&quot;])
+    s.land_y = land_y
+
+
+@onUpdate(&quot;sun&quot;)
+def drift(s):
+    if s.pos.y &lt; s.land_y:
+        s.pos.y += 60 * dt()
+
+
+@loop(SKY_SUN_EVERY)
+def sun_from_the_sky():
+    # It starts under the top bar, so it seems to come out from behind it.
+    x = rand(LAWN_X + 30, LAWN_X + COLS * CELL - 30)
+    make_sun(x, LAWN_Y - 40, rand(LAWN_Y + 40, LAWN_Y + ROWS * ROW_H - 40))
+
+
+@onMousePress
+def click():
+    global sun
+
+    m = mousePos()
+    for s in get(&quot;sun&quot;):
+        if m.dist(s.pos) &lt; 35:
+            sun = sun + SUN_VALUE
+            s.destroy()
+            return
+
+
+@onDraw
+def draw_everything():
+    # The top bar, and how much sun you have.
+    drawRect(pos=vec2(0, 0), width=width(), height=LAWN_Y - 8,
+             color=(110, 75, 45))
+    drawRect(pos=vec2(8, 8), width=78, height=96, color=(80, 55, 35),
+             radius=8)
+    drawSprite(sprite=&quot;sun&quot;, pos=vec2(47, 42), width=50, height=50,
+               anchor=&quot;center&quot;)
+    drawText(text=str(sun), pos=vec2(47, 88), size=22, anchor=&quot;center&quot;)</code></pre>
+
+<p>Every 9 seconds a sun drifts down onto the lawn. Click it to collect
+it, and the count goes up by 25. Leave it, and it fades away.</p>
+
+<ul>
+<li><strong><code>@loop(SKY_SUN_EVERY)</code></strong> runs
+<code>sun_from_the_sky</code> every 9 seconds. It picks a random spot across
+the lawn and a random height to land at. The sun starts at
+<code>LAWN_Y - 40</code>, under the top bar, so it seems to come out from
+behind it.</li>
+<li><strong><code>s.land_y = land_y</code></strong> is the first value an
+object carries for itself. <code>drift</code> runs for every sun, every
+frame, and moves it down until it reaches its own <code>land_y</code>.</li>
+<li><strong><code>lifespan(SUN_LIFE, fade=2)</code></strong> takes the sun
+away after 12 seconds, fading it out over the last 2. The fade works by
+changing the sun's opacity, so the sun needs <code>opacity(1)</code> to
+have one. Without it, the sun just vanishes.</li>
+<li><strong><code>click</code></strong> runs when the mouse button goes
+down, or a finger touches the screen. <code>m.dist(s.pos)</code> is how far
+the click was from a sun's middle, and closer than 35 pixels counts.</li>
+</ul>
+
+<p><code>click</code> changes <code>sun</code>, which lives outside it, so it
+has to say <code>global sun</code> first. Leave that out and the first click
+on a sun stops the game with:</p>
+
+<pre><code class="language-text">UnboundLocalError: cannot access local variable 'sun' where it is not associated with a value</code></pre>
+
+<p>Without <code>global</code>, <code>sun = sun + SUN_VALUE</code> makes a
+new <code>sun</code> that belongs to <code>click</code> alone, and then asks
+what's in it before anything has been put there.</p>
+
+<h2 id="step-3-planting">Step 3 — planting</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+COLS = 9           # squares across the lawn
+ROWS = 5           # rows of lawn
+CELL = 80          # a square is 80 pixels wide
+ROW_H = 90         # and 90 tall
+
+LAWN_X = 90        # the lawn starts here; left of it is the house
+LAWN_Y = 120       # and here, under the top bar
+
+kaypy(width=LAWN_X + COLS * CELL + 50, height=LAWN_Y + ROWS * ROW_H + 20,
+      background=[60, 45, 35])
+
+loadSprite(&quot;sun&quot;, &quot;images/sun.png&quot;)
+loadSprite(&quot;pineapple&quot;, &quot;images/pineapple.png&quot;)
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+SUN_VALUE = 25          # what one sun is worth
+SKY_SUN_EVERY = 9       # seconds between suns falling from the sky
+SUN_LIFE = 12           # seconds a sun stays before it fades away
+
+# Each plant: what it costs, how long before you can plant another, and how
+# often it does its job, in seconds. &quot;scale&quot; shrinks the picture to fit a
+# square; &quot;w&quot; and &quot;h&quot; are the size of the picture file itself, which the
+# cards need to draw it.
+PLANTS = {
+    &quot;pineapple&quot;: {&quot;cost&quot;: 50, &quot;wait&quot;: 5, &quot;every&quot;: 12,
+                  &quot;scale&quot;: 0.75, &quot;w&quot;: 64, &quot;h&quot;: 80},
+    &quot;bean&quot;: {&quot;cost&quot;: 100, &quot;wait&quot;: 5, &quot;every&quot;: 1.4,
+             &quot;scale&quot;: 0.9, &quot;w&quot;: 64, &quot;h&quot;: 54},
+}
+CARDS = [&quot;pineapple&quot;, &quot;bean&quot;]
+
+sun = 50
+selected = None      # the name of the plant card picked, or None
+ready_at = {}        # plant name -&gt; the time() its card is ready again
+
+# grid[row][col] is the plant in that square, or None.
+grid = []
+for row in range(ROWS):
+    grid.append([None] * COLS)
+
+# The lawn is made of rectangles that are game objects, not drawn in
+# onDraw. onDraw draws on top of every object, so a lawn drawn there would
+# cover the plants and the zombies. z(-10) puts these behind everything.
+for row in range(ROWS):
+    for col in range(COLS):
+        if (row + col) % 2 == 0:
+            green = (90, 170, 70)
+        else:
+            green = (80, 155, 62)
+        add([rect(CELL, ROW_H), pos(LAWN_X + col * CELL, LAWN_Y + row * ROW_H),
+             color(green[0], green[1], green[2]), z(-10)])
+
+
+def square_x(col):
+    &quot;&quot;&quot;The middle of a square, across.&quot;&quot;&quot;
+    return LAWN_X + col * CELL + CELL / 2
+
+
+def row_y(row):
+    &quot;&quot;&quot;The middle of a row, down.&quot;&quot;&quot;
+    return LAWN_Y + row * ROW_H + ROW_H / 2
+
+
+def make_sun(x, start_y, land_y):
+    &quot;&quot;&quot;A sun that drifts down to land_y, waits, and fades away.&quot;&quot;&quot;
+    s = add([sprite(&quot;sun&quot;), pos(x, start_y), anchor(&quot;center&quot;), scale(0.8),
+             opacity(1), lifespan(SUN_LIFE, fade=2), z(20), &quot;sun&quot;])
+    s.land_y = land_y
+
+
+@onUpdate(&quot;sun&quot;)
+def drift(s):
+    if s.pos.y &lt; s.land_y:
+        s.pos.y += 60 * dt()
+
+
+@loop(SKY_SUN_EVERY)
+def sun_from_the_sky():
+    # It starts under the top bar, so it seems to come out from behind it.
+    x = rand(LAWN_X + 30, LAWN_X + COLS * CELL - 30)
+    make_sun(x, LAWN_Y - 40, rand(LAWN_Y + 40, LAWN_Y + ROWS * ROW_H - 40))
+
+
+CARD_X = 95
+CARD_W = 78
+CARD_GAP = 6
+
+
+def card_x(i):
+    return CARD_X + i * (CARD_W + CARD_GAP)
+
+
+def card_ready(name):
+    return time() &gt;= ready_at.get(name, 0)
+
+
+# One handler for every click or tap. It asks, in order: was that a sun?
+# a card? the lawn? A sun comes first because suns float over the lawn,
+# and a tap on one should collect it, not plant something under it.
+@onMousePress
+def click():
+    global sun, selected
+
+    m = mousePos()
+    for s in get(&quot;sun&quot;):
+        if m.dist(s.pos) &lt; 35:
+            sun = sun + SUN_VALUE
+            s.destroy()
+            return
+
+    if m.y &lt; LAWN_Y:
+        for i in range(len(CARDS)):
+            if card_x(i) &lt;= m.x &lt; card_x(i) + CARD_W:
+                name = CARDS[i]
+                if selected == name:
+                    selected = None            # tap again to put it back
+                elif card_ready(name) and sun &gt;= PLANTS[name][&quot;cost&quot;]:
+                    selected = name
+        return
+
+    col = int((m.x - LAWN_X) // CELL)
+    row = int((m.y - LAWN_Y) // ROW_H)
+    if selected is None or col &lt; 0 or col &gt;= COLS or row &lt; 0 or row &gt;= ROWS:
+        return
+    if grid[row][col] is not None:
+        return
+
+    put_plant(selected, row, col)
+    sun = sun - PLANTS[selected][&quot;cost&quot;]
+    ready_at[selected] = time() + PLANTS[selected][&quot;wait&quot;]
+    selected = None
+
+
+def put_plant(name, row, col):
+    info = PLANTS[name]
+    plant = add([sprite(name), pos(square_x(col), row_y(row)),
+                 anchor(&quot;center&quot;), scale(info[&quot;scale&quot;]), z(1), &quot;plant&quot;])
+    plant.kind = name
+    plant.row = row
+    plant.col = col
+    plant.timer = info[&quot;every&quot;]
+    if name == &quot;pineapple&quot;:
+        plant.timer = 5          # the first sun comes sooner
+    grid[row][col] = plant
+
+
+@onUpdate(&quot;plant&quot;)
+def plant_work(plant):
+    plant.timer -= dt()
+    if plant.timer &gt; 0:
+        return
+
+    if plant.kind == &quot;pineapple&quot;:
+        make_sun(plant.pos.x + 15, plant.pos.y - 10, plant.pos.y + 20)
+        plant.timer = PLANTS[&quot;pineapple&quot;][&quot;every&quot;]
+
+
+@onDraw
+def draw_everything():
+    # The top bar, and how much sun you have.
+    drawRect(pos=vec2(0, 0), width=width(), height=LAWN_Y - 8,
+             color=(110, 75, 45))
+    drawRect(pos=vec2(8, 8), width=78, height=96, color=(80, 55, 35),
+             radius=8)
+    drawSprite(sprite=&quot;sun&quot;, pos=vec2(47, 42), width=50, height=50,
+               anchor=&quot;center&quot;)
+    drawText(text=str(sun), pos=vec2(47, 88), size=22, anchor=&quot;center&quot;)
+
+    # A card for each plant.
+    for i in range(len(CARDS)):
+        name = CARDS[i]
+        info = PLANTS[name]
+        x = card_x(i)
+        drawRect(pos=vec2(x, 8), width=CARD_W, height=96,
+                 color=(235, 220, 170), radius=8)
+        if selected == name:
+            drawRect(pos=vec2(x, 8), width=CARD_W, height=96,
+                     color=(255, 240, 60), radius=8, outline=4)
+        drawSprite(sprite=name, pos=vec2(x + CARD_W / 2, 46),
+                   width=info[&quot;w&quot;] * info[&quot;scale&quot;] * 0.75,
+                   height=info[&quot;h&quot;] * info[&quot;scale&quot;] * 0.75, anchor=&quot;center&quot;)
+        drawText(text=str(info[&quot;cost&quot;]), pos=vec2(x + CARD_W / 2, 90),
+                 size=18, color=(60, 40, 20), anchor=&quot;center&quot;)
+
+        # Grey while it is waiting to be ready, shrinking as it gets
+        # nearer; dim if you cannot afford it.
+        if not card_ready(name):
+            left = (ready_at[name] - time()) / info[&quot;wait&quot;]
+            drawRect(pos=vec2(x, 8), width=CARD_W, height=96 * left,
+                     color=(40, 40, 40), opacity=0.6, radius=8)
+        elif sun &lt; info[&quot;cost&quot;]:
+            drawRect(pos=vec2(x, 8), width=CARD_W, height=96,
+                     color=(40, 40, 40), opacity=0.4, radius=8)</code></pre>
+
+<p>Now there are two cards in the top bar. Click the pineapple card, then a
+square of lawn, and a pineapple grows there. Every 12 seconds it makes a
+sun of its own. Beans can be planted too, but they don't do anything
+yet.</p>
+
+<p><strong>The cards.</strong> <code>PLANTS</code> is a dictionary of
+dictionaries: everything about each plant in one place. <code>click</code>
+now asks three questions in order. Was it a sun? Was it a card? Was it the
+lawn? Suns come first because they float over the lawn, and a click on one
+should collect it, not plant something underneath.</p>
+
+<p>Clicking a card <em>selects</em> it, but only if you can afford it and
+it's ready. Clicking the lawn plants whatever is selected, if that square is
+empty. Click a selected card again to put it back.</p>
+
+<p><strong>Waiting.</strong> After you plant something,
+<code>ready_at[name]</code> is set to <code>time()</code> plus the wait, the
+moment the card is ready again. <code>card_ready</code> compares the time
+now with that. <code>ready_at.get(name, 0)</code> means "or 0 if it isn't
+in the dictionary yet", so every card is ready at the start. The grey part
+of a card shrinks as the time runs out: <code>left</code> goes from 1 down to
+0.</p>
+
+<p><strong>Plants are objects</strong> that carry their kind, their row and
+column, and a <code>timer</code>. <code>plant_work</code> runs for every
+plant, every frame, counting its timer down. When a pineapple's reaches
+zero, it makes a sun beside itself and starts counting again.</p>
+
+<p><strong>Turning a click into a square.</strong>
+<code>(m.x - LAWN_X) // CELL</code> is how many whole squares the click is
+from the lawn's left edge: <code>//</code> divides and throws away the
+remainder. The same for the row. A click left of the lawn gives a negative
+column, and one past the right edge a column of 9 or more; the
+<code>if</code> after it ignores both.</p>
+
+<h2 id="step-4-zombies">Step 4 — zombies</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+COLS = 9           # squares across the lawn
+ROWS = 5           # rows of lawn
+CELL = 80          # a square is 80 pixels wide
+ROW_H = 90         # and 90 tall
+
+LAWN_X = 90        # the lawn starts here; left of it is the house
+LAWN_Y = 120       # and here, under the top bar
+
+kaypy(width=LAWN_X + COLS * CELL + 50, height=LAWN_Y + ROWS * ROW_H + 20,
+      background=[60, 45, 35])
+
+loadSprite(&quot;sun&quot;, &quot;images/sun.png&quot;)
+loadSprite(&quot;pineapple&quot;, &quot;images/pineapple.png&quot;)
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+# The zombie is a strip of tiny pictures, one frame after another.
+loadSprite(&quot;zombie&quot;, &quot;dungeon/zombie.png&quot;, sliceX=4, anims={
+    &quot;walk&quot;: {&quot;from&quot;: 0, &quot;to&quot;: 3, &quot;speed&quot;: 6, &quot;loop&quot;: True},
+})
+
+SUN_VALUE = 25          # what one sun is worth
+SKY_SUN_EVERY = 9       # seconds between suns falling from the sky
+SUN_LIFE = 12           # seconds a sun stays before it fades away
+BITE_TIME = 0.6         # seconds between a zombie&#x27;s bites
+ZOMBIE_EVERY = 10       # seconds between zombies, for now
+
+# Each plant: what it costs, how long before you can plant another, how
+# many bites it takes to eat, and how often it does its job, in seconds. &quot;scale&quot; shrinks the picture to fit a
+# square; &quot;w&quot; and &quot;h&quot; are the size of the picture file itself, which the
+# cards need to draw it.
+PLANTS = {
+    &quot;pineapple&quot;: {&quot;cost&quot;: 50, &quot;wait&quot;: 5, &quot;hp&quot;: 6, &quot;every&quot;: 12,
+                  &quot;scale&quot;: 0.75, &quot;w&quot;: 64, &quot;h&quot;: 80},
+    &quot;bean&quot;: {&quot;cost&quot;: 100, &quot;wait&quot;: 5, &quot;hp&quot;: 6, &quot;every&quot;: 1.4,
+             &quot;scale&quot;: 0.9, &quot;w&quot;: 64, &quot;h&quot;: 54},
+}
+CARDS = [&quot;pineapple&quot;, &quot;bean&quot;]
+
+# Each zombie: how many hits it takes, and how fast it walks.
+ZOMBIES = {
+    &quot;zombie&quot;: {&quot;hp&quot;: 10, &quot;speed&quot;: 16, &quot;scale&quot;: 4},
+}
+
+sun = 50
+selected = None      # the name of the plant card picked, or None
+ready_at = {}        # plant name -&gt; the time() its card is ready again
+over = False         # True once the zombies are in
+
+# grid[row][col] is the plant in that square, or None.
+grid = []
+
+# The lawn is made of rectangles that are game objects, not drawn in
+# onDraw. onDraw draws on top of every object, so a lawn drawn there would
+# cover the plants and the zombies. z(-10) puts these behind everything.
+for row in range(ROWS):
+    for col in range(COLS):
+        if (row + col) % 2 == 0:
+            green = (90, 170, 70)
+        else:
+            green = (80, 155, 62)
+        add([rect(CELL, ROW_H), pos(LAWN_X + col * CELL, LAWN_Y + row * ROW_H),
+             color(green[0], green[1], green[2]), z(-10)])
+
+
+def start_level():
+    global sun, selected, ready_at, over, grid
+
+    destroyAll(&quot;plant&quot;)
+    destroyAll(&quot;zombie&quot;)
+    destroyAll(&quot;sun&quot;)
+
+    sun = 50
+    selected = None
+    ready_at = {}
+    over = False
+    grid = []
+    for row in range(ROWS):
+        grid.append([None] * COLS)
+
+
+def level_lost():
+    global over
+
+    over = True
+    shake(10)
+
+    @say(&quot;The zombies got into the house!&quot;, button=&quot;Try again&quot;)
+    def try_again():
+        start_level()
+
+
+def square_x(col):
+    &quot;&quot;&quot;The middle of a square, across.&quot;&quot;&quot;
+    return LAWN_X + col * CELL + CELL / 2
+
+
+def row_y(row):
+    &quot;&quot;&quot;The middle of a row, down.&quot;&quot;&quot;
+    return LAWN_Y + row * ROW_H + ROW_H / 2
+
+
+def make_sun(x, start_y, land_y):
+    &quot;&quot;&quot;A sun that drifts down to land_y, waits, and fades away.&quot;&quot;&quot;
+    s = add([sprite(&quot;sun&quot;), pos(x, start_y), anchor(&quot;center&quot;), scale(0.8),
+             opacity(1), lifespan(SUN_LIFE, fade=2), z(20), &quot;sun&quot;])
+    s.land_y = land_y
+
+
+@onUpdate(&quot;sun&quot;)
+def drift(s):
+    if s.pos.y &lt; s.land_y:
+        s.pos.y += 60 * dt()
+
+
+@loop(SKY_SUN_EVERY)
+def sun_from_the_sky():
+    # It starts under the top bar, so it seems to come out from behind it.
+    x = rand(LAWN_X + 30, LAWN_X + COLS * CELL - 30)
+    make_sun(x, LAWN_Y - 40, rand(LAWN_Y + 40, LAWN_Y + ROWS * ROW_H - 40))
+
+
+CARD_X = 95
+CARD_W = 78
+CARD_GAP = 6
+
+
+def card_x(i):
+    return CARD_X + i * (CARD_W + CARD_GAP)
+
+
+def card_ready(name):
+    return time() &gt;= ready_at.get(name, 0)
+
+
+# One handler for every click or tap. It asks, in order: was that a sun?
+# a card? the lawn? A sun comes first because suns float over the lawn,
+# and a tap on one should collect it, not plant something under it.
+@onMousePress
+def click():
+    global sun, selected
+
+    if over:
+        return
+    m = mousePos()
+    for s in get(&quot;sun&quot;):
+        if m.dist(s.pos) &lt; 35:
+            sun = sun + SUN_VALUE
+            s.destroy()
+            return
+
+    if m.y &lt; LAWN_Y:
+        for i in range(len(CARDS)):
+            if card_x(i) &lt;= m.x &lt; card_x(i) + CARD_W:
+                name = CARDS[i]
+                if selected == name:
+                    selected = None            # tap again to put it back
+                elif card_ready(name) and sun &gt;= PLANTS[name][&quot;cost&quot;]:
+                    selected = name
+        return
+
+    col = int((m.x - LAWN_X) // CELL)
+    row = int((m.y - LAWN_Y) // ROW_H)
+    if selected is None or col &lt; 0 or col &gt;= COLS or row &lt; 0 or row &gt;= ROWS:
+        return
+    if grid[row][col] is not None:
+        return
+
+    put_plant(selected, row, col)
+    sun = sun - PLANTS[selected][&quot;cost&quot;]
+    ready_at[selected] = time() + PLANTS[selected][&quot;wait&quot;]
+    selected = None
+
+
+def put_plant(name, row, col):
+    info = PLANTS[name]
+    plant = add([sprite(name), pos(square_x(col), row_y(row)),
+                 anchor(&quot;center&quot;), scale(info[&quot;scale&quot;]), health(info[&quot;hp&quot;]),
+                 z(1), &quot;plant&quot;])
+    plant.kind = name
+    plant.row = row
+    plant.col = col
+    plant.timer = info[&quot;every&quot;]
+    if name == &quot;pineapple&quot;:
+        plant.timer = 5          # the first sun comes sooner
+    grid[row][col] = plant
+
+
+def remove_plant(plant):
+    grid[plant.row][plant.col] = None
+    plant.destroy()
+
+
+@onUpdate(&quot;plant&quot;)
+def plant_work(plant):
+    if over:
+        return
+    plant.timer -= dt()
+    if plant.timer &gt; 0:
+        return
+
+    if plant.kind == &quot;pineapple&quot;:
+        make_sun(plant.pos.x + 15, plant.pos.y - 10, plant.pos.y + 20)
+        plant.timer = PLANTS[&quot;pineapple&quot;][&quot;every&quot;]
+
+
+@loop(ZOMBIE_EVERY)
+def zombie_comes():
+    if not over:
+        spawn(&quot;zombie&quot;)
+
+
+def spawn(kind):
+    info = ZOMBIES[kind]
+    row = choose(range(ROWS))
+    # anchor(&quot;bot&quot;) means pos is where its feet are.
+    zombie = add([sprite(kind, anim=&quot;walk&quot;),
+                  pos(width() + 30, row_y(row) + ROW_H / 2 - 8),
+                  anchor(&quot;bot&quot;), scale(info[&quot;scale&quot;]), area(),
+                  health(info[&quot;hp&quot;]), z(3 + row), &quot;zombie&quot;])
+    zombie.flipX = True      # the pictures face right; zombies walk left
+    zombie.kind = kind
+    zombie.row = row
+    zombie.walk_speed = info[&quot;speed&quot;] * rand(0.9, 1.1)
+    zombie.bite_wait = 0
+
+
+def plant_in_front(zombie):
+    &quot;&quot;&quot;The plant in the square the zombie&#x27;s face is in, or None.&quot;&quot;&quot;
+    col = int((zombie.pos.x - 20 - LAWN_X) // CELL)
+    if col &lt; 0 or col &gt;= COLS:
+        return None
+    return grid[zombie.row][col]
+
+
+@onUpdate(&quot;zombie&quot;)
+def walk(zombie):
+    if over:
+        return
+
+    plant = plant_in_front(zombie)
+    if plant is not None:
+        # Stop and eat.
+        zombie.bite_wait -= dt()
+        if zombie.bite_wait &lt;= 0:
+            plant.hurt(1)
+            zombie.bite_wait = BITE_TIME
+            if not plant.isAlive():
+                remove_plant(plant)
+    else:
+        zombie.pos.x -= zombie.walk_speed * dt()
+
+    if zombie.pos.x &lt; 20:
+        level_lost()
+
+
+@onDraw
+def draw_everything():
+    # The top bar, and how much sun you have.
+    drawRect(pos=vec2(0, 0), width=width(), height=LAWN_Y - 8,
+             color=(110, 75, 45))
+    drawRect(pos=vec2(8, 8), width=78, height=96, color=(80, 55, 35),
+             radius=8)
+    drawSprite(sprite=&quot;sun&quot;, pos=vec2(47, 42), width=50, height=50,
+               anchor=&quot;center&quot;)
+    drawText(text=str(sun), pos=vec2(47, 88), size=22, anchor=&quot;center&quot;)
+
+    # A card for each plant.
+    for i in range(len(CARDS)):
+        name = CARDS[i]
+        info = PLANTS[name]
+        x = card_x(i)
+        drawRect(pos=vec2(x, 8), width=CARD_W, height=96,
+                 color=(235, 220, 170), radius=8)
+        if selected == name:
+            drawRect(pos=vec2(x, 8), width=CARD_W, height=96,
+                     color=(255, 240, 60), radius=8, outline=4)
+        drawSprite(sprite=name, pos=vec2(x + CARD_W / 2, 46),
+                   width=info[&quot;w&quot;] * info[&quot;scale&quot;] * 0.75,
+                   height=info[&quot;h&quot;] * info[&quot;scale&quot;] * 0.75, anchor=&quot;center&quot;)
+        drawText(text=str(info[&quot;cost&quot;]), pos=vec2(x + CARD_W / 2, 90),
+                 size=18, color=(60, 40, 20), anchor=&quot;center&quot;)
+
+        # Grey while it is waiting to be ready, shrinking as it gets
+        # nearer; dim if you cannot afford it.
+        if not card_ready(name):
+            left = (ready_at[name] - time()) / info[&quot;wait&quot;]
+            drawRect(pos=vec2(x, 8), width=CARD_W, height=96 * left,
+                     color=(40, 40, 40), opacity=0.6, radius=8)
+        elif sun &lt; info[&quot;cost&quot;]:
+            drawRect(pos=vec2(x, 8), width=CARD_W, height=96,
+                     color=(40, 40, 40), opacity=0.4, radius=8)
+
+
+start_level()</code></pre>
+
+<p>Every 10 seconds a zombie walks in from the right, in a random row. It
+stops to eat any plant in its way, and if it reaches the house, the game is
+over. Nothing can fight back yet, so you <em>will</em> lose this one. Try
+pineapples in a zombie's path to slow it down.</p>
+
+<ul>
+<li><strong>The picture</strong> is a strip of 4 tiny frames, and
+<code>sliceX=4</code> cuts it up. The <code>"walk"</code> animation plays
+them over and over. <code>scale(4)</code> makes the 16-pixel zombie 64
+pixels tall.</li>
+<li><strong><code>zombie.flipX = True</code></strong>: the pictures face
+right, and these zombies walk left. Take that line out and they walk
+backwards.</li>
+<li><strong><code>anchor("bot")</code></strong> means
+<code>pos</code> is where its feet are, so every kind of zombie stands on
+the same line, however tall it is.</li>
+<li><strong><code>health()</code></strong> gives plants and zombies hit
+points. A zombie <code>.hurt(1)</code>s the plant in front of it every
+<code>BITE_TIME</code> seconds, and when <code>.isAlive()</code> says no,
+<code>remove_plant</code> takes it off the lawn <em>and</em> out of
+<code>grid</code>, so the square is free again.</li>
+<li><strong><code>plant_in_front</code></strong> turns the zombie's
+position into a column, the same way <code>click</code> does, 20 pixels in
+front of its middle, where its face is.</li>
+</ul>
+
+<p><strong><code>start_level()</code></strong> puts everything back as it
+started. It runs once at the very bottom of the file, and again from the
+<strong>Try again</strong> button. <code>say()</code> pauses the game while
+its message is up, and <code>over</code> stops the zombies, the plants and
+the clicks until the next game starts.</p>
+
+<h2 id="step-5-peas">Step 5 — peas</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+COLS = 9           # squares across the lawn
+ROWS = 5           # rows of lawn
+CELL = 80          # a square is 80 pixels wide
+ROW_H = 90         # and 90 tall
+
+LAWN_X = 90        # the lawn starts here; left of it is the house
+LAWN_Y = 120       # and here, under the top bar
+
+kaypy(width=LAWN_X + COLS * CELL + 50, height=LAWN_Y + ROWS * ROW_H + 20,
+      background=[60, 45, 35])
+
+loadSprite(&quot;sun&quot;, &quot;images/sun.png&quot;)
+loadSprite(&quot;pineapple&quot;, &quot;images/pineapple.png&quot;)
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+# The zombie is a strip of tiny pictures, one frame after another.
+loadSprite(&quot;zombie&quot;, &quot;dungeon/zombie.png&quot;, sliceX=4, anims={
+    &quot;walk&quot;: {&quot;from&quot;: 0, &quot;to&quot;: 3, &quot;speed&quot;: 6, &quot;loop&quot;: True},
+})
+
+SUN_VALUE = 25          # what one sun is worth
+SKY_SUN_EVERY = 9       # seconds between suns falling from the sky
+SUN_LIFE = 12           # seconds a sun stays before it fades away
+PEA_SPEED = 320         # pixels per second
+BITE_TIME = 0.6         # seconds between a zombie&#x27;s bites
+ZOMBIE_EVERY = 10       # seconds between zombies, for now
+
+# Each plant: what it costs, how long before you can plant another, how
+# many bites it takes to eat, and how often it does its job, in seconds. &quot;scale&quot; shrinks the picture to fit a
+# square; &quot;w&quot; and &quot;h&quot; are the size of the picture file itself, which the
+# cards need to draw it.
+PLANTS = {
+    &quot;pineapple&quot;: {&quot;cost&quot;: 50, &quot;wait&quot;: 5, &quot;hp&quot;: 6, &quot;every&quot;: 12,
+                  &quot;scale&quot;: 0.75, &quot;w&quot;: 64, &quot;h&quot;: 80},
+    &quot;bean&quot;: {&quot;cost&quot;: 100, &quot;wait&quot;: 5, &quot;hp&quot;: 6, &quot;every&quot;: 1.4,
+             &quot;scale&quot;: 0.9, &quot;w&quot;: 64, &quot;h&quot;: 54},
+}
+CARDS = [&quot;pineapple&quot;, &quot;bean&quot;]
+
+# Each zombie: how many hits it takes, and how fast it walks.
+ZOMBIES = {
+    &quot;zombie&quot;: {&quot;hp&quot;: 10, &quot;speed&quot;: 16, &quot;scale&quot;: 4},
+}
+
+sun = 50
+selected = None      # the name of the plant card picked, or None
+ready_at = {}        # plant name -&gt; the time() its card is ready again
+over = False         # True once the zombies are in
+
+# grid[row][col] is the plant in that square, or None.
+grid = []
+
+# The lawn is made of rectangles that are game objects, not drawn in
+# onDraw. onDraw draws on top of every object, so a lawn drawn there would
+# cover the plants and the zombies. z(-10) puts these behind everything.
+for row in range(ROWS):
+    for col in range(COLS):
+        if (row + col) % 2 == 0:
+            green = (90, 170, 70)
+        else:
+            green = (80, 155, 62)
+        add([rect(CELL, ROW_H), pos(LAWN_X + col * CELL, LAWN_Y + row * ROW_H),
+             color(green[0], green[1], green[2]), z(-10)])
+
+
+def start_level():
+    global sun, selected, ready_at, over, grid
+
+    destroyAll(&quot;plant&quot;)
+    destroyAll(&quot;zombie&quot;)
+    destroyAll(&quot;pea&quot;)
+    destroyAll(&quot;sun&quot;)
+
+    sun = 50
+    selected = None
+    ready_at = {}
+    over = False
+    grid = []
+    for row in range(ROWS):
+        grid.append([None] * COLS)
+
+
+def level_lost():
+    global over
+
+    over = True
+    shake(10)
+
+    @say(&quot;The zombies got into the house!&quot;, button=&quot;Try again&quot;)
+    def try_again():
+        start_level()
+
+
+def square_x(col):
+    &quot;&quot;&quot;The middle of a square, across.&quot;&quot;&quot;
+    return LAWN_X + col * CELL + CELL / 2
+
+
+def row_y(row):
+    &quot;&quot;&quot;The middle of a row, down.&quot;&quot;&quot;
+    return LAWN_Y + row * ROW_H + ROW_H / 2
+
+
+def make_sun(x, start_y, land_y):
+    &quot;&quot;&quot;A sun that drifts down to land_y, waits, and fades away.&quot;&quot;&quot;
+    s = add([sprite(&quot;sun&quot;), pos(x, start_y), anchor(&quot;center&quot;), scale(0.8),
+             opacity(1), lifespan(SUN_LIFE, fade=2), z(20), &quot;sun&quot;])
+    s.land_y = land_y
+
+
+@onUpdate(&quot;sun&quot;)
+def drift(s):
+    if s.pos.y &lt; s.land_y:
+        s.pos.y += 60 * dt()
+
+
+@loop(SKY_SUN_EVERY)
+def sun_from_the_sky():
+    # It starts under the top bar, so it seems to come out from behind it.
+    x = rand(LAWN_X + 30, LAWN_X + COLS * CELL - 30)
+    make_sun(x, LAWN_Y - 40, rand(LAWN_Y + 40, LAWN_Y + ROWS * ROW_H - 40))
+
+
+CARD_X = 95
+CARD_W = 78
+CARD_GAP = 6
+
+
+def card_x(i):
+    return CARD_X + i * (CARD_W + CARD_GAP)
+
+
+def card_ready(name):
+    return time() &gt;= ready_at.get(name, 0)
+
+
+# One handler for every click or tap. It asks, in order: was that a sun?
+# a card? the lawn? A sun comes first because suns float over the lawn,
+# and a tap on one should collect it, not plant something under it.
+@onMousePress
+def click():
+    global sun, selected
+
+    if over:
+        return
+    m = mousePos()
+    for s in get(&quot;sun&quot;):
+        if m.dist(s.pos) &lt; 35:
+            sun = sun + SUN_VALUE
+            s.destroy()
+            return
+
+    if m.y &lt; LAWN_Y:
+        for i in range(len(CARDS)):
+            if card_x(i) &lt;= m.x &lt; card_x(i) + CARD_W:
+                name = CARDS[i]
+                if selected == name:
+                    selected = None            # tap again to put it back
+                elif card_ready(name) and sun &gt;= PLANTS[name][&quot;cost&quot;]:
+                    selected = name
+        return
+
+    col = int((m.x - LAWN_X) // CELL)
+    row = int((m.y - LAWN_Y) // ROW_H)
+    if selected is None or col &lt; 0 or col &gt;= COLS or row &lt; 0 or row &gt;= ROWS:
+        return
+    if grid[row][col] is not None:
+        return
+
+    put_plant(selected, row, col)
+    sun = sun - PLANTS[selected][&quot;cost&quot;]
+    ready_at[selected] = time() + PLANTS[selected][&quot;wait&quot;]
+    selected = None
+
+
+def put_plant(name, row, col):
+    info = PLANTS[name]
+    plant = add([sprite(name), pos(square_x(col), row_y(row)),
+                 anchor(&quot;center&quot;), scale(info[&quot;scale&quot;]), health(info[&quot;hp&quot;]),
+                 z(1), &quot;plant&quot;])
+    plant.kind = name
+    plant.row = row
+    plant.col = col
+    plant.timer = info[&quot;every&quot;]
+    if name == &quot;pineapple&quot;:
+        plant.timer = 5          # the first sun comes sooner
+    grid[row][col] = plant
+
+
+def remove_plant(plant):
+    grid[plant.row][plant.col] = None
+    plant.destroy()
+
+
+@onUpdate(&quot;plant&quot;)
+def plant_work(plant):
+    if over:
+        return
+    plant.timer -= dt()
+    if plant.timer &gt; 0:
+        return
+
+    if plant.kind == &quot;pineapple&quot;:
+        make_sun(plant.pos.x + 15, plant.pos.y - 10, plant.pos.y + 20)
+        plant.timer = PLANTS[&quot;pineapple&quot;][&quot;every&quot;]
+
+    if plant.kind == &quot;bean&quot;:
+        if zombie_ahead(plant):
+            shoot(plant)
+            plant.timer = PLANTS[&quot;bean&quot;][&quot;every&quot;]
+
+
+def zombie_ahead(plant):
+    &quot;&quot;&quot;Is there a zombie on the lawn in this plant&#x27;s row, in front of it?&quot;&quot;&quot;
+    for zombie in get(&quot;zombie&quot;):
+        if zombie.row == plant.row and zombie.pos.x &gt; plant.pos.x - 10:
+            if zombie.pos.x &lt; LAWN_X + COLS * CELL + 10:
+                return True
+    return False
+
+
+def shoot(plant):
+    pea = add([circle(9), pos(plant.pos.x + 25, row_y(plant.row) - 6),
+               anchor(&quot;center&quot;), color(120, 220, 80), area(),
+               move(vec2(1, 0), PEA_SPEED), z(15), &quot;pea&quot;])
+    pea.row = plant.row
+
+
+@onUpdate(&quot;pea&quot;)
+def pea_gone(pea):
+    # Past the end of the lawn, a pea can never hit anything. Take it away,
+    # or the game slowly fills up with peas nobody can see.
+    if pea.pos.x &gt; width() + 20:
+        pea.destroy()
+
+
+@onCollide(&quot;pea&quot;, &quot;zombie&quot;)
+def hit(pea, zombie):
+    # A pea only hits zombies in its own row, and only once.
+    if pea.row != zombie.row or not pea.exists():
+        return
+    pea.destroy()
+    zombie.hurt(1)
+    if not zombie.isAlive():
+        zombie.destroy()
+
+
+@loop(ZOMBIE_EVERY)
+def zombie_comes():
+    if not over:
+        spawn(&quot;zombie&quot;)
+
+
+def spawn(kind):
+    info = ZOMBIES[kind]
+    row = choose(range(ROWS))
+    # anchor(&quot;bot&quot;) means pos is where its feet are.
+    zombie = add([sprite(kind, anim=&quot;walk&quot;),
+                  pos(width() + 30, row_y(row) + ROW_H / 2 - 8),
+                  anchor(&quot;bot&quot;), scale(info[&quot;scale&quot;]), area(),
+                  health(info[&quot;hp&quot;]), z(3 + row), &quot;zombie&quot;])
+    zombie.flipX = True      # the pictures face right; zombies walk left
+    zombie.kind = kind
+    zombie.row = row
+    zombie.walk_speed = info[&quot;speed&quot;] * rand(0.9, 1.1)
+    zombie.bite_wait = 0
+
+
+def plant_in_front(zombie):
+    &quot;&quot;&quot;The plant in the square the zombie&#x27;s face is in, or None.&quot;&quot;&quot;
+    col = int((zombie.pos.x - 20 - LAWN_X) // CELL)
+    if col &lt; 0 or col &gt;= COLS:
+        return None
+    return grid[zombie.row][col]
+
+
+@onUpdate(&quot;zombie&quot;)
+def walk(zombie):
+    if over:
+        return
+
+    plant = plant_in_front(zombie)
+    if plant is not None:
+        # Stop and eat.
+        zombie.bite_wait -= dt()
+        if zombie.bite_wait &lt;= 0:
+            plant.hurt(1)
+            zombie.bite_wait = BITE_TIME
+            if not plant.isAlive():
+                remove_plant(plant)
+    else:
+        zombie.pos.x -= zombie.walk_speed * dt()
+
+    if zombie.pos.x &lt; 20:
+        level_lost()
+
+
+@onDraw
+def draw_everything():
+    # The top bar, and how much sun you have.
+    drawRect(pos=vec2(0, 0), width=width(), height=LAWN_Y - 8,
+             color=(110, 75, 45))
+    drawRect(pos=vec2(8, 8), width=78, height=96, color=(80, 55, 35),
+             radius=8)
+    drawSprite(sprite=&quot;sun&quot;, pos=vec2(47, 42), width=50, height=50,
+               anchor=&quot;center&quot;)
+    drawText(text=str(sun), pos=vec2(47, 88), size=22, anchor=&quot;center&quot;)
+
+    # A card for each plant.
+    for i in range(len(CARDS)):
+        name = CARDS[i]
+        info = PLANTS[name]
+        x = card_x(i)
+        drawRect(pos=vec2(x, 8), width=CARD_W, height=96,
+                 color=(235, 220, 170), radius=8)
+        if selected == name:
+            drawRect(pos=vec2(x, 8), width=CARD_W, height=96,
+                     color=(255, 240, 60), radius=8, outline=4)
+        drawSprite(sprite=name, pos=vec2(x + CARD_W / 2, 46),
+                   width=info[&quot;w&quot;] * info[&quot;scale&quot;] * 0.75,
+                   height=info[&quot;h&quot;] * info[&quot;scale&quot;] * 0.75, anchor=&quot;center&quot;)
+        drawText(text=str(info[&quot;cost&quot;]), pos=vec2(x + CARD_W / 2, 90),
+                 size=18, color=(60, 40, 20), anchor=&quot;center&quot;)
+
+        # Grey while it is waiting to be ready, shrinking as it gets
+        # nearer; dim if you cannot afford it.
+        if not card_ready(name):
+            left = (ready_at[name] - time()) / info[&quot;wait&quot;]
+            drawRect(pos=vec2(x, 8), width=CARD_W, height=96 * left,
+                     color=(40, 40, 40), opacity=0.6, radius=8)
+        elif sun &lt; info[&quot;cost&quot;]:
+            drawRect(pos=vec2(x, 8), width=CARD_W, height=96,
+                     color=(40, 40, 40), opacity=0.4, radius=8)
+
+
+start_level()</code></pre>
+
+<p>Now beans fight back. A bean shoots a pea every 1.4 seconds, but only
+when there's a zombie in its row, ahead of it. Ten peas finish a zombie.</p>
+
+<ul>
+<li><strong><code>zombie_ahead</code></strong> looks through every zombie
+for one in the same row, to the right of the bean, and already on the lawn.
+Without it, beans would shoot all game long at nothing.</li>
+<li><strong>A pea</strong> is a circle with <code>move(vec2(1, 0),
+PEA_SPEED)</code>, which carries it right for ever without an
+<code>onUpdate</code> of its own. It remembers its row.</li>
+<li><strong><code>pea_gone</code></strong> takes away any pea that's flown
+past the edge of the window. A pea out there can never hit anything, and
+without this, the game would slowly fill up with peas nobody can see.</li>
+<li><strong><code>@onCollide("pea", "zombie")</code></strong> runs when a
+pea touches a zombie. It only counts if they're in the same row, and only
+once: <code>pea.exists()</code> is false once the pea has been destroyed, so
+a pea touching two zombies at once can't hit both.</li>
+</ul>
+
+<p>Both the pea and the zombie need <code>area()</code> for
+<code>onCollide</code> to notice them touching. Take <code>area()</code> off
+the zombie and there's no error at all: the peas fly straight through, and
+the zombies walk into the house.</p>
+
+<h2 id="step-6-waves">Step 6 — waves, lawnmowers, and winning</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+COLS = 9           # squares across the lawn
+ROWS = 5           # rows of lawn
+CELL = 80          # a square is 80 pixels wide
+ROW_H = 90         # and 90 tall
+
+LAWN_X = 90        # the lawn starts here; left of it is the house
+LAWN_Y = 120       # and here, under the top bar
+
+kaypy(width=LAWN_X + COLS * CELL + 50, height=LAWN_Y + ROWS * ROW_H + 20,
+      background=[60, 45, 35])
+
+loadSprite(&quot;sun&quot;, &quot;images/sun.png&quot;)
+loadSprite(&quot;pineapple&quot;, &quot;images/pineapple.png&quot;)
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+# The zombie is a strip of tiny pictures, one frame after another.
+loadSprite(&quot;zombie&quot;, &quot;dungeon/zombie.png&quot;, sliceX=4, anims={
+    &quot;walk&quot;: {&quot;from&quot;: 0, &quot;to&quot;: 3, &quot;speed&quot;: 6, &quot;loop&quot;: True},
+})
+
+SUN_VALUE = 25          # what one sun is worth
+SKY_SUN_EVERY = 9       # seconds between suns falling from the sky
+SUN_LIFE = 12           # seconds a sun stays before it fades away
+PEA_SPEED = 320         # pixels per second
+BITE_TIME = 0.6         # seconds between a zombie&#x27;s bites
+
+FIRST_WAVE = 20         # seconds before the first zombies come
+WAVE_GAP = 16           # seconds between waves
+SPAWN_GAP = 2.5         # seconds between zombies in the same wave
+
+# Each plant: what it costs, how long before you can plant another, how
+# many bites it takes to eat, and how often it does its job, in seconds. &quot;scale&quot; shrinks the picture to fit a
+# square; &quot;w&quot; and &quot;h&quot; are the size of the picture file itself, which the
+# cards need to draw it.
+PLANTS = {
+    &quot;pineapple&quot;: {&quot;cost&quot;: 50, &quot;wait&quot;: 5, &quot;hp&quot;: 6, &quot;every&quot;: 12,
+                  &quot;scale&quot;: 0.75, &quot;w&quot;: 64, &quot;h&quot;: 80},
+    &quot;bean&quot;: {&quot;cost&quot;: 100, &quot;wait&quot;: 5, &quot;hp&quot;: 6, &quot;every&quot;: 1.4,
+             &quot;scale&quot;: 0.9, &quot;w&quot;: 64, &quot;h&quot;: 54},
+}
+CARDS = [&quot;pineapple&quot;, &quot;bean&quot;]
+
+# Each zombie: how many hits it takes, and how fast it walks.
+ZOMBIES = {
+    &quot;zombie&quot;: {&quot;hp&quot;: 10, &quot;speed&quot;: 16, &quot;scale&quot;: 4},
+}
+
+# The waves of zombies. A wave is a list of the zombies in it; they come
+# one after another, in random rows. The last wave is the big one.
+WAVES = [[&quot;zombie&quot;], [&quot;zombie&quot;], [&quot;zombie&quot;, &quot;zombie&quot;], [&quot;zombie&quot;],
+         [&quot;zombie&quot;, &quot;zombie&quot;],
+         [&quot;zombie&quot;, &quot;zombie&quot;, &quot;zombie&quot;, &quot;zombie&quot;]]
+
+sun = 50
+selected = None      # the name of the plant card picked, or None
+ready_at = {}        # plant name -&gt; the time() its card is ready again
+over = False         # True once the zombies are in, or the level is won
+
+# grid[row][col] is the plant in that square, or None.
+grid = []
+
+# One lawnmower per row: where it is, and whether it is waiting, going, or
+# gone for good.
+mowers = []
+
+wave_number = 0      # how many waves have come so far
+wave_wait = 0        # seconds until the next wave
+queue = []           # zombies of this wave still to come
+spawn_wait = 0       # seconds until the next one of them
+banner = &quot;&quot;          # big words across the lawn, for a moment
+banner_time = 0
+
+# The lawn is made of rectangles that are game objects, not drawn in
+# onDraw. onDraw draws on top of every object, so a lawn drawn there would
+# cover the plants and the zombies. z(-10) puts these behind everything.
+for row in range(ROWS):
+    for col in range(COLS):
+        if (row + col) % 2 == 0:
+            green = (90, 170, 70)
+        else:
+            green = (80, 155, 62)
+        add([rect(CELL, ROW_H), pos(LAWN_X + col * CELL, LAWN_Y + row * ROW_H),
+             color(green[0], green[1], green[2]), z(-10)])
+
+
+def start_level():
+    global sun, selected, ready_at, over, grid, mowers
+    global wave_number, wave_wait, queue, spawn_wait, banner, banner_time
+
+    destroyAll(&quot;plant&quot;)
+    destroyAll(&quot;zombie&quot;)
+    destroyAll(&quot;pea&quot;)
+    destroyAll(&quot;sun&quot;)
+
+    sun = 50
+    selected = None
+    ready_at = {}
+    over = False
+    grid = []
+    mowers = []
+    for row in range(ROWS):
+        grid.append([None] * COLS)
+        mowers.append({&quot;x&quot;: LAWN_X - 40, &quot;state&quot;: &quot;waiting&quot;})
+
+    wave_number = 0
+    wave_wait = FIRST_WAVE
+    queue = []
+    spawn_wait = 0
+    banner = &quot;Here they come!&quot;
+    banner_time = 2
+
+
+def level_won():
+    global over
+
+    over = True
+
+    @say(&quot;You saved the garden!&quot;, button=&quot;Play again&quot;)
+    def again():
+        start_level()
+
+
+def level_lost():
+    global over
+
+    over = True
+    shake(10)
+
+    @say(&quot;The zombies got into the house!&quot;, button=&quot;Try again&quot;)
+    def try_again():
+        start_level()
+
+
+def square_x(col):
+    &quot;&quot;&quot;The middle of a square, across.&quot;&quot;&quot;
+    return LAWN_X + col * CELL + CELL / 2
+
+
+def row_y(row):
+    &quot;&quot;&quot;The middle of a row, down.&quot;&quot;&quot;
+    return LAWN_Y + row * ROW_H + ROW_H / 2
+
+
+def make_sun(x, start_y, land_y):
+    &quot;&quot;&quot;A sun that drifts down to land_y, waits, and fades away.&quot;&quot;&quot;
+    s = add([sprite(&quot;sun&quot;), pos(x, start_y), anchor(&quot;center&quot;), scale(0.8),
+             opacity(1), lifespan(SUN_LIFE, fade=2), z(20), &quot;sun&quot;])
+    s.land_y = land_y
+
+
+@onUpdate(&quot;sun&quot;)
+def drift(s):
+    if s.pos.y &lt; s.land_y:
+        s.pos.y += 60 * dt()
+
+
+@loop(SKY_SUN_EVERY)
+def sun_from_the_sky():
+    # It starts under the top bar, so it seems to come out from behind it.
+    x = rand(LAWN_X + 30, LAWN_X + COLS * CELL - 30)
+    make_sun(x, LAWN_Y - 40, rand(LAWN_Y + 40, LAWN_Y + ROWS * ROW_H - 40))
+
+
+CARD_X = 95
+CARD_W = 78
+CARD_GAP = 6
+
+
+def card_x(i):
+    return CARD_X + i * (CARD_W + CARD_GAP)
+
+
+def card_ready(name):
+    return time() &gt;= ready_at.get(name, 0)
+
+
+# One handler for every click or tap. It asks, in order: was that a sun?
+# a card? the lawn? A sun comes first because suns float over the lawn,
+# and a tap on one should collect it, not plant something under it.
+@onMousePress
+def click():
+    global sun, selected
+
+    if over:
+        return
+    m = mousePos()
+    for s in get(&quot;sun&quot;):
+        if m.dist(s.pos) &lt; 35:
+            sun = sun + SUN_VALUE
+            s.destroy()
+            return
+
+    if m.y &lt; LAWN_Y:
+        for i in range(len(CARDS)):
+            if card_x(i) &lt;= m.x &lt; card_x(i) + CARD_W:
+                name = CARDS[i]
+                if selected == name:
+                    selected = None            # tap again to put it back
+                elif card_ready(name) and sun &gt;= PLANTS[name][&quot;cost&quot;]:
+                    selected = name
+        return
+
+    col = int((m.x - LAWN_X) // CELL)
+    row = int((m.y - LAWN_Y) // ROW_H)
+    if selected is None or col &lt; 0 or col &gt;= COLS or row &lt; 0 or row &gt;= ROWS:
+        return
+    if grid[row][col] is not None:
+        return
+
+    put_plant(selected, row, col)
+    sun = sun - PLANTS[selected][&quot;cost&quot;]
+    ready_at[selected] = time() + PLANTS[selected][&quot;wait&quot;]
+    selected = None
+
+
+def put_plant(name, row, col):
+    info = PLANTS[name]
+    plant = add([sprite(name), pos(square_x(col), row_y(row)),
+                 anchor(&quot;center&quot;), scale(info[&quot;scale&quot;]), health(info[&quot;hp&quot;]),
+                 z(1), &quot;plant&quot;])
+    plant.kind = name
+    plant.row = row
+    plant.col = col
+    plant.timer = info[&quot;every&quot;]
+    if name == &quot;pineapple&quot;:
+        plant.timer = 5          # the first sun comes sooner
+    grid[row][col] = plant
+
+
+def remove_plant(plant):
+    grid[plant.row][plant.col] = None
+    plant.destroy()
+
+
+@onUpdate(&quot;plant&quot;)
+def plant_work(plant):
+    if over:
+        return
+    plant.timer -= dt()
+    if plant.timer &gt; 0:
+        return
+
+    if plant.kind == &quot;pineapple&quot;:
+        make_sun(plant.pos.x + 15, plant.pos.y - 10, plant.pos.y + 20)
+        plant.timer = PLANTS[&quot;pineapple&quot;][&quot;every&quot;]
+
+    if plant.kind == &quot;bean&quot;:
+        if zombie_ahead(plant):
+            shoot(plant)
+            plant.timer = PLANTS[&quot;bean&quot;][&quot;every&quot;]
+
+
+def zombie_ahead(plant):
+    &quot;&quot;&quot;Is there a zombie on the lawn in this plant&#x27;s row, in front of it?&quot;&quot;&quot;
+    for zombie in get(&quot;zombie&quot;):
+        if zombie.row == plant.row and zombie.pos.x &gt; plant.pos.x - 10:
+            if zombie.pos.x &lt; LAWN_X + COLS * CELL + 10:
+                return True
+    return False
+
+
+def shoot(plant):
+    pea = add([circle(9), pos(plant.pos.x + 25, row_y(plant.row) - 6),
+               anchor(&quot;center&quot;), color(120, 220, 80), area(),
+               move(vec2(1, 0), PEA_SPEED), z(15), &quot;pea&quot;])
+    pea.row = plant.row
+
+
+@onUpdate(&quot;pea&quot;)
+def pea_gone(pea):
+    # Past the end of the lawn, a pea can never hit anything. Take it away,
+    # or the game slowly fills up with peas nobody can see.
+    if pea.pos.x &gt; width() + 20:
+        pea.destroy()
+
+
+@onCollide(&quot;pea&quot;, &quot;zombie&quot;)
+def hit(pea, zombie):
+    # A pea only hits zombies in its own row, and only once.
+    if pea.row != zombie.row or not pea.exists():
+        return
+    pea.destroy()
+    zombie.hurt(1)
+    if not zombie.isAlive():
+        zombie.destroy()
+
+
+def spawn(kind):
+    info = ZOMBIES[kind]
+    row = choose(range(ROWS))
+    # anchor(&quot;bot&quot;) means pos is where its feet are.
+    zombie = add([sprite(kind, anim=&quot;walk&quot;),
+                  pos(width() + 30, row_y(row) + ROW_H / 2 - 8),
+                  anchor(&quot;bot&quot;), scale(info[&quot;scale&quot;]), area(),
+                  health(info[&quot;hp&quot;]), z(3 + row), &quot;zombie&quot;])
+    zombie.flipX = True      # the pictures face right; zombies walk left
+    zombie.kind = kind
+    zombie.row = row
+    zombie.walk_speed = info[&quot;speed&quot;] * rand(0.9, 1.1)
+    zombie.bite_wait = 0
+
+
+def plant_in_front(zombie):
+    &quot;&quot;&quot;The plant in the square the zombie&#x27;s face is in, or None.&quot;&quot;&quot;
+    col = int((zombie.pos.x - 20 - LAWN_X) // CELL)
+    if col &lt; 0 or col &gt;= COLS:
+        return None
+    return grid[zombie.row][col]
+
+
+@onUpdate(&quot;zombie&quot;)
+def walk(zombie):
+    if over:
+        return
+
+    plant = plant_in_front(zombie)
+    if plant is not None:
+        # Stop and eat.
+        zombie.bite_wait -= dt()
+        if zombie.bite_wait &lt;= 0:
+            plant.hurt(1)
+            zombie.bite_wait = BITE_TIME
+            if not plant.isAlive():
+                remove_plant(plant)
+    else:
+        zombie.pos.x -= zombie.walk_speed * dt()
+
+    # At the edge of the lawn: the mower, if it is still there. Past the
+    # mower: the house.
+    mower = mowers[zombie.row]
+    if zombie.pos.x &lt; LAWN_X - 10 and mower[&quot;state&quot;] == &quot;waiting&quot;:
+        mower[&quot;state&quot;] = &quot;going&quot;
+    if zombie.pos.x &lt; 20:
+        level_lost()
+
+
+@onUpdate
+def mow():
+    if over:
+        return
+    for row in range(ROWS):
+        mower = mowers[row]
+        if mower[&quot;state&quot;] == &quot;going&quot;:
+            mower[&quot;x&quot;] += 500 * dt()
+            for zombie in get(&quot;zombie&quot;):
+                if zombie.row == row and abs(zombie.pos.x - mower[&quot;x&quot;]) &lt; 40:
+                    zombie.destroy()
+            if mower[&quot;x&quot;] &gt; width() + 40:
+                mower[&quot;state&quot;] = &quot;gone&quot;
+
+
+@onUpdate
+def run_waves():
+    global wave_number, wave_wait, queue, spawn_wait, banner, banner_time
+
+    banner_time -= dt()
+    if over:
+        return
+
+    if len(queue) &gt; 0:
+        spawn_wait -= dt()
+        if spawn_wait &lt;= 0:
+            spawn(queue.pop(0))
+            spawn_wait = SPAWN_GAP
+    elif wave_number &lt; len(WAVES):
+        wave_wait -= dt()
+        if wave_wait &lt;= 0:
+            queue = list(WAVES[wave_number])
+            wave_number = wave_number + 1
+            wave_wait = WAVE_GAP
+            spawn_wait = 0
+            if wave_number == len(WAVES):
+                banner = &quot;A big wave is coming!&quot;
+                banner_time = 3
+    elif len(get(&quot;zombie&quot;)) == 0:
+        level_won()
+
+
+def draw_mower(x, y):
+    drawRect(pos=vec2(x - 22, y - 14), width=44, height=22,
+             color=(200, 50, 50), radius=5)
+    drawRect(pos=vec2(x - 18, y - 30), width=6, height=18,
+             color=(90, 90, 90))
+    drawCircle(pos=vec2(x - 13, y + 10), radius=7, color=(30, 30, 30))
+    drawCircle(pos=vec2(x + 13, y + 10), radius=7, color=(30, 30, 30))
+
+
+@onDraw
+def draw_everything():
+    for row in range(ROWS):
+        if mowers[row][&quot;state&quot;] != &quot;gone&quot;:
+            draw_mower(mowers[row][&quot;x&quot;], row_y(row) + 10)
+
+    # The top bar, and how much sun you have.
+    drawRect(pos=vec2(0, 0), width=width(), height=LAWN_Y - 8,
+             color=(110, 75, 45))
+    drawRect(pos=vec2(8, 8), width=78, height=96, color=(80, 55, 35),
+             radius=8)
+    drawSprite(sprite=&quot;sun&quot;, pos=vec2(47, 42), width=50, height=50,
+               anchor=&quot;center&quot;)
+    drawText(text=str(sun), pos=vec2(47, 88), size=22, anchor=&quot;center&quot;)
+
+    # A card for each plant.
+    for i in range(len(CARDS)):
+        name = CARDS[i]
+        info = PLANTS[name]
+        x = card_x(i)
+        drawRect(pos=vec2(x, 8), width=CARD_W, height=96,
+                 color=(235, 220, 170), radius=8)
+        if selected == name:
+            drawRect(pos=vec2(x, 8), width=CARD_W, height=96,
+                     color=(255, 240, 60), radius=8, outline=4)
+        drawSprite(sprite=name, pos=vec2(x + CARD_W / 2, 46),
+                   width=info[&quot;w&quot;] * info[&quot;scale&quot;] * 0.75,
+                   height=info[&quot;h&quot;] * info[&quot;scale&quot;] * 0.75, anchor=&quot;center&quot;)
+        drawText(text=str(info[&quot;cost&quot;]), pos=vec2(x + CARD_W / 2, 90),
+                 size=18, color=(60, 40, 20), anchor=&quot;center&quot;)
+
+        # Grey while it is waiting to be ready, shrinking as it gets
+        # nearer; dim if you cannot afford it.
+        if not card_ready(name):
+            left = (ready_at[name] - time()) / info[&quot;wait&quot;]
+            drawRect(pos=vec2(x, 8), width=CARD_W, height=96 * left,
+                     color=(40, 40, 40), opacity=0.6, radius=8)
+        elif sun &lt; info[&quot;cost&quot;]:
+            drawRect(pos=vec2(x, 8), width=CARD_W, height=96,
+                     color=(40, 40, 40), opacity=0.4, radius=8)
+
+    if wave_number == 0:
+        progress = &quot;Get ready!&quot;
+    else:
+        progress = &quot;Wave &quot; + str(wave_number) + &quot; of &quot; + str(len(WAVES))
+    drawText(text=progress, pos=vec2(width() - 20, 62), size=20,
+             anchor=&quot;topright&quot;)
+
+    if banner_time &gt; 0:
+        drawText(text=banner, pos=vec2(LAWN_X + COLS * CELL / 2,
+                                       LAWN_Y + ROWS * ROW_H / 2),
+                 size=44, anchor=&quot;center&quot;)
+
+
+start_level()</code></pre>
+
+<p>Now it's a level you can win. The zombies come in six waves, the last
+one big. Stop them all and the garden is saved. And each row has a
+lawnmower, a last chance: the first zombie to reach it sets it off, and it
+clears the whole row. But only once.</p>
+
+<p><strong>The waves</strong> are a list of lists. Each inner list is the
+zombies in one wave. <code>run_waves</code> runs every frame and does one
+of three things:</p>
+
+<ul>
+<li>If <code>queue</code> has zombies still to come in this wave, it counts
+down <code>spawn_wait</code> and sends the next one, 2.5 seconds apart.</li>
+<li>Otherwise, if there are waves left, it counts down to the next one, then
+copies it into <code>queue</code> with <code>list(...)</code>. A copy,
+because <code>queue.pop(0)</code> takes zombies out of it, and taking them
+out of <code>WAVES</code> itself would leave the waves empty next time.</li>
+<li>Otherwise every zombie has come. Once they're all gone, you've won.</li>
+</ul>
+
+<p><strong>The lawnmowers</strong> are a list of dictionaries, one per row.
+A mower is <code>"waiting"</code> until a zombie gets past the edge of the
+lawn, then <code>"going"</code>: <code>mow</code> moves it right at 500
+pixels a second and destroys every zombie it reaches in its row. Off the
+right edge, it's <code>"gone"</code> and isn't drawn any more. A zombie that
+gets past an empty mower spot reaches the house.</p>
+
+<p>The mowers are drawn in <code>onDraw</code> from rectangles and circles,
+not a picture. That's why they're dictionaries rather than objects: there's
+nothing to <code>add()</code>.</p>
+
+<p><strong>The banner</strong> is big words across the lawn, for as long as
+<code>banner_time</code> is above zero. It counts down every frame, so
+setting it to 3 shows the words for 3 seconds.</p>
+
+<h2 id="step-7-the-whole-game">Step 7 — the whole game</h2>
+
+<p>This is the game exactly as it is on the <a href="../../games/">games
+page</a>. It adds:</p>
+
+<ul>
+<li><strong>Levels.</strong> <code>LEVELS</code> takes the place of
+<code>CARDS</code> and <code>WAVES</code>: each level is a dictionary with
+its own plants and its own waves. <code>level</code> says which one is
+being played, and everything that used <code>WAVES</code> or
+<code>CARDS</code> now uses <code>LEVELS[level]["waves"]</code> or
+<code>LEVELS[level]["plants"]</code>. Clearing a level moves on to the next,
+and the new plant is the last one in its list:
+<code>[-1]</code>.</li>
+<li><strong>The level you reached is remembered</strong>, with
+<code>setData</code> when you clear one and <code>getData</code> at the
+start, so you can come back later and carry on.</li>
+<li><strong>Three more plants.</strong> The <strong>brock</strong> does
+nothing at all; it just takes 60 bites to eat, so zombies are stuck at it
+for a long time. The <strong>bomb</strong> explodes 0.8 seconds after it's
+planted, destroying every zombie within a square and a half of it, in its
+own row and the rows above and below. The <strong>onion</strong> shoots like
+a bean, but its peas are icy. <code>pea.icy</code> is
+<code>True</code> or <code>False</code>, and an icy pea sets the zombie's
+<code>slow_left</code>, which halves its speed until it runs out. Slowed
+zombies get a blue glow.</li>
+<li><strong>Two more zombies.</strong> The tiny zombie is fast and weak; the
+big one is slow and takes 30 peas.</li>
+<li><strong>A preview</strong> of the plant you're holding, faint, over the
+square under the mouse.</li>
+<li><strong>Sounds</strong>, and a message at the start explaining what to
+do.</li>
+</ul>
+
+<pre><code class="language-python">&quot;&quot;&quot;Garden Guard -- plant a garden, and hold off the zombies.
+
+    click or tap a plant card, then a square of lawn, to plant it
+    click or tap a sun to collect it
+
+Zombies walk in from the right, one row at a time, and eat any plant in
+their way. Plants cost sun. Sun falls from the sky, and pineapples make more
+of it, so plant pineapples first, then beans to shoot the zombies. Each row
+has a lawnmower that clears the row the first time a zombie gets through --
+but only the first time. If a zombie reaches the house, the level is lost.
+
+Every level brings a new plant and a new kind of zombie. The level you
+reached is remembered.
+
+THE PLANTS
+
+    pineapple   makes sun
+    bean        shoots peas down its row
+    brock       a wall: takes a long time to eat
+    bomb        blows up every zombie in the squares around it
+    onion       shoots icy peas that slow zombies down
+
+HOW THIS FILE IS PUT TOGETHER
+
+    1. the window and the pictures
+    2. the settings: plants, zombies and levels
+    3. the lawn
+    4. what the game has to remember
+    5. levels: starting, winning, losing
+    6. sun
+    7. planting: the cards and the lawn
+    8. what plants do
+    9. zombies, and peas hitting them
+   10. the lawnmowers
+   11. the waves
+   12. drawing the top bar
+   13. start the game
+
+Plants, zombies, peas and suns are game objects. Each one carries a few
+values of its own as well -- a zombie knows its row and how fast it walks,
+a plant knows how long until it next shoots.
+&quot;&quot;&quot;
+
+from kaypy import *
+
+# --------------------------------------------------------------- 1. setup
+
+COLS = 9           # squares across the lawn
+ROWS = 5           # rows of lawn
+CELL = 80          # a square is 80 pixels wide
+ROW_H = 90         # and 90 tall
+
+LAWN_X = 90        # the lawn starts here; left of it is the house
+LAWN_Y = 120       # and here, under the top bar
+
+kaypy(width=LAWN_X + COLS * CELL + 50, height=LAWN_Y + ROWS * ROW_H + 20,
+      background=[60, 45, 35])
+
+loadSprite(&quot;sun&quot;, &quot;images/sun.png&quot;)
+loadSprite(&quot;pineapple&quot;, &quot;images/pineapple.png&quot;)
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;brock&quot;, &quot;images/brock.png&quot;)
+loadSprite(&quot;bomb&quot;, &quot;images/bomb.png&quot;)
+loadSprite(&quot;onion&quot;, &quot;images/onion.png&quot;)
+
+# The zombies are strips of tiny pictures, one frame after another.
+loadSprite(&quot;zombie&quot;, &quot;dungeon/zombie.png&quot;, sliceX=4, anims={
+    &quot;walk&quot;: {&quot;from&quot;: 0, &quot;to&quot;: 3, &quot;speed&quot;: 6, &quot;loop&quot;: True},
+})
+loadSprite(&quot;tiny_zombie&quot;, &quot;dungeon/tiny_zombie.png&quot;, sliceX=8, anims={
+    &quot;walk&quot;: {&quot;from&quot;: 4, &quot;to&quot;: 7, &quot;speed&quot;: 10, &quot;loop&quot;: True},
+})
+loadSprite(&quot;big_zombie&quot;, &quot;dungeon/big_zombie.png&quot;, sliceX=8, anims={
+    &quot;walk&quot;: {&quot;from&quot;: 4, &quot;to&quot;: 7, &quot;speed&quot;: 6, &quot;loop&quot;: True},
+})
+
+loadSound(&quot;collect&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;plant&quot;, &quot;sounds/thump.wav&quot;)
+loadSound(&quot;boom&quot;, &quot;sounds/small_boom.wav&quot;)
+loadSound(&quot;mower&quot;, &quot;sounds/swoosh.wav&quot;)
+loadSound(&quot;win&quot;, &quot;sounds/rising_beep.wav&quot;)
+loadSound(&quot;lose&quot;, &quot;sounds/lazer_punch.wav&quot;)
+
+
+# ----------------------------------------------------------- 2. settings
+
+START_SUN = 50          # sun at the start of a level
+SUN_VALUE = 25          # what one sun is worth
+SKY_SUN_EVERY = 9       # seconds between suns falling from the sky
+SUN_LIFE = 12           # seconds a sun stays before it fades away
+
+PEA_SPEED = 320         # pixels per second
+SLOW_TIME = 3           # how long an icy pea slows a zombie, in seconds
+BITE_TIME = 0.6         # seconds between a zombie&#x27;s bites
+
+FIRST_WAVE = 20         # seconds before the first zombies come
+WAVE_GAP = 16           # seconds between waves
+SPAWN_GAP = 2.5         # seconds between zombies in the same wave
+
+# Each plant: what it costs, how long before you can plant another, how
+# many bites it takes to eat, and how often it does its job, in seconds.
+# &quot;scale&quot; shrinks the picture to fit a square; &quot;w&quot; and &quot;h&quot; are the size of
+# the picture file itself, which the cards need to draw it.
+PLANTS = {
+    &quot;pineapple&quot;: {&quot;cost&quot;: 50, &quot;wait&quot;: 5, &quot;hp&quot;: 6, &quot;every&quot;: 12,
+                  &quot;scale&quot;: 0.75, &quot;w&quot;: 64, &quot;h&quot;: 80},
+    &quot;bean&quot;: {&quot;cost&quot;: 100, &quot;wait&quot;: 5, &quot;hp&quot;: 6, &quot;every&quot;: 1.4,
+             &quot;scale&quot;: 0.9, &quot;w&quot;: 64, &quot;h&quot;: 54},
+    &quot;brock&quot;: {&quot;cost&quot;: 50, &quot;wait&quot;: 20, &quot;hp&quot;: 60, &quot;every&quot;: 0,
+              &quot;scale&quot;: 0.55, &quot;w&quot;: 128, &quot;h&quot;: 102},
+    &quot;bomb&quot;: {&quot;cost&quot;: 150, &quot;wait&quot;: 30, &quot;hp&quot;: 100, &quot;every&quot;: 0.8,
+             &quot;scale&quot;: 0.65, &quot;w&quot;: 82, &quot;h&quot;: 92},
+    &quot;onion&quot;: {&quot;cost&quot;: 175, &quot;wait&quot;: 5, &quot;hp&quot;: 6, &quot;every&quot;: 1.4,
+              &quot;scale&quot;: 0.6, &quot;w&quot;: 77, &quot;h&quot;: 101},
+}
+
+# Each zombie: how many peas it takes, and how fast it walks.
+ZOMBIES = {
+    &quot;zombie&quot;: {&quot;hp&quot;: 10, &quot;speed&quot;: 16, &quot;scale&quot;: 4},
+    &quot;tiny_zombie&quot;: {&quot;hp&quot;: 5, &quot;speed&quot;: 32, &quot;scale&quot;: 3},
+    &quot;big_zombie&quot;: {&quot;hp&quot;: 30, &quot;speed&quot;: 10, &quot;scale&quot;: 2.2},
+}
+
+# Each level: the plants you can use, and the waves of zombies. A wave is
+# a list of the zombies in it; they come one after another, in random rows.
+# The last wave of every level is the big one.
+LEVELS = [
+    {&quot;plants&quot;: [&quot;pineapple&quot;, &quot;bean&quot;],
+     &quot;waves&quot;: [[&quot;zombie&quot;], [&quot;zombie&quot;], [&quot;zombie&quot;, &quot;zombie&quot;], [&quot;zombie&quot;],
+               [&quot;zombie&quot;, &quot;zombie&quot;],
+               [&quot;zombie&quot;, &quot;zombie&quot;, &quot;zombie&quot;, &quot;zombie&quot;]]},
+    {&quot;plants&quot;: [&quot;pineapple&quot;, &quot;bean&quot;, &quot;brock&quot;],
+     &quot;waves&quot;: [[&quot;zombie&quot;], [&quot;tiny_zombie&quot;], [&quot;zombie&quot;, &quot;zombie&quot;],
+               [&quot;tiny_zombie&quot;, &quot;zombie&quot;],
+               [&quot;zombie&quot;, &quot;tiny_zombie&quot;, &quot;zombie&quot;],
+               [&quot;zombie&quot;, &quot;zombie&quot;, &quot;tiny_zombie&quot;, &quot;tiny_zombie&quot;,
+                &quot;zombie&quot;]]},
+    {&quot;plants&quot;: [&quot;pineapple&quot;, &quot;bean&quot;, &quot;brock&quot;, &quot;bomb&quot;],
+     &quot;waves&quot;: [[&quot;zombie&quot;], [&quot;zombie&quot;, &quot;tiny_zombie&quot;], [&quot;big_zombie&quot;],
+               [&quot;zombie&quot;, &quot;zombie&quot;, &quot;tiny_zombie&quot;],
+               [&quot;big_zombie&quot;, &quot;zombie&quot;],
+               [&quot;zombie&quot;, &quot;tiny_zombie&quot;, &quot;zombie&quot;, &quot;tiny_zombie&quot;],
+               [&quot;big_zombie&quot;, &quot;big_zombie&quot;, &quot;zombie&quot;, &quot;zombie&quot;,
+                &quot;tiny_zombie&quot;, &quot;tiny_zombie&quot;]]},
+    {&quot;plants&quot;: [&quot;pineapple&quot;, &quot;bean&quot;, &quot;brock&quot;, &quot;bomb&quot;, &quot;onion&quot;],
+     &quot;waves&quot;: [[&quot;zombie&quot;, &quot;zombie&quot;], [&quot;tiny_zombie&quot;, &quot;tiny_zombie&quot;],
+               [&quot;big_zombie&quot;, &quot;zombie&quot;],
+               [&quot;zombie&quot;, &quot;zombie&quot;, &quot;tiny_zombie&quot;, &quot;zombie&quot;],
+               [&quot;big_zombie&quot;, &quot;big_zombie&quot;],
+               [&quot;tiny_zombie&quot;, &quot;tiny_zombie&quot;, &quot;tiny_zombie&quot;, &quot;zombie&quot;,
+                &quot;zombie&quot;],
+               [&quot;big_zombie&quot;, &quot;zombie&quot;, &quot;zombie&quot;, &quot;big_zombie&quot;],
+               [&quot;big_zombie&quot;, &quot;big_zombie&quot;, &quot;big_zombie&quot;, &quot;zombie&quot;,
+                &quot;zombie&quot;, &quot;zombie&quot;, &quot;tiny_zombie&quot;, &quot;tiny_zombie&quot;,
+                &quot;tiny_zombie&quot;]]},
+]
+
+LEVEL_KEY = &quot;garden_guard_level&quot;
+
+
+# -------------------------------------------------------------- 3. the lawn
+#
+# The lawn is made of rectangles that are game objects, not drawn in
+# onDraw. onDraw draws on top of every object, so a lawn drawn there would
+# cover the plants and the zombies. z(-10) puts these behind everything.
+
+for row in range(ROWS):
+    for col in range(COLS):
+        if (row + col) % 2 == 0:
+            green = (90, 170, 70)
+        else:
+            green = (80, 155, 62)
+        add([rect(CELL, ROW_H), pos(LAWN_X + col * CELL, LAWN_Y + row * ROW_H),
+             color(green[0], green[1], green[2]), z(-10)])
+
+
+def square_x(col):
+    &quot;&quot;&quot;The middle of a square, across.&quot;&quot;&quot;
+    return LAWN_X + col * CELL + CELL / 2
+
+
+def row_y(row):
+    &quot;&quot;&quot;The middle of a row, down.&quot;&quot;&quot;
+    return LAWN_Y + row * ROW_H + ROW_H / 2
+
+
+# ------------------------------------------- 4. what the game remembers
+
+level = getData(LEVEL_KEY, 0)   # 0 is the first level in LEVELS
+sun = START_SUN
+selected = None      # the name of the plant card picked, or None
+ready_at = {}        # plant name -&gt; the time() its card is ready again
+over = False         # True once the zombies are in, or a level is won
+
+# grid[row][col] is the plant in that square, or None.
+grid = []
+
+# One lawnmower per row: where it is, and whether it is waiting, going, or
+# gone for good.
+mowers = []
+
+wave_number = 0      # how many waves have come so far this level
+wave_wait = 0        # seconds until the next wave
+queue = []           # zombies of this wave still to come
+spawn_wait = 0       # seconds until the next one of them
+banner = &quot;&quot;          # big words across the lawn, for a moment
+banner_time = 0
+
+
+# ------------------------------------------------------------- 5. levels
+
+def start_level():
+    global sun, selected, ready_at, over, grid, mowers
+    global wave_number, wave_wait, queue, spawn_wait, banner, banner_time
+
+    destroyAll(&quot;plant&quot;)
+    destroyAll(&quot;zombie&quot;)
+    destroyAll(&quot;pea&quot;)
+    destroyAll(&quot;sun&quot;)
+
+    sun = START_SUN
+    selected = None
+    ready_at = {}
+    over = False
+    grid = []
+    mowers = []
+    for row in range(ROWS):
+        grid.append([None] * COLS)
+        mowers.append({&quot;x&quot;: LAWN_X - 40, &quot;state&quot;: &quot;waiting&quot;})
+
+    wave_number = 0
+    wave_wait = FIRST_WAVE
+    queue = []
+    spawn_wait = 0
+    banner = &quot;Level &quot; + str(level + 1)
+    banner_time = 2
+
+
+def level_won():
+    global over, level
+
+    over = True
+    play(&quot;win&quot;)
+    if level + 1 &lt; len(LEVELS):
+        new_plant = LEVELS[level + 1][&quot;plants&quot;][-1]
+        level = level + 1
+        setData(LEVEL_KEY, level)
+
+        @say(&quot;Level &quot; + str(level) + &quot; cleared!\n\n&quot;
+             &quot;You have a new plant: the &quot; + new_plant + &quot;.&quot;,
+             button=&quot;Next level&quot;)
+        def next_level():
+            start_level()
+    else:
+        level = 0
+        setData(LEVEL_KEY, level)
+
+        @say(&quot;You saved the garden!\n\nEvery level cleared.&quot;,
+             button=&quot;Play again&quot;)
+        def again():
+            start_level()
+
+
+def level_lost():
+    global over
+
+    over = True
+    play(&quot;lose&quot;)
+    shake(10)
+
+    @say(&quot;The zombies got into the house!&quot;, button=&quot;Try again&quot;)
+    def try_again():
+        start_level()
+
+
+# ------------------------------------------------------------------ 6. sun
+
+def make_sun(x, start_y, land_y):
+    &quot;&quot;&quot;A sun that drifts down to land_y, waits, and fades away.&quot;&quot;&quot;
+    s = add([sprite(&quot;sun&quot;), pos(x, start_y), anchor(&quot;center&quot;), scale(0.8),
+             opacity(1), lifespan(SUN_LIFE, fade=2), z(20), &quot;sun&quot;])
+    s.land_y = land_y
+
+
+@onUpdate(&quot;sun&quot;)
+def drift(s):
+    if s.pos.y &lt; s.land_y:
+        s.pos.y += 60 * dt()
+
+
+@loop(SKY_SUN_EVERY)
+def sun_from_the_sky():
+    # It starts under the top bar, so it seems to come out from behind it.
+    x = rand(LAWN_X + 30, LAWN_X + COLS * CELL - 30)
+    make_sun(x, LAWN_Y - 40, rand(LAWN_Y + 40, LAWN_Y + ROWS * ROW_H - 40))
+
+
+# ------------------------------------- 7. planting: the cards and the lawn
+#
+# One handler for every click or tap. It asks, in order: was that a sun?
+# a card? the lawn? A sun comes first because suns float over the lawn,
+# and a tap on one should collect it, not plant something under it.
+
+CARD_X = 95
+CARD_W = 78
+CARD_GAP = 6
+
+
+def card_x(i):
+    return CARD_X + i * (CARD_W + CARD_GAP)
+
+
+def card_ready(name):
+    return time() &gt;= ready_at.get(name, 0)
+
+
+@onMousePress
+def click():
+    global sun, selected
+
+    if over:
+        return
+    m = mousePos()
+
+    for s in get(&quot;sun&quot;):
+        if m.dist(s.pos) &lt; 35:
+            sun = sun + SUN_VALUE
+            s.destroy()
+            play(&quot;collect&quot;)
+            return
+
+    plants = LEVELS[level][&quot;plants&quot;]
+    if m.y &lt; LAWN_Y:
+        for i in range(len(plants)):
+            if card_x(i) &lt;= m.x &lt; card_x(i) + CARD_W:
+                name = plants[i]
+                if selected == name:
+                    selected = None            # tap again to put it back
+                elif card_ready(name) and sun &gt;= PLANTS[name][&quot;cost&quot;]:
+                    selected = name
+        return
+
+    col = int((m.x - LAWN_X) // CELL)
+    row = int((m.y - LAWN_Y) // ROW_H)
+    if selected is None or col &lt; 0 or col &gt;= COLS or row &lt; 0 or row &gt;= ROWS:
+        return
+    if grid[row][col] is not None:
+        return
+
+    put_plant(selected, row, col)
+    sun = sun - PLANTS[selected][&quot;cost&quot;]
+    ready_at[selected] = time() + PLANTS[selected][&quot;wait&quot;]
+    selected = None
+    play(&quot;plant&quot;)
+
+
+def put_plant(name, row, col):
+    info = PLANTS[name]
+    plant = add([sprite(name), pos(square_x(col), row_y(row)),
+                 anchor(&quot;center&quot;), scale(info[&quot;scale&quot;]), health(info[&quot;hp&quot;]),
+                 z(1), &quot;plant&quot;])
+    plant.kind = name
+    plant.row = row
+    plant.col = col
+    plant.timer = info[&quot;every&quot;]
+    if name == &quot;pineapple&quot;:
+        plant.timer = 5          # the first sun comes sooner
+    grid[row][col] = plant
+
+
+def remove_plant(plant):
+    grid[plant.row][plant.col] = None
+    plant.destroy()
+
+
+# --------------------------------------------------- 8. what plants do
+
+@onUpdate(&quot;plant&quot;)
+def plant_work(plant):
+    if over:
+        return
+    plant.timer -= dt()
+    if plant.timer &gt; 0:
+        return
+
+    if plant.kind == &quot;pineapple&quot;:
+        make_sun(plant.pos.x + 15, plant.pos.y - 10, plant.pos.y + 20)
+        plant.timer = PLANTS[&quot;pineapple&quot;][&quot;every&quot;]
+
+    if plant.kind == &quot;bean&quot; or plant.kind == &quot;onion&quot;:
+        if zombie_ahead(plant):
+            shoot(plant)
+            plant.timer = PLANTS[plant.kind][&quot;every&quot;]
+
+    if plant.kind == &quot;bomb&quot;:
+        explode(plant)
+
+
+def zombie_ahead(plant):
+    &quot;&quot;&quot;Is there a zombie on the lawn in this plant&#x27;s row, in front of it?&quot;&quot;&quot;
+    for zombie in get(&quot;zombie&quot;):
+        if zombie.row == plant.row and zombie.pos.x &gt; plant.pos.x - 10:
+            if zombie.pos.x &lt; LAWN_X + COLS * CELL + 10:
+                return True
+    return False
+
+
+def shoot(plant):
+    if plant.kind == &quot;onion&quot;:
+        colour = (160, 220, 255)
+    else:
+        colour = (120, 220, 80)
+    pea = add([circle(9), pos(plant.pos.x + 25, row_y(plant.row) - 6),
+               anchor(&quot;center&quot;), color(colour[0], colour[1], colour[2]),
+               area(), move(vec2(1, 0), PEA_SPEED), z(15), &quot;pea&quot;])
+    pea.row = plant.row
+    pea.icy = plant.kind == &quot;onion&quot;
+
+
+@onUpdate(&quot;pea&quot;)
+def pea_gone(pea):
+    # Past the end of the lawn, a pea can never hit anything. Take it away,
+    # or the game slowly fills up with peas nobody can see.
+    if pea.pos.x &gt; width() + 20:
+        pea.destroy()
+
+
+def explode(bomb):
+    addKaboom(bomb.pos, scale=1.5)
+    play(&quot;boom&quot;)
+    shake(6)
+    for zombie in get(&quot;zombie&quot;):
+        if abs(zombie.row - bomb.row) &lt;= 1:
+            if abs(zombie.pos.x - bomb.pos.x) &lt; CELL * 1.5:
+                zombie.destroy()
+    remove_plant(bomb)
+
+
+# ------------------------------------- 9. zombies, and peas hitting them
+
+def spawn(kind):
+    info = ZOMBIES[kind]
+    row = choose(range(ROWS))
+    # anchor(&quot;bot&quot;) means pos is where its feet are.
+    zombie = add([sprite(kind, anim=&quot;walk&quot;),
+                  pos(width() + 30, row_y(row) + ROW_H / 2 - 8),
+                  anchor(&quot;bot&quot;), scale(info[&quot;scale&quot;]), area(),
+                  health(info[&quot;hp&quot;]), z(3 + row), &quot;zombie&quot;])
+    zombie.flipX = True      # the pictures face right; zombies walk left
+    zombie.kind = kind
+    zombie.row = row
+    zombie.walk_speed = info[&quot;speed&quot;] * rand(0.9, 1.1)
+    zombie.slow_left = 0
+    zombie.bite_wait = 0
+
+
+def plant_in_front(zombie):
+    &quot;&quot;&quot;The plant in the square the zombie&#x27;s face is in, or None.&quot;&quot;&quot;
+    col = int((zombie.pos.x - 20 - LAWN_X) // CELL)
+    if col &lt; 0 or col &gt;= COLS:
+        return None
+    return grid[zombie.row][col]
+
+
+@onUpdate(&quot;zombie&quot;)
+def walk(zombie):
+    if over:
+        return
+
+    speed = zombie.walk_speed
+    if zombie.slow_left &gt; 0:
+        zombie.slow_left -= dt()
+        speed = speed / 2
+
+    plant = plant_in_front(zombie)
+    if plant is not None:
+        # Stop and eat.
+        zombie.bite_wait -= dt()
+        if zombie.bite_wait &lt;= 0:
+            plant.hurt(1)
+            zombie.bite_wait = BITE_TIME
+            if not plant.isAlive():
+                remove_plant(plant)
+    else:
+        zombie.pos.x -= speed * dt()
+
+    # At the edge of the lawn: the mower, if it is still there. Past the
+    # mower: the house.
+    mower = mowers[zombie.row]
+    if zombie.pos.x &lt; LAWN_X - 10 and mower[&quot;state&quot;] == &quot;waiting&quot;:
+        mower[&quot;state&quot;] = &quot;going&quot;
+        play(&quot;mower&quot;)
+    if zombie.pos.x &lt; 20:
+        level_lost()
+
+
+@onCollide(&quot;pea&quot;, &quot;zombie&quot;)
+def hit(pea, zombie):
+    # A pea only hits zombies in its own row, and only once.
+    if pea.row != zombie.row or not pea.exists():
+        return
+    pea.destroy()
+    zombie.hurt(1)
+    if pea.icy:
+        zombie.slow_left = SLOW_TIME
+    if not zombie.isAlive():
+        zombie.destroy()
+
+
+# --------------------------------------------------------- 10. lawnmowers
+
+@onUpdate
+def mow():
+    if over:
+        return
+    for row in range(ROWS):
+        mower = mowers[row]
+        if mower[&quot;state&quot;] == &quot;going&quot;:
+            mower[&quot;x&quot;] += 500 * dt()
+            for zombie in get(&quot;zombie&quot;):
+                if zombie.row == row and abs(zombie.pos.x - mower[&quot;x&quot;]) &lt; 40:
+                    zombie.destroy()
+            if mower[&quot;x&quot;] &gt; width() + 40:
+                mower[&quot;state&quot;] = &quot;gone&quot;
+
+
+# -------------------------------------------------------------- 11. waves
+
+@onUpdate
+def run_waves():
+    global wave_number, wave_wait, queue, spawn_wait, banner, banner_time
+
+    banner_time -= dt()
+    if over:
+        return
+    waves = LEVELS[level][&quot;waves&quot;]
+
+    if len(queue) &gt; 0:
+        spawn_wait -= dt()
+        if spawn_wait &lt;= 0:
+            spawn(queue.pop(0))
+            spawn_wait = SPAWN_GAP
+    elif wave_number &lt; len(waves):
+        wave_wait -= dt()
+        if wave_wait &lt;= 0:
+            queue = list(waves[wave_number])
+            wave_number = wave_number + 1
+            wave_wait = WAVE_GAP
+            spawn_wait = 0
+            if wave_number == len(waves):
+                banner = &quot;A big wave is coming!&quot;
+                banner_time = 3
+    elif len(get(&quot;zombie&quot;)) == 0:
+        level_won()
+
+
+# ------------------------------------------------------ 12. the top bar
+
+def draw_mower(x, y):
+    drawRect(pos=vec2(x - 22, y - 14), width=44, height=22,
+             color=(200, 50, 50), radius=5)
+    drawRect(pos=vec2(x - 18, y - 30), width=6, height=18,
+             color=(90, 90, 90))
+    drawCircle(pos=vec2(x - 13, y + 10), radius=7, color=(30, 30, 30))
+    drawCircle(pos=vec2(x + 13, y + 10), radius=7, color=(30, 30, 30))
+
+
+@onDraw
+def draw_everything():
+    for row in range(ROWS):
+        if mowers[row][&quot;state&quot;] != &quot;gone&quot;:
+            draw_mower(mowers[row][&quot;x&quot;], row_y(row) + 10)
+
+    # Slowed zombies get a blue glow.
+    for zombie in get(&quot;zombie&quot;):
+        if zombie.slow_left &gt; 0:
+            drawCircle(pos=vec2(zombie.pos.x, zombie.pos.y - 30), radius=30,
+                       color=(120, 190, 255), opacity=0.35)
+
+    # The plant you are holding, over the square under the mouse.
+    m = mousePos()
+    if selected is not None and m.y &gt; LAWN_Y and m.x &gt; LAWN_X:
+        col = int((m.x - LAWN_X) // CELL)
+        row = int((m.y - LAWN_Y) // ROW_H)
+        if col &lt; COLS and row &lt; ROWS:
+            info = PLANTS[selected]
+            drawSprite(sprite=selected, pos=vec2(square_x(col), row_y(row)),
+                       width=info[&quot;w&quot;] * info[&quot;scale&quot;],
+                       height=info[&quot;h&quot;] * info[&quot;scale&quot;],
+                       anchor=&quot;center&quot;, opacity=0.5)
+
+    # The top bar: how much sun, then a card for each plant.
+    drawRect(pos=vec2(0, 0), width=width(), height=LAWN_Y - 8,
+             color=(110, 75, 45))
+    drawRect(pos=vec2(8, 8), width=78, height=96, color=(80, 55, 35),
+             radius=8)
+    drawSprite(sprite=&quot;sun&quot;, pos=vec2(47, 42), width=50, height=50,
+               anchor=&quot;center&quot;)
+    drawText(text=str(sun), pos=vec2(47, 88), size=22, anchor=&quot;center&quot;)
+
+    plants = LEVELS[level][&quot;plants&quot;]
+    for i in range(len(plants)):
+        name = plants[i]
+        info = PLANTS[name]
+        x = card_x(i)
+        drawRect(pos=vec2(x, 8), width=CARD_W, height=96,
+                 color=(235, 220, 170), radius=8)
+        if selected == name:
+            drawRect(pos=vec2(x, 8), width=CARD_W, height=96,
+                     color=(255, 240, 60), radius=8, outline=4)
+        drawSprite(sprite=name, pos=vec2(x + CARD_W / 2, 46),
+                   width=info[&quot;w&quot;] * info[&quot;scale&quot;] * 0.75,
+                   height=info[&quot;h&quot;] * info[&quot;scale&quot;] * 0.75, anchor=&quot;center&quot;)
+        drawText(text=str(info[&quot;cost&quot;]), pos=vec2(x + CARD_W / 2, 90),
+                 size=18, color=(60, 40, 20), anchor=&quot;center&quot;)
+
+        # Grey while it is waiting to be ready, shrinking as it gets
+        # nearer; dim if you cannot afford it.
+        if not card_ready(name):
+            left = (ready_at[name] - time()) / info[&quot;wait&quot;]
+            drawRect(pos=vec2(x, 8), width=CARD_W, height=96 * left,
+                     color=(40, 40, 40), opacity=0.6, radius=8)
+        elif sun &lt; info[&quot;cost&quot;]:
+            drawRect(pos=vec2(x, 8), width=CARD_W, height=96,
+                     color=(40, 40, 40), opacity=0.4, radius=8)
+
+    waves = LEVELS[level][&quot;waves&quot;]
+    drawText(text=&quot;Level &quot; + str(level + 1), pos=vec2(width() - 20, 22),
+             size=26, anchor=&quot;topright&quot;)
+    if wave_number == 0:
+        progress = &quot;Get ready!&quot;
+    else:
+        progress = &quot;Wave &quot; + str(wave_number) + &quot; of &quot; + str(len(waves))
+    drawText(text=progress, pos=vec2(width() - 20, 62), size=20,
+             anchor=&quot;topright&quot;)
+
+    if banner_time &gt; 0:
+        drawText(text=banner, pos=vec2(LAWN_X + COLS * CELL / 2,
+                                       LAWN_Y + ROWS * ROW_H / 2),
+                 size=44, anchor=&quot;center&quot;)
+
+
+# ------------------------------------------------------- 13. start the game
+
+start_level()
+say(&quot;Zombies are coming for the garden!\n\n&quot;
+    &quot;Tap a plant card, then a square of lawn, to plant it. Plants cost sun: &quot;
+    &quot;tap the suns to collect them. Pineapples make more sun, and beans &quot;
+    &quot;shoot the zombies.&quot;, button=&quot;Play&quot;)</code></pre>
+
+<h2 id="make-it-yours">Make it yours</h2>
+
+<p><a href="../../play/?game=garden_guard">Open the whole game in the playground →</a>
+It goes straight into the editor, ready to change and run.</p>
+
+<ul>
+<li><strong>Design a level.</strong> Add a dictionary to the end of
+<code>LEVELS</code> with the plants you want and your own waves. Every name
+in a wave has to be in <code>ZOMBIES</code>; spell one wrong, say
+<code>"zombi"</code>, and the game stops with <code>KeyError: 'zombi'</code>
+the moment that zombie is due, because there's nothing in
+<code>ZOMBIES</code> to look up.</li>
+<li><strong>Change the money.</strong> <code>START_SUN</code>,
+<code>SUN_VALUE</code> and <code>SKY_SUN_EVERY</code> decide how much sun
+there is. More sun is an easier game.</li>
+<li><strong>Change a plant.</strong> Everything about a plant is one line in
+<code>PLANTS</code>. A bean with <code>"every": 0.7</code> shoots twice as
+fast; a brock with <code>"hp": 200</code> is nearly impossible to eat.</li>
+<li><strong>A new zombie.</strong> The playground's Sprites panel has more
+dungeon monsters, and clicking one writes its <code>loadSprite</code> line,
+animations and all. The zombies here walk with an animation called
+<code>"walk"</code>, so rename the monster's <code>"run"</code> to that, give
+it a line in <code>ZOMBIES</code>, and put it in a wave.</li>
+</ul>
+
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>
