@@ -892,8 +892,13 @@ def fly():
 <pre><code class="language-python">x = rand(0, width())
 </code></pre>
 <h3 id="randia-b">randi(a, b)</h3>
-<p>A random whole number, <code>b</code> not included.</p>
-<pre><code class="language-python">n = randi(1, 7)          # 1 to 6
+<p>A random whole number from <code>a</code> to <code>b</code>, and
+<code>b</code> can come up too, so <code>randi(1, 6)</code> is a dice. One
+argument means from zero: <code>randi(3)</code> is 0, 1, 2 or 3. This is
+the same as Python's own <code>random.randint</code>. KAPLAY's
+<code>randi</code> leaves <code>b</code> out, so a game copied from
+KAPLAY can now and then pick one more than it meant to.</p>
+<pre><code class="language-python">n = randi(1, 6)          # 1 to 6, like a dice
 </code></pre>
 <h3 id="chooseseq">choose(seq)</h3>
 <p>One item from a list, at random.</p>
