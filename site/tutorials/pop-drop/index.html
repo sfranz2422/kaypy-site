@@ -1,0 +1,2446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Pop Drop · KayPy</title>
+<meta name="description" content="How Pop Drop was built, a step at a time: a honeycomb that is a list of lists, aiming with the arrow keys, bouncing off the walls, and a flood fill to find what pops and what falls — in plain Python a student can copy.">
+<meta property="og:title" content="Building Pop Drop · KayPy">
+<meta property="og:description" content="How Pop Drop was built, a step at a time.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All eight lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li><li><a class="dropdown-item" href="../../learn/functions/">6 — Functions</a></li><li><a class="dropdown-item" href="../../learn/decorators/">7 — Decorators</a></li><li><a class="dropdown-item" href="../../learn/dictionaries/">8 — Dictionaries</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../../tutorials/" aria-current="page">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <article class="prose">
+<h1 id="building-pop-drop">Building Pop Drop</h1>
+
+<p><a href="../../static/games/pop_drop/">Play it first →</a> Turn the
+launcher with the left and right arrows and fire with <strong>space</strong>.
+The piece bounces off the walls and sticks where it lands. Three or more of a
+kind touching pop, and anything left with nothing holding it up falls off.
+Miss too often and the ceiling comes down a row; let a piece past the red
+line and the game is over. It's a game in the style of the classic
+<em>Snood</em>.</p>
+
+<p>This is how it was built, a step at a time. Every numbered step below is a
+whole program: copy it into
+<a href="../../play/">the playground</a>, press Run, and it works. Each step
+is the one before it with something added, so you can build the game the way
+it was built. Then break something on purpose and see what changes. That
+teaches you more than reading does.</p>
+
+<p>There is nothing clever in it. No list comprehensions, no tricks, and every
+kaypy function it uses is on the <a href="../../api/">API page</a>.</p>
+
+<h2 id="the-one-big-idea">The one big idea: a honeycomb is a list of lists</h2>
+
+<p>Like <a href="../block-slide/">Block Slide</a>, this game has no game
+objects. The board is a list of rows, and each row is a list of spots. A spot
+holds the name of a piece, or <code>None</code> if it's empty:</p>
+
+<pre><code class="language-python">grid[0] = ["apple", "bean", "bean", "egg", "coin", "apple", "egg", "bean"]
+grid[1] = ["coin", "egg", None, "apple", "bean", "coin", "egg", None]</code></pre>
+
+<p><code>grid[1][2]</code> is row 1, spot 2. Row 0 is the top. Every frame
+the board is drawn fresh from the list, so popping a piece is just putting
+<code>None</code> in its spot.</p>
+
+<p>What makes it a honeycomb is that every <em>odd</em> row is pushed half a
+piece to the right, so its pieces sit in the dips between the pieces above
+and below:</p>
+
+<pre><code class="language-text">row 0:   A B C D E F G H
+row 1:    a b c d e f g
+row 2:   A B C D E F G H</code></pre>
+
+<p>That costs an odd row one spot (it would stick out past the wall), so odd
+rows have 7 spots and even rows 8. And because the rows nest into each other,
+they're closer together than a piece is tall: 42 pixels apart for pieces 48
+pixels across.</p>
+
+<p>Two questions decide the whole game, and both are answered by walking
+around this list. <em>Which pieces of the same kind touch the one that just
+landed?</em> Those pop. <em>Which pieces are still joined to the
+ceiling?</em> The rest fall. Both are a <strong>flood fill</strong>, which
+step 4 builds.</p>
+
+<h2 id="step-1-the-honeycomb">Step 1 — the honeycomb</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+COLS = 8           # spots across the even rows (the odd rows have one less)
+CELL = 48          # a piece is 48 pixels across
+ROW_H = 42         # rows overlap, like a honeycomb, so they are closer than 48
+ROWS = 12          # rows in the board
+
+BOARD_X = 28                 # the left wall
+BOARD_Y = 100                # the top of the ceiling
+BOARD_W = COLS * CELL
+
+# Tall, to fit a phone held upright. The empty space at the bottom is where
+# the launcher goes in step 2, and the controls for a phone in the last step.
+kaypy(width=BOARD_W + 2 * BOARD_X, height=940, background=[24, 22, 40])
+
+loadSprite(&quot;apple&quot;, &quot;images/apple.png&quot;)
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSprite(&quot;egg&quot;, &quot;images/egg.png&quot;)
+
+# Each kind of piece: the colour of the circle behind it, and the size the
+# picture is drawn at. The pictures are not all the same shape, so each one
+# gets its own width and height.
+PIECES = {
+    &quot;apple&quot;: {&quot;colour&quot;: (150, 45, 60), &quot;w&quot;: 31, &quot;h&quot;: 36},
+    &quot;bean&quot;: {&quot;colour&quot;: (35, 120, 85), &quot;w&quot;: 38, &quot;h&quot;: 32},
+    &quot;coin&quot;: {&quot;colour&quot;: (190, 110, 30), &quot;w&quot;: 26, &quot;h&quot;: 32},
+    &quot;egg&quot;: {&quot;colour&quot;: (130, 100, 70), &quot;w&quot;: 29, &quot;h&quot;: 36},
+}
+KINDS = [&quot;apple&quot;, &quot;bean&quot;, &quot;coin&quot;, &quot;egg&quot;]
+
+
+def row_length(row):
+    if row % 2 == 0:
+        return COLS
+    return COLS - 1
+
+
+def spot_x(row, col):
+    &quot;&quot;&quot;The middle of a spot, across.&quot;&quot;&quot;
+    x = BOARD_X + CELL / 2 + col * CELL
+    if row % 2 == 1:
+        x = x + CELL / 2
+    return x
+
+
+def spot_y(row):
+    &quot;&quot;&quot;The middle of a spot, down.&quot;&quot;&quot;
+    return BOARD_Y + CELL / 2 + row * ROW_H
+
+
+# The board: a list of rows, and each row a list of spots. A spot holds the
+# name of a piece, or None if it is empty. The top four rows start full.
+grid = []
+for row in range(ROWS):
+    grid.append([None] * COLS)
+
+for row in range(4):
+    for col in range(row_length(row)):
+        grid[row][col] = choose(KINDS)
+
+
+def draw_piece(kind, x, y):
+    piece = PIECES[kind]
+    drawCircle(pos=vec2(x, y), radius=CELL / 2 - 2, color=piece[&quot;colour&quot;])
+    drawSprite(sprite=kind, pos=vec2(x, y), width=piece[&quot;w&quot;],
+               height=piece[&quot;h&quot;], anchor=&quot;center&quot;)
+
+
+@onDraw
+def draw_everything():
+    drawRect(pos=vec2(BOARD_X, BOARD_Y), width=BOARD_W, height=580,
+             color=(34, 32, 56))
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            if grid[row][col] is not None:
+                draw_piece(grid[row][col], spot_x(row, col), spot_y(row))</code></pre>
+
+<p>Run it, and four rows of pieces hang from the top: different every
+time.</p>
+
+<ul>
+<li><code>[None] * COLS</code> makes a list of 8 <code>None</code>s: one
+empty row. The loop does that <code>ROWS</code> times, so <code>grid</code>
+starts as 12 empty rows.</li>
+<li>The second loop fills the top 4 rows. <code>row_length(row)</code> says
+how many spots that row really has: 8 for an even row, 7 for an odd one.
+<code>row % 2</code> is the remainder after dividing by 2, so it's
+<code>0</code> for even rows and <code>1</code> for odd ones.</li>
+<li><code>spot_x(row, col)</code> and <code>spot_y(row)</code> turn a spot
+into pixels: the middle of the piece. <code>spot_x</code> adds half a piece
+for the odd rows. That one <code>if</code> is the whole honeycomb. Take it
+out and every piece sits straight under the one above it, and because the
+rows are only 42 pixels apart, the 48-pixel pieces overlap each other.</li>
+<li><code>draw_piece</code> draws a coloured circle and then the picture on
+top of it. <code>anchor="center"</code> means <code>pos</code> is the
+middle of the picture rather than its top-left corner, so the picture sits
+in the middle of the circle. The circle is there so a coin and a lemon, both
+yellow, are easy to tell apart.</li>
+</ul>
+
+<p>The pictures aren't all the same shape. The egg is tall and the bean is
+wide, so each kind in <code>PIECES</code> has its own width and height. Give
+them all <code>"w": 36, "h": 36</code> and the egg and the bean come out
+the wrong shape.</p>
+
+<h2 id="step-2-aiming-and-bouncing">Step 2 — aiming and bouncing</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+COLS = 8           # spots across the even rows (the odd rows have one less)
+CELL = 48          # a piece is 48 pixels across
+ROW_H = 42         # rows overlap, like a honeycomb, so they are closer than 48
+ROWS = 12          # rows in the board
+
+BOARD_X = 28                 # the left wall
+BOARD_Y = 100                # the top of the ceiling
+BOARD_W = COLS * CELL
+LAUNCH = vec2(BOARD_X + BOARD_W / 2, 630)
+
+SHOT_SPEED = 900   # pixels per second
+TURN_SPEED = 100   # how fast the launcher turns, degrees per second
+
+# Tall, to fit a phone held upright. The empty space at the bottom is where
+# the controls for a phone go, in the last step.
+kaypy(width=BOARD_W + 2 * BOARD_X, height=940, background=[24, 22, 40])
+
+loadSprite(&quot;apple&quot;, &quot;images/apple.png&quot;)
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSprite(&quot;egg&quot;, &quot;images/egg.png&quot;)
+
+# Each kind of piece: the colour of the circle behind it, and the size the
+# picture is drawn at. The pictures are not all the same shape, so each one
+# gets its own width and height.
+PIECES = {
+    &quot;apple&quot;: {&quot;colour&quot;: (150, 45, 60), &quot;w&quot;: 31, &quot;h&quot;: 36},
+    &quot;bean&quot;: {&quot;colour&quot;: (35, 120, 85), &quot;w&quot;: 38, &quot;h&quot;: 32},
+    &quot;coin&quot;: {&quot;colour&quot;: (190, 110, 30), &quot;w&quot;: 26, &quot;h&quot;: 32},
+    &quot;egg&quot;: {&quot;colour&quot;: (130, 100, 70), &quot;w&quot;: 29, &quot;h&quot;: 36},
+}
+KINDS = [&quot;apple&quot;, &quot;bean&quot;, &quot;coin&quot;, &quot;egg&quot;]
+
+
+def row_length(row):
+    if row % 2 == 0:
+        return COLS
+    return COLS - 1
+
+
+def spot_x(row, col):
+    &quot;&quot;&quot;The middle of a spot, across.&quot;&quot;&quot;
+    x = BOARD_X + CELL / 2 + col * CELL
+    if row % 2 == 1:
+        x = x + CELL / 2
+    return x
+
+
+def spot_y(row):
+    &quot;&quot;&quot;The middle of a spot, down.&quot;&quot;&quot;
+    return BOARD_Y + CELL / 2 + row * ROW_H
+
+
+# The board: a list of rows, and each row a list of spots. A spot holds the
+# name of a piece, or None if it is empty. The top four rows start full.
+grid = []
+for row in range(ROWS):
+    grid.append([None] * COLS)
+
+for row in range(4):
+    for col in range(row_length(row)):
+        grid[row][col] = choose(KINDS)
+
+
+aim = -90            # degrees: -90 is straight up, -180 would be left
+loaded = choose(KINDS)   # the piece in the launcher
+shot = None          # the piece in the air: a dictionary, or None
+
+
+@onUpdate
+def turn():
+    global aim
+
+    if isKeyDown(&quot;left&quot;):
+        aim = aim - TURN_SPEED * dt()
+    if isKeyDown(&quot;right&quot;):
+        aim = aim + TURN_SPEED * dt()
+    # Not too flat, or a shot would bounce from wall to wall for ages.
+    aim = clamp(aim, -165, -15)
+
+
+@onKeyPress(&quot;space&quot;)
+def fire():
+    global shot
+
+    if shot is not None:
+        return
+    # Vec2.fromAngle turns an angle into a direction: an arrow one pixel
+    # long, pointing that way.
+    direction = Vec2.fromAngle(aim)
+    shot = {&quot;kind&quot;: loaded, &quot;pos&quot;: LAUNCH, &quot;vel&quot;: direction * SHOT_SPEED}
+
+
+@onUpdate
+def fly():
+    global shot, loaded
+
+    if shot is None:
+        return
+
+    shot[&quot;pos&quot;] = shot[&quot;pos&quot;] + shot[&quot;vel&quot;] * dt()
+
+    # Bounce off the side walls: put it back inside, and send it the other
+    # way across. Its speed up the screen does not change.
+    x = shot[&quot;pos&quot;].x
+    left = BOARD_X + CELL / 2
+    right = BOARD_X + BOARD_W - CELL / 2
+    if x &lt; left:
+        shot[&quot;pos&quot;] = vec2(left, shot[&quot;pos&quot;].y)
+        shot[&quot;vel&quot;] = vec2(-shot[&quot;vel&quot;].x, shot[&quot;vel&quot;].y)
+    if x &gt; right:
+        shot[&quot;pos&quot;] = vec2(right, shot[&quot;pos&quot;].y)
+        shot[&quot;vel&quot;] = vec2(-shot[&quot;vel&quot;].x, shot[&quot;vel&quot;].y)
+
+    # For now it flies straight through the pieces and is gone when it
+    # reaches the ceiling. Sticking is the next step.
+    if shot[&quot;pos&quot;].y - CELL / 2 &lt;= BOARD_Y:
+        shot = None
+        loaded = choose(KINDS)
+
+
+def draw_piece(kind, x, y):
+    piece = PIECES[kind]
+    drawCircle(pos=vec2(x, y), radius=CELL / 2 - 2, color=piece[&quot;colour&quot;])
+    drawSprite(sprite=kind, pos=vec2(x, y), width=piece[&quot;w&quot;],
+               height=piece[&quot;h&quot;], anchor=&quot;center&quot;)
+
+
+@onDraw
+def draw_everything():
+    drawRect(pos=vec2(BOARD_X, BOARD_Y), width=BOARD_W, height=580,
+             color=(34, 32, 56))
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            if grid[row][col] is not None:
+                draw_piece(grid[row][col], spot_x(row, col), spot_y(row))
+
+    # The launcher: a line pointing where the shot will go.
+    tip = LAUNCH + Vec2.fromAngle(aim) * 60
+    drawLine(p1=LAUNCH, p2=tip, width=6, color=(230, 230, 240))
+    if shot is None:
+        draw_piece(loaded, LAUNCH.x, LAUNCH.y)
+    else:
+        draw_piece(shot[&quot;kind&quot;], shot[&quot;pos&quot;].x, shot[&quot;pos&quot;].y)</code></pre>
+
+<p>Hold the left and right arrows to turn the launcher, and press
+<strong>space</strong> to fire. Aim at a side wall and watch the piece
+bounce. For now it flies straight through the other pieces and disappears at
+the ceiling.</p>
+
+<p><strong>Aiming.</strong> <code>aim</code> is an angle in degrees. The
+screen's y goes <em>down</em>, so angles go round clockwise:
+<code>0</code> is right, <code>-90</code> is straight up and
+<code>-180</code> is left. Holding an arrow adds or takes away
+<code>TURN_SPEED * dt()</code> every frame. <code>dt()</code> is the time
+since the last frame, so that's 100 degrees a second, however fast the
+computer is. <code>clamp</code> stops it at <code>-165</code> and
+<code>-15</code>. Flatter than that, a shot bounces from wall to wall for
+ages before it gets anywhere.</p>
+
+<p><strong>Firing.</strong> The flying piece is a dictionary with its kind,
+where it is (<code>"pos"</code>), and its velocity (<code>"vel"</code>): how
+far it moves in a second, across and down. <code><a
+href="../../api/#vec2fromangledegrees">Vec2.fromAngle(aim)</a></code> turns
+the angle into a direction, an arrow one pixel long pointing that way, and
+multiplying it by <code>SHOT_SPEED</code> makes it 900 pixels long. The
+launcher line is drawn the same way, 60 pixels long.</p>
+
+<p><strong>Bouncing.</strong> Every frame the piece moves by
+<code>vel * dt()</code>. If it's gone past a wall, it's put back at the wall
+and its sideways speed is flipped: <code>-shot["vel"].x</code>. Its speed up
+the screen stays the same, which is what makes it a bounce.</p>
+
+<p><code>if shot is not None: return</code> at the top of <code>fire</code>
+means pressing space again while a piece is flying does nothing. Without it,
+every press would start a new shot from the launcher, and the one in the air
+would vanish.</p>
+
+<h2 id="step-3-sticking">Step 3 — sticking</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+COLS = 8           # spots across the even rows (the odd rows have one less)
+CELL = 48          # a piece is 48 pixels across
+ROW_H = 42         # rows overlap, like a honeycomb, so they are closer than 48
+ROWS = 12          # rows in the board
+
+BOARD_X = 28                 # the left wall
+BOARD_Y = 100                # the top of the ceiling
+BOARD_W = COLS * CELL
+LAUNCH = vec2(BOARD_X + BOARD_W / 2, 630)
+
+SHOT_SPEED = 900   # pixels per second
+TURN_SPEED = 100   # how fast the launcher turns, degrees per second
+
+# Tall, to fit a phone held upright. The empty space at the bottom is where
+# the controls for a phone go, in the last step.
+kaypy(width=BOARD_W + 2 * BOARD_X, height=940, background=[24, 22, 40])
+
+loadSprite(&quot;apple&quot;, &quot;images/apple.png&quot;)
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSprite(&quot;egg&quot;, &quot;images/egg.png&quot;)
+
+# Each kind of piece: the colour of the circle behind it, and the size the
+# picture is drawn at. The pictures are not all the same shape, so each one
+# gets its own width and height.
+PIECES = {
+    &quot;apple&quot;: {&quot;colour&quot;: (150, 45, 60), &quot;w&quot;: 31, &quot;h&quot;: 36},
+    &quot;bean&quot;: {&quot;colour&quot;: (35, 120, 85), &quot;w&quot;: 38, &quot;h&quot;: 32},
+    &quot;coin&quot;: {&quot;colour&quot;: (190, 110, 30), &quot;w&quot;: 26, &quot;h&quot;: 32},
+    &quot;egg&quot;: {&quot;colour&quot;: (130, 100, 70), &quot;w&quot;: 29, &quot;h&quot;: 36},
+}
+KINDS = [&quot;apple&quot;, &quot;bean&quot;, &quot;coin&quot;, &quot;egg&quot;]
+
+
+def row_length(row):
+    if row % 2 == 0:
+        return COLS
+    return COLS - 1
+
+
+def in_grid(row, col):
+    return 0 &lt;= row &lt; ROWS and 0 &lt;= col &lt; row_length(row)
+
+
+def spot_x(row, col):
+    &quot;&quot;&quot;The middle of a spot, across.&quot;&quot;&quot;
+    x = BOARD_X + CELL / 2 + col * CELL
+    if row % 2 == 1:
+        x = x + CELL / 2
+    return x
+
+
+def spot_y(row):
+    &quot;&quot;&quot;The middle of a spot, down.&quot;&quot;&quot;
+    return BOARD_Y + CELL / 2 + row * ROW_H
+
+
+# The board: a list of rows, and each row a list of spots. A spot holds the
+# name of a piece, or None if it is empty. The top four rows start full.
+grid = []
+for row in range(ROWS):
+    grid.append([None] * COLS)
+
+for row in range(4):
+    for col in range(row_length(row)):
+        grid[row][col] = choose(KINDS)
+
+
+# Every spot touches six others: one each side, two above and two below.
+# WHICH two above depends on whether the row is pushed over.
+
+def neighbours(row, col):
+    if row % 2 == 0:
+        shift = -1
+    else:
+        shift = 0
+    around = [
+        (row, col - 1), (row, col + 1),
+        (row - 1, col + shift), (row - 1, col + shift + 1),
+        (row + 1, col + shift), (row + 1, col + shift + 1),
+    ]
+    inside = []
+    for spot in around:
+        if in_grid(spot[0], spot[1]):
+            inside.append(spot)
+    return inside
+
+
+aim = -90            # degrees: -90 is straight up, -180 would be left
+loaded = choose(KINDS)   # the piece in the launcher
+shot = None          # the piece in the air: a dictionary, or None
+
+
+@onUpdate
+def turn():
+    global aim
+
+    if isKeyDown(&quot;left&quot;):
+        aim = aim - TURN_SPEED * dt()
+    if isKeyDown(&quot;right&quot;):
+        aim = aim + TURN_SPEED * dt()
+    # Not too flat, or a shot would bounce from wall to wall for ages.
+    aim = clamp(aim, -165, -15)
+
+
+@onKeyPress(&quot;space&quot;)
+def fire():
+    global shot
+
+    if shot is not None:
+        return
+    # Vec2.fromAngle turns an angle into a direction: an arrow one pixel
+    # long, pointing that way.
+    direction = Vec2.fromAngle(aim)
+    shot = {&quot;kind&quot;: loaded, &quot;pos&quot;: LAUNCH, &quot;vel&quot;: direction * SHOT_SPEED}
+
+
+@onUpdate
+def fly():
+
+    if shot is None:
+        return
+
+    # A slow frame must not let the piece jump straight through another.
+    step = min(dt(), 1 / 30)
+    shot[&quot;pos&quot;] = shot[&quot;pos&quot;] + shot[&quot;vel&quot;] * step
+
+    # Bounce off the side walls: put it back inside, and send it the other
+    # way across. Its speed up the screen does not change.
+    x = shot[&quot;pos&quot;].x
+    left = BOARD_X + CELL / 2
+    right = BOARD_X + BOARD_W - CELL / 2
+    if x &lt; left:
+        shot[&quot;pos&quot;] = vec2(left, shot[&quot;pos&quot;].y)
+        shot[&quot;vel&quot;] = vec2(-shot[&quot;vel&quot;].x, shot[&quot;vel&quot;].y)
+    if x &gt; right:
+        shot[&quot;pos&quot;] = vec2(right, shot[&quot;pos&quot;].y)
+        shot[&quot;vel&quot;] = vec2(-shot[&quot;vel&quot;].x, shot[&quot;vel&quot;].y)
+
+    # Stick to the ceiling, or to any piece it comes close enough to touch.
+    # &quot;Close enough&quot; is a little less than a whole piece, so a shot can slip
+    # through a gap that looks big enough.
+    if shot[&quot;pos&quot;].y - CELL / 2 &lt;= BOARD_Y:
+        stick()
+        return
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            if grid[row][col] is not None:
+                middle = vec2(spot_x(row, col), spot_y(row))
+                if shot[&quot;pos&quot;].dist(middle) &lt; CELL * 0.85:
+                    stick()
+                    return
+
+
+def stick():
+    &quot;&quot;&quot;Put the flying piece in the nearest empty spot it could hang from.&quot;&quot;&quot;
+    global shot, loaded
+
+    best_spot = None
+    best_dist = 0
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            if grid[row][col] is None and can_hang(row, col):
+                middle = vec2(spot_x(row, col), spot_y(row))
+                distance = shot[&quot;pos&quot;].dist(middle)
+                if best_spot is None or distance &lt; best_dist:
+                    best_spot = (row, col)
+                    best_dist = distance
+
+    grid[best_spot[0]][best_spot[1]] = shot[&quot;kind&quot;]
+    shot = None
+    loaded = choose(KINDS)
+
+
+def can_hang(row, col):
+    &quot;&quot;&quot;A spot can be filled if it touches the ceiling or another piece.&quot;&quot;&quot;
+    if row == 0:
+        return True
+    for near in neighbours(row, col):
+        if grid[near[0]][near[1]] is not None:
+            return True
+    return False
+
+
+def draw_piece(kind, x, y):
+    piece = PIECES[kind]
+    drawCircle(pos=vec2(x, y), radius=CELL / 2 - 2, color=piece[&quot;colour&quot;])
+    drawSprite(sprite=kind, pos=vec2(x, y), width=piece[&quot;w&quot;],
+               height=piece[&quot;h&quot;], anchor=&quot;center&quot;)
+
+
+@onDraw
+def draw_everything():
+    drawRect(pos=vec2(BOARD_X, BOARD_Y), width=BOARD_W, height=580,
+             color=(34, 32, 56))
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            if grid[row][col] is not None:
+                draw_piece(grid[row][col], spot_x(row, col), spot_y(row))
+
+    # The launcher: a line pointing where the shot will go.
+    tip = LAUNCH + Vec2.fromAngle(aim) * 60
+    drawLine(p1=LAUNCH, p2=tip, width=6, color=(230, 230, 240))
+    if shot is None:
+        draw_piece(loaded, LAUNCH.x, LAUNCH.y)
+    else:
+        draw_piece(shot[&quot;kind&quot;], shot[&quot;pos&quot;].x, shot[&quot;pos&quot;].y)</code></pre>
+
+<p>Now a shot sticks to the ceiling or to the first piece it touches, and
+snaps into a spot in the honeycomb.</p>
+
+<p><strong>Touching.</strong> Every frame, <code>fly</code> checks the
+distance from the shot to every piece on the board. <code>.dist()</code>
+measures it. Closer than <code>CELL * 0.85</code> counts as touching:
+slightly less than a whole piece, so a shot can slip through a gap that looks
+just big enough.</p>
+
+<p><strong>Snapping.</strong> <code>stick</code> looks at every empty spot
+and keeps the nearest one the piece could hang from. <code>can_hang</code>
+says yes for a spot in the top row (it touches the ceiling) or one that
+touches a piece, so a piece can never end up floating on its own.</p>
+
+<p><strong>Neighbours.</strong> Every spot touches six others: one each
+side, two above and two below. Which two above depends on the row. Look at
+the picture of the honeycomb again: <code>c</code> in row 1 sits between
+<code>C</code> and <code>D</code> above it, the same column and one to the
+right. But <code>C</code> in row 2 sits between <code>b</code> and
+<code>c</code> above it, one to the left and the same column. That's what
+<code>shift</code> is. Then <code>neighbours</code> throws away anything off
+the edge of the board, using <code>in_grid</code>.</p>
+
+<p><strong>One more line in <code>fly</code>.</strong>
+<code>min(dt(), 1 / 30)</code> moves the shot as if no more than a thirtieth
+of a second had passed. On a slow frame, a whole <code>dt()</code> could
+carry it 45 pixels in one go, straight past a piece it should have hit.</p>
+
+<p><strong>This step can crash, and it's worth seeing.</strong> Fire straight
+up again and again. The pieces pile down towards the launcher, and when the
+bottom row is full and the next shot touches it, the game stops with:</p>
+
+<pre><code class="language-text">TypeError: 'NoneType' object is not subscriptable</code></pre>
+
+<p>pointing at <code>grid[best_spot[0]][best_spot[1]] = shot["kind"]</code>.
+The piece needs a spot <em>below</em> the bottom row, and there isn't one,
+so no spot was ever found and <code>best_spot</code> is still
+<code>None</code>. <code>None[0]</code> makes no sense, and that's what the
+message means. Step 6 fixes it by ending the game before the board can get
+that full.</p>
+
+<h2 id="step-4-popping">Step 4 — popping</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+COLS = 8           # spots across the even rows (the odd rows have one less)
+CELL = 48          # a piece is 48 pixels across
+ROW_H = 42         # rows overlap, like a honeycomb, so they are closer than 48
+ROWS = 12          # rows in the board
+
+BOARD_X = 28                 # the left wall
+BOARD_Y = 100                # the top of the ceiling
+BOARD_W = COLS * CELL
+LAUNCH = vec2(BOARD_X + BOARD_W / 2, 630)
+
+SHOT_SPEED = 900   # pixels per second
+TURN_SPEED = 100   # how fast the launcher turns, degrees per second
+POINTS_POP = 10    # for each piece that pops
+
+# Tall, to fit a phone held upright. The empty space at the bottom is where
+# the controls for a phone go, in the last step.
+kaypy(width=BOARD_W + 2 * BOARD_X, height=940, background=[24, 22, 40])
+
+loadSprite(&quot;apple&quot;, &quot;images/apple.png&quot;)
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSprite(&quot;egg&quot;, &quot;images/egg.png&quot;)
+
+# Each kind of piece: the colour of the circle behind it, and the size the
+# picture is drawn at. The pictures are not all the same shape, so each one
+# gets its own width and height.
+PIECES = {
+    &quot;apple&quot;: {&quot;colour&quot;: (150, 45, 60), &quot;w&quot;: 31, &quot;h&quot;: 36},
+    &quot;bean&quot;: {&quot;colour&quot;: (35, 120, 85), &quot;w&quot;: 38, &quot;h&quot;: 32},
+    &quot;coin&quot;: {&quot;colour&quot;: (190, 110, 30), &quot;w&quot;: 26, &quot;h&quot;: 32},
+    &quot;egg&quot;: {&quot;colour&quot;: (130, 100, 70), &quot;w&quot;: 29, &quot;h&quot;: 36},
+}
+KINDS = [&quot;apple&quot;, &quot;bean&quot;, &quot;coin&quot;, &quot;egg&quot;]
+
+
+def row_length(row):
+    if row % 2 == 0:
+        return COLS
+    return COLS - 1
+
+
+def in_grid(row, col):
+    return 0 &lt;= row &lt; ROWS and 0 &lt;= col &lt; row_length(row)
+
+
+def spot_x(row, col):
+    &quot;&quot;&quot;The middle of a spot, across.&quot;&quot;&quot;
+    x = BOARD_X + CELL / 2 + col * CELL
+    if row % 2 == 1:
+        x = x + CELL / 2
+    return x
+
+
+def spot_y(row):
+    &quot;&quot;&quot;The middle of a spot, down.&quot;&quot;&quot;
+    return BOARD_Y + CELL / 2 + row * ROW_H
+
+
+# The board: a list of rows, and each row a list of spots. A spot holds the
+# name of a piece, or None if it is empty. The top four rows start full.
+grid = []
+for row in range(ROWS):
+    grid.append([None] * COLS)
+
+for row in range(4):
+    for col in range(row_length(row)):
+        grid[row][col] = choose(KINDS)
+
+
+# Every spot touches six others: one each side, two above and two below.
+# WHICH two above depends on whether the row is pushed over.
+
+def neighbours(row, col):
+    if row % 2 == 0:
+        shift = -1
+    else:
+        shift = 0
+    around = [
+        (row, col - 1), (row, col + 1),
+        (row - 1, col + shift), (row - 1, col + shift + 1),
+        (row + 1, col + shift), (row + 1, col + shift + 1),
+    ]
+    inside = []
+    for spot in around:
+        if in_grid(spot[0], spot[1]):
+            inside.append(spot)
+    return inside
+
+
+def group_of(row, col):
+    &quot;&quot;&quot;Every spot joined to this one by pieces of the same kind.
+
+    A flood fill: start with one spot, keep a list of spots still to look
+    around, and add every matching neighbour not already found. When the
+    list is empty, the whole group has been found.
+    &quot;&quot;&quot;
+    kind = grid[row][col]
+    found = [(row, col)]
+    to_look = [(row, col)]
+    while len(to_look) &gt; 0:
+        spot = to_look.pop()
+        for near in neighbours(spot[0], spot[1]):
+            if grid[near[0]][near[1]] == kind and near not in found:
+                found.append(near)
+                to_look.append(near)
+    return found
+
+
+score = 0
+aim = -90            # degrees: -90 is straight up, -180 would be left
+loaded = choose(KINDS)   # the piece in the launcher
+shot = None          # the piece in the air: a dictionary, or None
+
+
+@onUpdate
+def turn():
+    global aim
+
+    if isKeyDown(&quot;left&quot;):
+        aim = aim - TURN_SPEED * dt()
+    if isKeyDown(&quot;right&quot;):
+        aim = aim + TURN_SPEED * dt()
+    # Not too flat, or a shot would bounce from wall to wall for ages.
+    aim = clamp(aim, -165, -15)
+
+
+@onKeyPress(&quot;space&quot;)
+def fire():
+    global shot
+
+    if shot is not None:
+        return
+    # Vec2.fromAngle turns an angle into a direction: an arrow one pixel
+    # long, pointing that way.
+    direction = Vec2.fromAngle(aim)
+    shot = {&quot;kind&quot;: loaded, &quot;pos&quot;: LAUNCH, &quot;vel&quot;: direction * SHOT_SPEED}
+
+
+@onUpdate
+def fly():
+
+    if shot is None:
+        return
+
+    # A slow frame must not let the piece jump straight through another.
+    step = min(dt(), 1 / 30)
+    shot[&quot;pos&quot;] = shot[&quot;pos&quot;] + shot[&quot;vel&quot;] * step
+
+    # Bounce off the side walls: put it back inside, and send it the other
+    # way across. Its speed up the screen does not change.
+    x = shot[&quot;pos&quot;].x
+    left = BOARD_X + CELL / 2
+    right = BOARD_X + BOARD_W - CELL / 2
+    if x &lt; left:
+        shot[&quot;pos&quot;] = vec2(left, shot[&quot;pos&quot;].y)
+        shot[&quot;vel&quot;] = vec2(-shot[&quot;vel&quot;].x, shot[&quot;vel&quot;].y)
+    if x &gt; right:
+        shot[&quot;pos&quot;] = vec2(right, shot[&quot;pos&quot;].y)
+        shot[&quot;vel&quot;] = vec2(-shot[&quot;vel&quot;].x, shot[&quot;vel&quot;].y)
+
+    # Stick to the ceiling, or to any piece it comes close enough to touch.
+    # &quot;Close enough&quot; is a little less than a whole piece, so a shot can slip
+    # through a gap that looks big enough.
+    if shot[&quot;pos&quot;].y - CELL / 2 &lt;= BOARD_Y:
+        stick()
+        return
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            if grid[row][col] is not None:
+                middle = vec2(spot_x(row, col), spot_y(row))
+                if shot[&quot;pos&quot;].dist(middle) &lt; CELL * 0.85:
+                    stick()
+                    return
+
+
+def stick():
+    &quot;&quot;&quot;Put the flying piece in the nearest empty spot it could hang from.&quot;&quot;&quot;
+    global shot, loaded
+
+    best_spot = None
+    best_dist = 0
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            if grid[row][col] is None and can_hang(row, col):
+                middle = vec2(spot_x(row, col), spot_y(row))
+                distance = shot[&quot;pos&quot;].dist(middle)
+                if best_spot is None or distance &lt; best_dist:
+                    best_spot = (row, col)
+                    best_dist = distance
+
+    grid[best_spot[0]][best_spot[1]] = shot[&quot;kind&quot;]
+    shot = None
+    loaded = choose(KINDS)
+    settle(best_spot[0], best_spot[1])
+
+
+def settle(row, col):
+    &quot;&quot;&quot;After a piece sticks: three or more of a kind pop.&quot;&quot;&quot;
+    global score
+
+    group = group_of(row, col)
+    if len(group) &gt;= 3:
+        for spot in group:
+            grid[spot[0]][spot[1]] = None
+        score = score + POINTS_POP * len(group)
+
+
+def can_hang(row, col):
+    &quot;&quot;&quot;A spot can be filled if it touches the ceiling or another piece.&quot;&quot;&quot;
+    if row == 0:
+        return True
+    for near in neighbours(row, col):
+        if grid[near[0]][near[1]] is not None:
+            return True
+    return False
+
+
+def draw_piece(kind, x, y):
+    piece = PIECES[kind]
+    drawCircle(pos=vec2(x, y), radius=CELL / 2 - 2, color=piece[&quot;colour&quot;])
+    drawSprite(sprite=kind, pos=vec2(x, y), width=piece[&quot;w&quot;],
+               height=piece[&quot;h&quot;], anchor=&quot;center&quot;)
+
+
+@onDraw
+def draw_everything():
+    drawRect(pos=vec2(BOARD_X, BOARD_Y), width=BOARD_W, height=580,
+             color=(34, 32, 56))
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            if grid[row][col] is not None:
+                draw_piece(grid[row][col], spot_x(row, col), spot_y(row))
+
+    # The launcher: a line pointing where the shot will go.
+    tip = LAUNCH + Vec2.fromAngle(aim) * 60
+    drawLine(p1=LAUNCH, p2=tip, width=6, color=(230, 230, 240))
+    if shot is None:
+        draw_piece(loaded, LAUNCH.x, LAUNCH.y)
+    else:
+        draw_piece(shot[&quot;kind&quot;], shot[&quot;pos&quot;].x, shot[&quot;pos&quot;].y)
+
+    drawText(text=&quot;Score &quot; + str(score), pos=vec2(BOARD_X, 58), size=20)</code></pre>
+
+<p>Land a piece next to two of the same kind, and all three pop. Land it on
+a bigger group and the whole group goes.</p>
+
+<p><code>group_of(row, col)</code> is the <strong>flood fill</strong>, and
+it's the heart of the game. It finds every piece joined to this one by pieces
+of the same kind, using two lists:</p>
+
+<ul>
+<li><code>found</code>: every spot in the group so far. It starts with just
+the piece that landed.</li>
+<li><code>to_look</code>: spots whose neighbours haven't been checked yet.
+It starts with the same one.</li>
+</ul>
+
+<p>The <code>while</code> loop takes a spot off <code>to_look</code> and
+checks its six neighbours. A neighbour of the same kind that isn't in
+<code>found</code> yet goes into <em>both</em> lists: it's in the group, and
+its own neighbours need checking. When <code>to_look</code> is empty, there's
+nothing left to check, and <code>found</code> is the whole group, however
+oddly it winds around the board.</p>
+
+<p>Each spot is a pair, <code>(row, col)</code>. Brackets like that make a
+<em>tuple</em>, which is like a list that can't be changed.
+<code>spot[0]</code> is the row and <code>spot[1]</code> the column, and
+<code>near not in found</code> works because Python can compare two pairs to
+see if they're the same.</p>
+
+<p>Try taking out <code>and near not in found</code>. As soon as a piece
+lands next to one of its own kind, the two find each other, then each other
+again, for ever. The <code>while</code> loop never ends and the game
+freezes. That check is what makes the flood fill stop.</p>
+
+<p><code>settle</code> runs after every piece sticks. If the group is 3 or
+more, every spot in it is set back to <code>None</code> and the score goes up
+10 for each piece.</p>
+
+<h2 id="step-5-falling-off">Step 5 — falling off</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+COLS = 8           # spots across the even rows (the odd rows have one less)
+CELL = 48          # a piece is 48 pixels across
+ROW_H = 42         # rows overlap, like a honeycomb, so they are closer than 48
+ROWS = 12          # rows in the board
+
+BOARD_X = 28                 # the left wall
+BOARD_Y = 100                # the top of the ceiling
+BOARD_W = COLS * CELL
+LAUNCH = vec2(BOARD_X + BOARD_W / 2, 630)
+
+SHOT_SPEED = 900   # pixels per second
+TURN_SPEED = 100   # how fast the launcher turns, degrees per second
+POINTS_POP = 10    # for each piece that pops
+POINTS_DROP = 20   # for each piece that falls off
+
+# Tall, to fit a phone held upright. The empty space at the bottom is where
+# the controls for a phone go, in the last step.
+kaypy(width=BOARD_W + 2 * BOARD_X, height=940, background=[24, 22, 40])
+
+loadSprite(&quot;apple&quot;, &quot;images/apple.png&quot;)
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSprite(&quot;egg&quot;, &quot;images/egg.png&quot;)
+
+# Each kind of piece: the colour of the circle behind it, and the size the
+# picture is drawn at. The pictures are not all the same shape, so each one
+# gets its own width and height.
+PIECES = {
+    &quot;apple&quot;: {&quot;colour&quot;: (150, 45, 60), &quot;w&quot;: 31, &quot;h&quot;: 36},
+    &quot;bean&quot;: {&quot;colour&quot;: (35, 120, 85), &quot;w&quot;: 38, &quot;h&quot;: 32},
+    &quot;coin&quot;: {&quot;colour&quot;: (190, 110, 30), &quot;w&quot;: 26, &quot;h&quot;: 32},
+    &quot;egg&quot;: {&quot;colour&quot;: (130, 100, 70), &quot;w&quot;: 29, &quot;h&quot;: 36},
+}
+KINDS = [&quot;apple&quot;, &quot;bean&quot;, &quot;coin&quot;, &quot;egg&quot;]
+
+
+def row_length(row):
+    if row % 2 == 0:
+        return COLS
+    return COLS - 1
+
+
+def in_grid(row, col):
+    return 0 &lt;= row &lt; ROWS and 0 &lt;= col &lt; row_length(row)
+
+
+def spot_x(row, col):
+    &quot;&quot;&quot;The middle of a spot, across.&quot;&quot;&quot;
+    x = BOARD_X + CELL / 2 + col * CELL
+    if row % 2 == 1:
+        x = x + CELL / 2
+    return x
+
+
+def spot_y(row):
+    &quot;&quot;&quot;The middle of a spot, down.&quot;&quot;&quot;
+    return BOARD_Y + CELL / 2 + row * ROW_H
+
+
+# The board: a list of rows, and each row a list of spots. A spot holds the
+# name of a piece, or None if it is empty. The top four rows start full.
+grid = []
+for row in range(ROWS):
+    grid.append([None] * COLS)
+
+for row in range(4):
+    for col in range(row_length(row)):
+        grid[row][col] = choose(KINDS)
+
+
+# Every spot touches six others: one each side, two above and two below.
+# WHICH two above depends on whether the row is pushed over.
+
+def neighbours(row, col):
+    if row % 2 == 0:
+        shift = -1
+    else:
+        shift = 0
+    around = [
+        (row, col - 1), (row, col + 1),
+        (row - 1, col + shift), (row - 1, col + shift + 1),
+        (row + 1, col + shift), (row + 1, col + shift + 1),
+    ]
+    inside = []
+    for spot in around:
+        if in_grid(spot[0], spot[1]):
+            inside.append(spot)
+    return inside
+
+
+def group_of(row, col):
+    &quot;&quot;&quot;Every spot joined to this one by pieces of the same kind.
+
+    A flood fill: start with one spot, keep a list of spots still to look
+    around, and add every matching neighbour not already found. When the
+    list is empty, the whole group has been found.
+    &quot;&quot;&quot;
+    kind = grid[row][col]
+    found = [(row, col)]
+    to_look = [(row, col)]
+    while len(to_look) &gt; 0:
+        spot = to_look.pop()
+        for near in neighbours(spot[0], spot[1]):
+            if grid[near[0]][near[1]] == kind and near not in found:
+                found.append(near)
+                to_look.append(near)
+    return found
+
+
+def hanging_on():
+    &quot;&quot;&quot;Every spot joined to the ceiling, through pieces of any kind.
+
+    The same flood fill, but it starts from every piece in the top row at
+    once, and any piece will do.
+    &quot;&quot;&quot;
+    found = []
+    for col in range(row_length(0)):
+        if grid[0][col] is not None:
+            found.append((0, col))
+    to_look = list(found)
+    while len(to_look) &gt; 0:
+        spot = to_look.pop()
+        for near in neighbours(spot[0], spot[1]):
+            if grid[near[0]][near[1]] is not None and near not in found:
+                found.append(near)
+                to_look.append(near)
+    return found
+
+
+score = 0
+aim = -90            # degrees: -90 is straight up, -180 would be left
+loaded = choose(KINDS)   # the piece in the launcher
+shot = None          # the piece in the air: a dictionary, or None
+
+# Pieces that have just popped or fallen. They are not on the board any
+# more; they are only drawn, until they are gone.
+popping = []
+falling = []
+
+
+@onUpdate
+def turn():
+    global aim
+
+    if isKeyDown(&quot;left&quot;):
+        aim = aim - TURN_SPEED * dt()
+    if isKeyDown(&quot;right&quot;):
+        aim = aim + TURN_SPEED * dt()
+    # Not too flat, or a shot would bounce from wall to wall for ages.
+    aim = clamp(aim, -165, -15)
+
+
+@onKeyPress(&quot;space&quot;)
+def fire():
+    global shot
+
+    if shot is not None:
+        return
+    # Vec2.fromAngle turns an angle into a direction: an arrow one pixel
+    # long, pointing that way.
+    direction = Vec2.fromAngle(aim)
+    shot = {&quot;kind&quot;: loaded, &quot;pos&quot;: LAUNCH, &quot;vel&quot;: direction * SHOT_SPEED}
+
+
+@onUpdate
+def fly():
+
+    if shot is None:
+        return
+
+    # A slow frame must not let the piece jump straight through another.
+    step = min(dt(), 1 / 30)
+    shot[&quot;pos&quot;] = shot[&quot;pos&quot;] + shot[&quot;vel&quot;] * step
+
+    # Bounce off the side walls: put it back inside, and send it the other
+    # way across. Its speed up the screen does not change.
+    x = shot[&quot;pos&quot;].x
+    left = BOARD_X + CELL / 2
+    right = BOARD_X + BOARD_W - CELL / 2
+    if x &lt; left:
+        shot[&quot;pos&quot;] = vec2(left, shot[&quot;pos&quot;].y)
+        shot[&quot;vel&quot;] = vec2(-shot[&quot;vel&quot;].x, shot[&quot;vel&quot;].y)
+    if x &gt; right:
+        shot[&quot;pos&quot;] = vec2(right, shot[&quot;pos&quot;].y)
+        shot[&quot;vel&quot;] = vec2(-shot[&quot;vel&quot;].x, shot[&quot;vel&quot;].y)
+
+    # Stick to the ceiling, or to any piece it comes close enough to touch.
+    # &quot;Close enough&quot; is a little less than a whole piece, so a shot can slip
+    # through a gap that looks big enough.
+    if shot[&quot;pos&quot;].y - CELL / 2 &lt;= BOARD_Y:
+        stick()
+        return
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            if grid[row][col] is not None:
+                middle = vec2(spot_x(row, col), spot_y(row))
+                if shot[&quot;pos&quot;].dist(middle) &lt; CELL * 0.85:
+                    stick()
+                    return
+
+
+def stick():
+    &quot;&quot;&quot;Put the flying piece in the nearest empty spot it could hang from.&quot;&quot;&quot;
+    global shot, loaded
+
+    best_spot = None
+    best_dist = 0
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            if grid[row][col] is None and can_hang(row, col):
+                middle = vec2(spot_x(row, col), spot_y(row))
+                distance = shot[&quot;pos&quot;].dist(middle)
+                if best_spot is None or distance &lt; best_dist:
+                    best_spot = (row, col)
+                    best_dist = distance
+
+    grid[best_spot[0]][best_spot[1]] = shot[&quot;kind&quot;]
+    shot = None
+    loaded = choose(KINDS)
+    settle(best_spot[0], best_spot[1])
+
+
+def settle(row, col):
+    &quot;&quot;&quot;After a piece sticks: three or more of a kind pop, then anything
+    left with nothing holding it up falls.&quot;&quot;&quot;
+    global score
+
+    group = group_of(row, col)
+    if len(group) &gt;= 3:
+        for spot in group:
+            popping.append({&quot;kind&quot;: grid[spot[0]][spot[1]],
+                            &quot;x&quot;: spot_x(spot[0], spot[1]),
+                            &quot;y&quot;: spot_y(spot[0]), &quot;time&quot;: 0})
+            grid[spot[0]][spot[1]] = None
+        score = score + POINTS_POP * len(group)
+
+        # Now anything not joined to the ceiling falls.
+        held = hanging_on()
+        dropped = 0
+        for r in range(ROWS):
+            for c in range(row_length(r)):
+                if grid[r][c] is not None and (r, c) not in held:
+                    knock_off(r, c)
+                    dropped = dropped + 1
+        score = score + POINTS_DROP * dropped
+
+
+def knock_off(row, col):
+    &quot;&quot;&quot;Take a piece off the board and let it fall.&quot;&quot;&quot;
+    falling.append({&quot;kind&quot;: grid[row][col], &quot;x&quot;: spot_x(row, col),
+                    &quot;y&quot;: spot_y(row), &quot;speed&quot;: -100})
+    grid[row][col] = None
+
+
+@onUpdate
+def move_leftovers():
+    global popping, falling
+
+    keep = []
+    for piece in popping:
+        piece[&quot;time&quot;] = piece[&quot;time&quot;] + dt()
+        if piece[&quot;time&quot;] &lt; 0.25:
+            keep.append(piece)
+    popping = keep
+
+    keep = []
+    for piece in falling:
+        piece[&quot;speed&quot;] = piece[&quot;speed&quot;] + 1800 * dt()
+        piece[&quot;y&quot;] = piece[&quot;y&quot;] + piece[&quot;speed&quot;] * dt()
+        if piece[&quot;y&quot;] &lt; height() + CELL:
+            keep.append(piece)
+    falling = keep
+
+
+def can_hang(row, col):
+    &quot;&quot;&quot;A spot can be filled if it touches the ceiling or another piece.&quot;&quot;&quot;
+    if row == 0:
+        return True
+    for near in neighbours(row, col):
+        if grid[near[0]][near[1]] is not None:
+            return True
+    return False
+
+
+def draw_piece(kind, x, y, size=1.0, opacity=1.0):
+    piece = PIECES[kind]
+    drawCircle(pos=vec2(x, y), radius=(CELL / 2 - 2) * size,
+               color=piece[&quot;colour&quot;], opacity=opacity)
+    drawSprite(sprite=kind, pos=vec2(x, y), width=piece[&quot;w&quot;] * size,
+               height=piece[&quot;h&quot;] * size, anchor=&quot;center&quot;, opacity=opacity)
+
+
+@onDraw
+def draw_everything():
+    drawRect(pos=vec2(BOARD_X, BOARD_Y), width=BOARD_W, height=580,
+             color=(34, 32, 56))
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            if grid[row][col] is not None:
+                draw_piece(grid[row][col], spot_x(row, col), spot_y(row))
+
+    for piece in popping:
+        grow = 1 + piece[&quot;time&quot;] * 2
+        draw_piece(piece[&quot;kind&quot;], piece[&quot;x&quot;], piece[&quot;y&quot;], grow,
+                   1 - piece[&quot;time&quot;] * 4)
+    for piece in falling:
+        draw_piece(piece[&quot;kind&quot;], piece[&quot;x&quot;], piece[&quot;y&quot;])
+
+    # The launcher: a line pointing where the shot will go.
+    tip = LAUNCH + Vec2.fromAngle(aim) * 60
+    drawLine(p1=LAUNCH, p2=tip, width=6, color=(230, 230, 240))
+    if shot is None:
+        draw_piece(loaded, LAUNCH.x, LAUNCH.y)
+    else:
+        draw_piece(shot[&quot;kind&quot;], shot[&quot;pos&quot;].x, shot[&quot;pos&quot;].y)
+
+    drawText(text=&quot;Score &quot; + str(score), pos=vec2(BOARD_X, 58), size=20)</code></pre>
+
+<p>Pop the pieces holding up a bunch of others, and the whole bunch falls
+off the board. That's where the big scores are.</p>
+
+<p><code>hanging_on()</code> is the same flood fill, with two differences.
+It starts from <em>every</em> piece in the top row at once, because they all
+touch the ceiling. And any piece will do: it doesn't care what kind it is.
+What it finds is every piece still joined to the ceiling. Anything on the
+board that isn't in that list has nothing holding it up, and
+<code>knock_off</code> takes it away. Each one is worth 20.</p>
+
+<p><strong>The animations.</strong> A piece that pops or falls is no longer
+on the board, but it would look odd if it just vanished. So it goes into one
+of two lists: <code>popping</code> or <code>falling</code>. Each frame,
+<code>move_leftovers</code> moves them along:</p>
+
+<ul>
+<li>A popping piece counts up its <code>"time"</code>, and
+<code>draw_everything</code> draws it bigger and fainter as the time goes
+up. At a quarter of a second it's left out of the list.</li>
+<li>A falling piece starts with a <code>"speed"</code> of -100, a small hop
+upwards, and gains 1800 every second, which is gravity. Once it's below the
+bottom of the window, it's left out of the list.</li>
+</ul>
+
+<p>Both use the same trick for taking things out of a list: make a new list,
+<code>keep</code>, of only the ones to keep, and use that from then on.
+Removing items from a list while a <code>for</code> loop is going through it
+skips some of them.</p>
+
+<h2 id="step-6-the-danger-meter">Step 6 — the danger meter</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+COLS = 8           # spots across the even rows (the odd rows have one less)
+CELL = 48          # a piece is 48 pixels across
+ROW_H = 42         # rows overlap, like a honeycomb, so they are closer than 48
+DANGER_ROWS = 11   # a piece in the 12th row down is past the red line
+
+BOARD_X = 28                 # the left wall
+BOARD_Y = 100                # the top of the ceiling
+BOARD_W = COLS * CELL
+LAUNCH = vec2(BOARD_X + BOARD_W / 2, 630)
+
+SHOT_SPEED = 900   # pixels per second
+TURN_SPEED = 100   # how fast the launcher turns, degrees per second
+POINTS_POP = 10    # for each piece that pops
+POINTS_DROP = 20   # for each piece that falls off
+MISSES_ALLOWED = 7  # misses before the ceiling comes down
+
+# Tall, to fit a phone held upright. The empty space at the bottom is where
+# the controls for a phone go, in the last step.
+kaypy(width=BOARD_W + 2 * BOARD_X, height=940, background=[24, 22, 40])
+
+loadSprite(&quot;apple&quot;, &quot;images/apple.png&quot;)
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSprite(&quot;egg&quot;, &quot;images/egg.png&quot;)
+
+# Each kind of piece: the colour of the circle behind it, and the size the
+# picture is drawn at. The pictures are not all the same shape, so each one
+# gets its own width and height.
+PIECES = {
+    &quot;apple&quot;: {&quot;colour&quot;: (150, 45, 60), &quot;w&quot;: 31, &quot;h&quot;: 36},
+    &quot;bean&quot;: {&quot;colour&quot;: (35, 120, 85), &quot;w&quot;: 38, &quot;h&quot;: 32},
+    &quot;coin&quot;: {&quot;colour&quot;: (190, 110, 30), &quot;w&quot;: 26, &quot;h&quot;: 32},
+    &quot;egg&quot;: {&quot;colour&quot;: (130, 100, 70), &quot;w&quot;: 29, &quot;h&quot;: 36},
+}
+KINDS = [&quot;apple&quot;, &quot;bean&quot;, &quot;coin&quot;, &quot;egg&quot;]
+
+
+# One more row than can be played in, so a piece that sticks just past the
+# red line has somewhere to go -- and then ends the game.
+ROWS = DANGER_ROWS + 1
+
+
+def row_length(row):
+    if row % 2 == 0:
+        return COLS
+    return COLS - 1
+
+
+def in_grid(row, col):
+    return 0 &lt;= row &lt; ROWS and 0 &lt;= col &lt; row_length(row)
+
+
+def empty_grid():
+    rows = []
+    for row in range(ROWS):
+        rows.append([None] * COLS)
+    return rows
+
+
+# The ceiling comes down a row at a time. Everything hangs from it, so the
+# whole board is drawn lower by the same amount.
+
+drops = 0            # how many rows the ceiling has come down
+
+
+def ceiling_y():
+    return BOARD_Y + drops * ROW_H
+
+
+def spot_x(row, col):
+    &quot;&quot;&quot;The middle of a spot, across.&quot;&quot;&quot;
+    x = BOARD_X + CELL / 2 + col * CELL
+    if row % 2 == 1:
+        x = x + CELL / 2
+    return x
+
+
+def spot_y(row):
+    &quot;&quot;&quot;The middle of a spot, down.&quot;&quot;&quot;
+    return ceiling_y() + CELL / 2 + row * ROW_H
+
+
+# The board: a list of rows, and each row a list of spots. A spot holds the
+# name of a piece, or None if it is empty. new_game() fills it.
+grid = []
+
+
+# Every spot touches six others: one each side, two above and two below.
+# WHICH two above depends on whether the row is pushed over.
+
+def neighbours(row, col):
+    if row % 2 == 0:
+        shift = -1
+    else:
+        shift = 0
+    around = [
+        (row, col - 1), (row, col + 1),
+        (row - 1, col + shift), (row - 1, col + shift + 1),
+        (row + 1, col + shift), (row + 1, col + shift + 1),
+    ]
+    inside = []
+    for spot in around:
+        if in_grid(spot[0], spot[1]):
+            inside.append(spot)
+    return inside
+
+
+def group_of(row, col):
+    &quot;&quot;&quot;Every spot joined to this one by pieces of the same kind.
+
+    A flood fill: start with one spot, keep a list of spots still to look
+    around, and add every matching neighbour not already found. When the
+    list is empty, the whole group has been found.
+    &quot;&quot;&quot;
+    kind = grid[row][col]
+    found = [(row, col)]
+    to_look = [(row, col)]
+    while len(to_look) &gt; 0:
+        spot = to_look.pop()
+        for near in neighbours(spot[0], spot[1]):
+            if grid[near[0]][near[1]] == kind and near not in found:
+                found.append(near)
+                to_look.append(near)
+    return found
+
+
+def hanging_on():
+    &quot;&quot;&quot;Every spot joined to the ceiling, through pieces of any kind.
+
+    The same flood fill, but it starts from every piece in the top row at
+    once, and any piece will do.
+    &quot;&quot;&quot;
+    found = []
+    for col in range(row_length(0)):
+        if grid[0][col] is not None:
+            found.append((0, col))
+    to_look = list(found)
+    while len(to_look) &gt; 0:
+        spot = to_look.pop()
+        for near in neighbours(spot[0], spot[1]):
+            if grid[near[0]][near[1]] is not None and near not in found:
+                found.append(near)
+                to_look.append(near)
+    return found
+
+
+score = 0
+misses = 0           # shots in a row that popped nothing
+over = False
+aim = -90            # degrees: -90 is straight up, -180 would be left
+loaded = choose(KINDS)   # the piece in the launcher
+shot = None          # the piece in the air: a dictionary, or None
+
+# Pieces that have just popped or fallen. They are not on the board any
+# more; they are only drawn, until they are gone.
+popping = []
+falling = []
+
+
+@onUpdate
+def turn():
+    global aim
+
+    if isKeyDown(&quot;left&quot;):
+        aim = aim - TURN_SPEED * dt()
+    if isKeyDown(&quot;right&quot;):
+        aim = aim + TURN_SPEED * dt()
+    # Not too flat, or a shot would bounce from wall to wall for ages.
+    aim = clamp(aim, -165, -15)
+
+
+@onKeyPress(&quot;space&quot;)
+def fire():
+    global shot
+
+    if shot is not None or over:
+        return
+    # Vec2.fromAngle turns an angle into a direction: an arrow one pixel
+    # long, pointing that way.
+    direction = Vec2.fromAngle(aim)
+    shot = {&quot;kind&quot;: loaded, &quot;pos&quot;: LAUNCH, &quot;vel&quot;: direction * SHOT_SPEED}
+
+
+@onUpdate
+def fly():
+
+    if shot is None:
+        return
+
+    # A slow frame must not let the piece jump straight through another.
+    step = min(dt(), 1 / 30)
+    shot[&quot;pos&quot;] = shot[&quot;pos&quot;] + shot[&quot;vel&quot;] * step
+
+    # Bounce off the side walls: put it back inside, and send it the other
+    # way across. Its speed up the screen does not change.
+    x = shot[&quot;pos&quot;].x
+    left = BOARD_X + CELL / 2
+    right = BOARD_X + BOARD_W - CELL / 2
+    if x &lt; left:
+        shot[&quot;pos&quot;] = vec2(left, shot[&quot;pos&quot;].y)
+        shot[&quot;vel&quot;] = vec2(-shot[&quot;vel&quot;].x, shot[&quot;vel&quot;].y)
+    if x &gt; right:
+        shot[&quot;pos&quot;] = vec2(right, shot[&quot;pos&quot;].y)
+        shot[&quot;vel&quot;] = vec2(-shot[&quot;vel&quot;].x, shot[&quot;vel&quot;].y)
+
+    # Stick to the ceiling, or to any piece it comes close enough to touch.
+    # &quot;Close enough&quot; is a little less than a whole piece, so a shot can slip
+    # through a gap that looks big enough.
+    if shot[&quot;pos&quot;].y - CELL / 2 &lt;= ceiling_y():
+        stick()
+        return
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            if grid[row][col] is not None:
+                middle = vec2(spot_x(row, col), spot_y(row))
+                if shot[&quot;pos&quot;].dist(middle) &lt; CELL * 0.85:
+                    stick()
+                    return
+
+
+def stick():
+    &quot;&quot;&quot;Put the flying piece in the nearest empty spot it could hang from.&quot;&quot;&quot;
+    global shot, loaded
+
+    best_spot = None
+    best_dist = 0
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            if grid[row][col] is None and can_hang(row, col):
+                middle = vec2(spot_x(row, col), spot_y(row))
+                distance = shot[&quot;pos&quot;].dist(middle)
+                if best_spot is None or distance &lt; best_dist:
+                    best_spot = (row, col)
+                    best_dist = distance
+
+    grid[best_spot[0]][best_spot[1]] = shot[&quot;kind&quot;]
+    shot = None
+    loaded = choose(KINDS)
+    settle(best_spot[0], best_spot[1])
+
+
+def settle(row, col):
+    &quot;&quot;&quot;After a piece sticks: pop, drop, fill the danger meter, check.&quot;&quot;&quot;
+    global score, misses, drops
+
+    group = group_of(row, col)
+    if len(group) &gt;= 3:
+        for spot in group:
+            popping.append({&quot;kind&quot;: grid[spot[0]][spot[1]],
+                            &quot;x&quot;: spot_x(spot[0], spot[1]),
+                            &quot;y&quot;: spot_y(spot[0]), &quot;time&quot;: 0})
+            grid[spot[0]][spot[1]] = None
+        score = score + POINTS_POP * len(group)
+
+        # Now anything not joined to the ceiling falls.
+        held = hanging_on()
+        dropped = 0
+        for r in range(ROWS):
+            for c in range(row_length(r)):
+                if grid[r][c] is not None and (r, c) not in held:
+                    knock_off(r, c)
+                    dropped = dropped + 1
+        score = score + POINTS_DROP * dropped
+        misses = max(0, misses - 1)
+    else:
+        misses = misses + 1
+        if misses &gt;= MISSES_ALLOWED:
+            misses = 0
+            drops = drops + 1
+            shake(4)
+
+    # Past the red line? Look at the rows below it.
+    for r in range(DANGER_ROWS - drops, ROWS):
+        for c in range(row_length(r)):
+            if grid[r][c] is not None:
+                game_over()
+                return
+
+
+def game_over():
+    global over
+
+    over = True
+    shake(10)
+
+    @say(&quot;The pieces reached the line!\n\nScore: &quot; + str(score),
+         button=&quot;Play again&quot;)
+    def again():
+        new_game()
+
+
+def new_game():
+    global grid, drops, score, misses, over, shot, popping, falling
+
+    grid = empty_grid()
+    drops = 0
+    score = 0
+    misses = 0
+    over = False
+    shot = None
+    popping = []
+    falling = []
+    for row in range(4):
+        for col in range(row_length(row)):
+            grid[row][col] = choose(KINDS)
+
+
+def knock_off(row, col):
+    &quot;&quot;&quot;Take a piece off the board and let it fall.&quot;&quot;&quot;
+    falling.append({&quot;kind&quot;: grid[row][col], &quot;x&quot;: spot_x(row, col),
+                    &quot;y&quot;: spot_y(row), &quot;speed&quot;: -100})
+    grid[row][col] = None
+
+
+@onUpdate
+def move_leftovers():
+    global popping, falling
+
+    keep = []
+    for piece in popping:
+        piece[&quot;time&quot;] = piece[&quot;time&quot;] + dt()
+        if piece[&quot;time&quot;] &lt; 0.25:
+            keep.append(piece)
+    popping = keep
+
+    keep = []
+    for piece in falling:
+        piece[&quot;speed&quot;] = piece[&quot;speed&quot;] + 1800 * dt()
+        piece[&quot;y&quot;] = piece[&quot;y&quot;] + piece[&quot;speed&quot;] * dt()
+        if piece[&quot;y&quot;] &lt; height() + CELL:
+            keep.append(piece)
+    falling = keep
+
+
+def can_hang(row, col):
+    &quot;&quot;&quot;A spot can be filled if it touches the ceiling or another piece.&quot;&quot;&quot;
+    if row == 0:
+        return True
+    for near in neighbours(row, col):
+        if grid[near[0]][near[1]] is not None:
+            return True
+    return False
+
+
+def draw_piece(kind, x, y, size=1.0, opacity=1.0):
+    piece = PIECES[kind]
+    drawCircle(pos=vec2(x, y), radius=(CELL / 2 - 2) * size,
+               color=piece[&quot;colour&quot;], opacity=opacity)
+    drawSprite(sprite=kind, pos=vec2(x, y), width=piece[&quot;w&quot;] * size,
+               height=piece[&quot;h&quot;] * size, anchor=&quot;center&quot;, opacity=opacity)
+
+
+@onDraw
+def draw_everything():
+    # The well the pieces hang in, the ceiling that comes down, and the red
+    # line across the bottom of the last row a piece may be in.
+    line_y = BOARD_Y + DANGER_ROWS * ROW_H + (CELL - ROW_H)
+    drawRect(pos=vec2(BOARD_X, BOARD_Y), width=BOARD_W,
+             height=LAUNCH.y + CELL - BOARD_Y, color=(34, 32, 56))
+    drawRect(pos=vec2(BOARD_X, BOARD_Y - 8), width=BOARD_W,
+             height=ceiling_y() - BOARD_Y + 8, color=(110, 110, 130))
+    drawRect(pos=vec2(BOARD_X, line_y), width=BOARD_W, height=3,
+             color=(240, 90, 90))
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            if grid[row][col] is not None:
+                draw_piece(grid[row][col], spot_x(row, col), spot_y(row))
+
+    for piece in popping:
+        grow = 1 + piece[&quot;time&quot;] * 2
+        draw_piece(piece[&quot;kind&quot;], piece[&quot;x&quot;], piece[&quot;y&quot;], grow,
+                   1 - piece[&quot;time&quot;] * 4)
+    for piece in falling:
+        draw_piece(piece[&quot;kind&quot;], piece[&quot;x&quot;], piece[&quot;y&quot;])
+
+    # The launcher: a line pointing where the shot will go.
+    tip = LAUNCH + Vec2.fromAngle(aim) * 60
+    drawLine(p1=LAUNCH, p2=tip, width=6, color=(230, 230, 240))
+    if shot is None:
+        draw_piece(loaded, LAUNCH.x, LAUNCH.y)
+    else:
+        draw_piece(shot[&quot;kind&quot;], shot[&quot;pos&quot;].x, shot[&quot;pos&quot;].y)
+
+    drawText(text=&quot;Score &quot; + str(score), pos=vec2(BOARD_X, 58), size=20)
+
+    # The danger meter: one box per miss.
+    for i in range(MISSES_ALLOWED):
+        if i &lt; misses:
+            colour = (240, 90, 90)
+        else:
+            colour = (70, 66, 100)
+        drawRect(pos=vec2(BOARD_X + BOARD_W - MISSES_ALLOWED * 16 + i * 16,
+                          62), width=12, height=16, color=colour, radius=3)
+
+
+new_game()</code></pre>
+
+<p>Now there's a way to lose. Each shot that pops nothing lights a box in
+the danger meter at the top right. When all seven are lit, the ceiling comes
+down a row and takes every piece with it. A shot that does pop something
+turns one box off again. If any piece ends up past the red line, the game is
+over.</p>
+
+<p><strong>The ceiling.</strong> <code>drops</code> counts how many rows it
+has come down, and <code>ceiling_y()</code> is where it is now.
+<code>spot_y</code> measures from <code>ceiling_y()</code> instead of from
+<code>BOARD_Y</code>, and because <em>everything</em> on the board is drawn
+and hit-tested through <code>spot_y</code>, changing one number moves the
+whole board down. Nothing in <code>grid</code> changes at all: row 0 is still
+row 0, it's just drawn lower.</p>
+
+<p><strong>The red line</strong> is under the 11th row
+(<code>DANGER_ROWS</code>), and it doesn't move. Each time the ceiling
+drops, one row fewer fits above the line, so the loop that looks for pieces
+past it starts at row <code>DANGER_ROWS - drops</code>.</p>
+
+<p><strong>The crash from step 3 is gone.</strong> <code>ROWS</code> is now
+<code>DANGER_ROWS + 1</code>: one more row than can be played in. The moment
+any piece lands past the line, the game is over, so the board never gets
+full enough to need a row that doesn't exist.</p>
+
+<p><strong><code>new_game()</code></strong> puts everything back as it
+started and fills a fresh board. The same function starts the first game,
+at the very bottom of the file, and every game after it, from the
+<strong>Play again</strong> button. <code>say()</code> pauses the game while
+its message is up, and <code>over</code> stops <code>fire</code> working
+until the next game starts.</p>
+
+<h2 id="step-7-the-whole-game">Step 7 — the whole game</h2>
+
+<p>This is the game exactly as it is on the <a href="../../games/">games
+page</a>. It adds:</p>
+
+<ul>
+<li><strong>Levels.</strong> Clear every piece and the next level starts.
+Level 1 has 4 kinds and 4 rows, and each level adds one more of each, up to
+all 7 kinds and 7 rows. <code>KINDS[:5]</code> is the first 5 kinds in the
+list. The danger meter gets shorter too: <code>misses_allowed()</code> is
+7 on level 1, then 6, 5 and finally 4.</li>
+<li><strong>Steel.</strong> From level 2, some pieces are steel.
+<code>settle</code> never pops a group of steel, so the only way to get rid
+of it is to pop what it hangs from. <code>choose(range(1, rows))</code> picks
+a row at random, not counting the top one, so steel never touches the
+ceiling.</li>
+<li><strong>Never a useless piece.</strong> <code>kinds_left()</code> lists
+the kinds still on the board, and <code>load_new()</code> only hands you
+those. Without it, clearing the last coin could still leave you holding a
+coin, with nothing it could ever match.</li>
+<li><strong>The next piece</strong>, shown at the bottom left, so you can
+plan a shot ahead.</li>
+<li><strong>Between levels.</strong> <code>level_cleared</code> knocks off
+any steel still hanging, as a bonus, and sets <code>busy</code> so you can't
+fire. Then <code>wait(1.0, show_message)</code> gives the last pieces a
+second to fall before the message comes up. Showing it straight away would
+pause the game with them frozen in mid-air.</li>
+<li><strong>Your best score</strong>, kept with <code>getData</code> and
+<code>setData</code>, so it's still there next time.</li>
+<li><strong>Sounds</strong>, and a message at the start explaining what to
+do.</li>
+<li><strong>Controls for a phone.</strong>
+<code>joystick=["space"]</code> puts a d-pad and one button at the bottom of
+the window. They pretend to be the arrow keys and space, so nothing else in
+the game needed changing. That's what the empty space at the bottom has been
+for since step 1.</li>
+</ul>
+
+<p>Only <strong>space</strong> fires, not the up arrow as well, and that's
+because of the d-pad. A thumb between left and up holds <em>both</em>
+arrows, so a player turning left whose thumb slid upwards a little would
+fire by accident.</p>
+
+<pre><code class="language-python">&quot;&quot;&quot;Pop Drop -- aim, fire, and pop the pieces before they reach the bottom.
+
+    left / right arrows   turn the launcher
+    space                 fire
+
+The pieces hang from the ceiling in a honeycomb. Fire one up at them: it
+bounces off the side walls and sticks where it lands. Three or more of the
+same kind touching each other pop -- and anything left hanging with nothing
+holding it to the ceiling falls off too.
+
+Every shot that pops nothing fills the danger meter. When it is full, the
+ceiling comes down a row. If a piece goes past the red line, the game is
+over. Clear every piece to move up a level. Steel never pops: the only way
+to get rid of it is to cut away whatever it hangs from.
+
+On a phone, the d-pad turns the launcher and the button fires.
+
+HOW THIS FILE IS PUT TOGETHER
+
+    1. the window and the pictures
+    2. the settings
+    3. the board: a list of rows, and where each spot is on the screen
+    4. neighbours, groups, and what is still hanging on
+    5. what the game has to remember
+    6. levels
+    7. aiming and firing
+    8. the flying piece, and where it sticks
+    9. drawing
+   10. start the game
+
+Like Block Slide, the board is not made of game objects. It is a list of
+lists of names -- &quot;apple&quot;, &quot;steel&quot;, or None for an empty spot -- and it is
+drawn from that list every frame.
+&quot;&quot;&quot;
+
+from kaypy import *
+
+# --------------------------------------------------------------- 1. setup
+
+COLS = 8           # spots across the even rows (the odd rows have one less)
+CELL = 48          # a piece is 48 pixels across
+ROW_H = 42         # rows overlap, like a honeycomb, so they are closer than 48
+DANGER_ROWS = 11   # a piece in the 12th row down is past the red line
+
+BOARD_X = 28                 # the left wall
+BOARD_Y = 100                # the top of the ceiling
+BOARD_W = COLS * CELL
+LAUNCH = vec2(BOARD_X + BOARD_W / 2, 630)
+
+# The window is taller than the game. The bottom part is for the d-pad and
+# the fire button: joystick=[&quot;space&quot;] puts them there, and they press the
+# arrow keys and space for you.
+kaypy(width=BOARD_W + 2 * BOARD_X, height=940, background=[24, 22, 40],
+      joystick=[&quot;space&quot;])
+
+loadSprite(&quot;apple&quot;, &quot;images/apple.png&quot;)
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSprite(&quot;egg&quot;, &quot;images/egg.png&quot;)
+loadSprite(&quot;ghosty&quot;, &quot;images/ghosty.png&quot;)
+loadSprite(&quot;lemon&quot;, &quot;images/lemon.png&quot;)
+loadSprite(&quot;mushroom&quot;, &quot;images/mushroom.png&quot;)
+loadSprite(&quot;steel&quot;, &quot;images/steel.png&quot;)
+
+loadSound(&quot;fire&quot;, &quot;sounds/swoosh.wav&quot;)
+loadSound(&quot;stick&quot;, &quot;sounds/thump.wav&quot;)
+loadSound(&quot;pop&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;drop&quot;, &quot;sounds/small_boom.wav&quot;)
+loadSound(&quot;level&quot;, &quot;sounds/rising_beep.wav&quot;)
+loadSound(&quot;over&quot;, &quot;sounds/lazer_punch.wav&quot;)
+
+
+# ---------------------------------------------------------- 2. settings
+
+SHOT_SPEED = 900      # pixels per second
+TURN_SPEED = 100      # how fast the launcher turns, degrees per second
+POINTS_POP = 10       # for each piece that pops
+POINTS_DROP = 20      # for each piece that falls off
+POINTS_LEVEL = 100    # for clearing a level, times the level number
+
+# Each kind of piece: the colour of the circle behind it, and the size the
+# picture is drawn at. The pictures are not all the same shape, so each one
+# gets its own width and height -- otherwise the ghost would be squashed.
+PIECES = {
+    &quot;apple&quot;: {&quot;colour&quot;: (150, 45, 60), &quot;w&quot;: 31, &quot;h&quot;: 36},
+    &quot;bean&quot;: {&quot;colour&quot;: (35, 120, 85), &quot;w&quot;: 38, &quot;h&quot;: 32},
+    &quot;coin&quot;: {&quot;colour&quot;: (190, 110, 30), &quot;w&quot;: 26, &quot;h&quot;: 32},
+    &quot;egg&quot;: {&quot;colour&quot;: (130, 100, 70), &quot;w&quot;: 29, &quot;h&quot;: 36},
+    &quot;ghosty&quot;: {&quot;colour&quot;: (50, 80, 170), &quot;w&quot;: 29, &quot;h&quot;: 36},
+    &quot;lemon&quot;: {&quot;colour&quot;: (130, 140, 30), &quot;w&quot;: 26, &quot;h&quot;: 36},
+    &quot;mushroom&quot;: {&quot;colour&quot;: (120, 60, 140), &quot;w&quot;: 38, &quot;h&quot;: 32},
+}
+
+# The order new kinds are added in, one more each level.
+KINDS = [&quot;apple&quot;, &quot;bean&quot;, &quot;coin&quot;, &quot;egg&quot;, &quot;ghosty&quot;, &quot;lemon&quot;, &quot;mushroom&quot;]
+
+BEST_KEY = &quot;pop_drop_best&quot;
+
+
+# ----------------------------------------------------------- 3. the board
+#
+# grid[row][col] is the name of the piece in that spot, or None.
+#
+# Row 0 is the top. The odd rows are pushed half a piece to the right, so
+# they fit into the gaps of the rows above and below -- that is what makes
+# it a honeycomb. It also means an odd row has room for one piece fewer.
+#
+#     row 0:   A B C D E F G H
+#     row 1:    a b c d e f g
+#     row 2:   A B C D E F G H
+#
+# There is one more row than can be played in, so a piece that sticks just
+# past the red line has somewhere to go -- and then ends the game.
+
+ROWS = DANGER_ROWS + 1
+grid = []
+
+
+def row_length(row):
+    if row % 2 == 0:
+        return COLS
+    return COLS - 1
+
+
+def in_grid(row, col):
+    return 0 &lt;= row &lt; ROWS and 0 &lt;= col &lt; row_length(row)
+
+
+def empty_grid():
+    rows = []
+    for row in range(ROWS):
+        rows.append([None] * COLS)
+    return rows
+
+
+# The ceiling comes down a row at a time. Everything hangs from it, so the
+# whole board is drawn lower by the same amount.
+
+drops = 0            # how many rows the ceiling has come down
+
+
+def ceiling_y():
+    return BOARD_Y + drops * ROW_H
+
+
+def spot_x(row, col):
+    &quot;&quot;&quot;The middle of a spot, across.&quot;&quot;&quot;
+    x = BOARD_X + CELL / 2 + col * CELL
+    if row % 2 == 1:
+        x = x + CELL / 2
+    return x
+
+
+def spot_y(row):
+    &quot;&quot;&quot;The middle of a spot, down.&quot;&quot;&quot;
+    return ceiling_y() + CELL / 2 + row * ROW_H
+
+
+# ------------------------------------- 4. neighbours, groups, hanging on
+#
+# Every spot touches six others: one each side, two above and two below.
+# WHICH two above depends on whether the row is pushed over. Look at &quot;c&quot; in
+# the picture above: it sits between &quot;C&quot; and &quot;D&quot;. But &quot;C&quot; sits between &quot;b&quot;
+# and &quot;c&quot;. Hence the shift.
+
+def neighbours(row, col):
+    if row % 2 == 0:
+        shift = -1
+    else:
+        shift = 0
+    around = [
+        (row, col - 1), (row, col + 1),
+        (row - 1, col + shift), (row - 1, col + shift + 1),
+        (row + 1, col + shift), (row + 1, col + shift + 1),
+    ]
+    inside = []
+    for spot in around:
+        if in_grid(spot[0], spot[1]):
+            inside.append(spot)
+    return inside
+
+
+def group_of(row, col):
+    &quot;&quot;&quot;Every spot joined to this one by pieces of the same kind.
+
+    A flood fill: start with one spot, keep a list of spots still to look
+    around, and add every matching neighbour not already found. When the
+    list is empty, the whole group has been found.
+    &quot;&quot;&quot;
+    kind = grid[row][col]
+    found = [(row, col)]
+    to_look = [(row, col)]
+    while len(to_look) &gt; 0:
+        spot = to_look.pop()
+        for near in neighbours(spot[0], spot[1]):
+            if grid[near[0]][near[1]] == kind and near not in found:
+                found.append(near)
+                to_look.append(near)
+    return found
+
+
+def hanging_on():
+    &quot;&quot;&quot;Every spot joined to the ceiling, through pieces of any kind.
+
+    The same flood fill, but it starts from every piece in the top row at
+    once, and any piece will do.
+    &quot;&quot;&quot;
+    found = []
+    for col in range(row_length(0)):
+        if grid[0][col] is not None:
+            found.append((0, col))
+    to_look = list(found)
+    while len(to_look) &gt; 0:
+        spot = to_look.pop()
+        for near in neighbours(spot[0], spot[1]):
+            if grid[near[0]][near[1]] is not None and near not in found:
+                found.append(near)
+                to_look.append(near)
+    return found
+
+
+def kinds_left():
+    &quot;&quot;&quot;The kinds still on the board, not counting steel.&quot;&quot;&quot;
+    left = []
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            kind = grid[row][col]
+            if kind is not None and kind != &quot;steel&quot; and kind not in left:
+                left.append(kind)
+    return left
+
+
+# ------------------------------------------- 5. what the game remembers
+
+level = 1
+score = 0
+best = getData(BEST_KEY, 0)
+misses = 0           # shots in a row that popped nothing
+aim = -90            # degrees: -90 is straight up, -180 would be left
+loaded = &quot;apple&quot;     # the piece in the launcher
+next_up = &quot;bean&quot;     # the one after it
+shot = None          # the piece in the air: a dictionary, or None
+busy = False         # True between levels: no firing then
+over = False
+
+# Pieces that have just popped or fallen. They are not on the board any
+# more; they are only drawn, until they are gone.
+popping = []
+falling = []
+
+
+def misses_allowed():
+    &quot;&quot;&quot;How many misses fill the danger meter. Fewer as the levels go up.&quot;&quot;&quot;
+    return max(4, 8 - level)
+
+
+# ---------------------------------------------------------- 6. levels
+#
+# Level 1 has four kinds of piece and four rows. Each level adds one of
+# each, up to all seven kinds and seven rows, and from level 2 on, some of
+# the pieces are steel.
+
+def start_level():
+    global grid, drops, misses, shot, busy, popping, falling
+
+    grid = empty_grid()
+    drops = 0
+    misses = 0
+    shot = None
+    busy = False
+    popping = []
+    falling = []
+
+    kinds = KINDS[:min(3 + level, len(KINDS))]
+    rows = min(3 + level, 7)
+    for row in range(rows):
+        for col in range(row_length(row)):
+            grid[row][col] = choose(kinds)
+
+    # Steel goes anywhere below the top row. It may land on steel already
+    # put there, so there can be fewer than this -- that is fine.
+    for i in range(min(level - 1, 6)):
+        row = choose(range(1, rows))
+        col = choose(range(row_length(row)))
+        grid[row][col] = &quot;steel&quot;
+
+    load_new()
+    load_new()
+
+
+def load_new():
+    &quot;&quot;&quot;Move the next piece into the launcher, and choose a new next one.
+
+    Only kinds still on the board are chosen, so you are never handed a
+    piece that cannot match anything.
+    &quot;&quot;&quot;
+    global loaded, next_up
+
+    left = kinds_left()
+    loaded = next_up
+    if loaded not in left and len(left) &gt; 0:
+        loaded = choose(left)
+    if len(left) &gt; 0:
+        next_up = choose(left)
+
+
+def level_cleared():
+    global level, score, busy
+
+    busy = True
+    score = score + POINTS_LEVEL * level
+    play(&quot;level&quot;)
+
+    # Any steel still hanging falls away as a bonus.
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            if grid[row][col] is not None:
+                knock_off(row, col)
+
+    level = level + 1
+
+    def show_message():
+        @say(&quot;Level &quot; + str(level - 1) + &quot; cleared!\n\n&quot;
+             &quot;Next: level &quot; + str(level) + &quot;.&quot;, button=&quot;Go&quot;)
+        def go_on():
+            start_level()
+
+    wait(1.0, show_message)
+
+
+def game_over():
+    global over, best
+
+    over = True
+    play(&quot;over&quot;)
+    shake(10)
+    if score &gt; best:
+        best = score
+        setData(BEST_KEY, best)
+        message = &quot;New best: &quot; + str(score) + &quot;!&quot;
+    else:
+        message = &quot;Score: &quot; + str(score) + &quot;\nBest: &quot; + str(best)
+
+    @say(&quot;The pieces reached the line!\n\n&quot; + message, button=&quot;Play again&quot;)
+    def again():
+        new_game()
+
+
+def new_game():
+    global level, score, over, aim
+
+    level = 1
+    score = 0
+    over = False
+    aim = -90
+    start_level()
+
+
+# ------------------------------------------------- 7. aiming and firing
+
+@onUpdate
+def turn():
+    global aim
+
+    if isKeyDown(&quot;left&quot;):
+        aim = aim - TURN_SPEED * dt()
+    if isKeyDown(&quot;right&quot;):
+        aim = aim + TURN_SPEED * dt()
+    # Not too flat, or a shot would bounce from wall to wall for ages.
+    aim = clamp(aim, -165, -15)
+
+
+# Only space fires, not up as well. On a phone the d-pad holds two arrows
+# at once when a thumb is between them, so a thumb turning left that slid a
+# little upwards would fire by accident.
+@onKeyPress(&quot;space&quot;)
+def fire():
+    global shot
+
+    if shot is not None or busy or over:
+        return
+    # Vec2.fromAngle turns an angle into a direction: an arrow one pixel
+    # long, pointing that way.
+    direction = Vec2.fromAngle(aim)
+    shot = {&quot;kind&quot;: loaded, &quot;pos&quot;: LAUNCH, &quot;vel&quot;: direction * SHOT_SPEED}
+    play(&quot;fire&quot;)
+
+
+# ------------------------------- 8. the flying piece, and where it sticks
+
+@onUpdate
+def fly():
+    if shot is None:
+        return
+
+    # A slow frame must not let the piece jump straight through another.
+    step = min(dt(), 1 / 30)
+    shot[&quot;pos&quot;] = shot[&quot;pos&quot;] + shot[&quot;vel&quot;] * step
+
+    # Bounce off the side walls: put it back inside, and send it the other
+    # way across. Its speed up the screen does not change.
+    x = shot[&quot;pos&quot;].x
+    left = BOARD_X + CELL / 2
+    right = BOARD_X + BOARD_W - CELL / 2
+    if x &lt; left:
+        shot[&quot;pos&quot;] = vec2(left, shot[&quot;pos&quot;].y)
+        shot[&quot;vel&quot;] = vec2(-shot[&quot;vel&quot;].x, shot[&quot;vel&quot;].y)
+    if x &gt; right:
+        shot[&quot;pos&quot;] = vec2(right, shot[&quot;pos&quot;].y)
+        shot[&quot;vel&quot;] = vec2(-shot[&quot;vel&quot;].x, shot[&quot;vel&quot;].y)
+
+    # Stick to the ceiling, or to any piece it comes close enough to touch.
+    # &quot;Close enough&quot; is a little less than a whole piece, so a shot can slip
+    # through a gap that looks big enough.
+    if shot[&quot;pos&quot;].y - CELL / 2 &lt;= ceiling_y():
+        stick()
+        return
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            if grid[row][col] is not None:
+                middle = vec2(spot_x(row, col), spot_y(row))
+                if shot[&quot;pos&quot;].dist(middle) &lt; CELL * 0.85:
+                    stick()
+                    return
+
+
+def stick():
+    &quot;&quot;&quot;Put the flying piece in the nearest empty spot it could hang from.&quot;&quot;&quot;
+    global shot
+
+    best_spot = None
+    best_dist = 0
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            if grid[row][col] is None and can_hang(row, col):
+                middle = vec2(spot_x(row, col), spot_y(row))
+                distance = shot[&quot;pos&quot;].dist(middle)
+                if best_spot is None or distance &lt; best_dist:
+                    best_spot = (row, col)
+                    best_dist = distance
+
+    grid[best_spot[0]][best_spot[1]] = shot[&quot;kind&quot;]
+    shot = None
+    settle(best_spot[0], best_spot[1])
+
+
+def can_hang(row, col):
+    &quot;&quot;&quot;A spot can be filled if it touches the ceiling or another piece.&quot;&quot;&quot;
+    if row == 0:
+        return True
+    for near in neighbours(row, col):
+        if grid[near[0]][near[1]] is not None:
+            return True
+    return False
+
+
+def settle(row, col):
+    &quot;&quot;&quot;After a piece sticks: pop, drop, fill the danger meter, check.&quot;&quot;&quot;
+    global score, misses, drops
+
+    group = group_of(row, col)
+    if len(group) &gt;= 3 and grid[row][col] != &quot;steel&quot;:
+        for spot in group:
+            popping.append({&quot;kind&quot;: grid[spot[0]][spot[1]],
+                            &quot;x&quot;: spot_x(spot[0], spot[1]),
+                            &quot;y&quot;: spot_y(spot[0]), &quot;time&quot;: 0})
+            grid[spot[0]][spot[1]] = None
+        score = score + POINTS_POP * len(group)
+        play(&quot;pop&quot;)
+
+        # Now anything not joined to the ceiling falls.
+        held = hanging_on()
+        dropped = 0
+        for r in range(ROWS):
+            for c in range(row_length(r)):
+                if grid[r][c] is not None and (r, c) not in held:
+                    knock_off(r, c)
+                    dropped = dropped + 1
+        if dropped &gt; 0:
+            score = score + POINTS_DROP * dropped
+            play(&quot;drop&quot;)
+        misses = max(0, misses - 1)
+    else:
+        play(&quot;stick&quot;)
+        misses = misses + 1
+        if misses &gt;= misses_allowed():
+            misses = 0
+            drops = drops + 1
+            shake(4)
+
+    if len(kinds_left()) == 0:
+        level_cleared()
+        return
+
+    # Past the red line? Look at the rows below it.
+    for r in range(DANGER_ROWS - drops, ROWS):
+        for c in range(row_length(r)):
+            if grid[r][c] is not None:
+                game_over()
+                return
+
+    load_new()
+
+
+def knock_off(row, col):
+    &quot;&quot;&quot;Take a piece off the board and let it fall.&quot;&quot;&quot;
+    falling.append({&quot;kind&quot;: grid[row][col], &quot;x&quot;: spot_x(row, col),
+                    &quot;y&quot;: spot_y(row), &quot;speed&quot;: -100})
+    grid[row][col] = None
+
+
+@onUpdate
+def move_leftovers():
+    global popping, falling
+
+    keep = []
+    for piece in popping:
+        piece[&quot;time&quot;] = piece[&quot;time&quot;] + dt()
+        if piece[&quot;time&quot;] &lt; 0.25:
+            keep.append(piece)
+    popping = keep
+
+    keep = []
+    for piece in falling:
+        piece[&quot;speed&quot;] = piece[&quot;speed&quot;] + 1800 * dt()
+        piece[&quot;y&quot;] = piece[&quot;y&quot;] + piece[&quot;speed&quot;] * dt()
+        if piece[&quot;y&quot;] &lt; height() + CELL:
+            keep.append(piece)
+    falling = keep
+
+
+# ------------------------------------------------------------ 9. drawing
+
+def draw_piece(kind, x, y, size=1.0, opacity=1.0):
+    if kind == &quot;steel&quot;:
+        drawSprite(sprite=&quot;steel&quot;, pos=vec2(x, y), width=(CELL - 4) * size,
+                   height=(CELL - 4) * size, anchor=&quot;center&quot;,
+                   opacity=opacity)
+        return
+    piece = PIECES[kind]
+    drawCircle(pos=vec2(x, y), radius=(CELL / 2 - 2) * size,
+               color=piece[&quot;colour&quot;], opacity=opacity)
+    drawSprite(sprite=kind, pos=vec2(x, y), width=piece[&quot;w&quot;] * size,
+               height=piece[&quot;h&quot;] * size, anchor=&quot;center&quot;, opacity=opacity)
+
+
+@onDraw
+def draw_everything():
+    # The well the pieces hang in, and the ceiling that comes down.
+    line_y = BOARD_Y + DANGER_ROWS * ROW_H + (CELL - ROW_H)
+    drawRect(pos=vec2(BOARD_X, BOARD_Y), width=BOARD_W,
+             height=LAUNCH.y + CELL - BOARD_Y, color=(34, 32, 56))
+    drawRect(pos=vec2(BOARD_X, BOARD_Y - 8), width=BOARD_W,
+             height=ceiling_y() - BOARD_Y + 8, color=(110, 110, 130))
+    drawRect(pos=vec2(BOARD_X, line_y), width=BOARD_W, height=3,
+             color=(240, 90, 90))
+
+    for row in range(ROWS):
+        for col in range(row_length(row)):
+            if grid[row][col] is not None:
+                draw_piece(grid[row][col], spot_x(row, col), spot_y(row))
+
+    for piece in popping:
+        grow = 1 + piece[&quot;time&quot;] * 2
+        draw_piece(piece[&quot;kind&quot;], piece[&quot;x&quot;], piece[&quot;y&quot;], grow,
+                   1 - piece[&quot;time&quot;] * 4)
+    for piece in falling:
+        draw_piece(piece[&quot;kind&quot;], piece[&quot;x&quot;], piece[&quot;y&quot;])
+
+    # The launcher: a line pointing where the shot will go.
+    if not busy:
+        tip = LAUNCH + Vec2.fromAngle(aim) * 60
+        drawLine(p1=LAUNCH, p2=tip, width=6, color=(230, 230, 240))
+        if shot is None:
+            draw_piece(loaded, LAUNCH.x, LAUNCH.y)
+    if shot is not None:
+        draw_piece(shot[&quot;kind&quot;], shot[&quot;pos&quot;].x, shot[&quot;pos&quot;].y)
+
+    drawText(text=&quot;Next&quot;, pos=vec2(BOARD_X + 10, LAUNCH.y - 50), size=18)
+    if not busy:
+        draw_piece(next_up, BOARD_X + 30, LAUNCH.y, 0.8)
+
+    # The words along the top, and the danger meter: one box per miss.
+    drawText(text=&quot;Pop Drop&quot;, pos=vec2(BOARD_X, 14), size=30)
+    drawText(text=&quot;Level &quot; + str(level), pos=vec2(BOARD_X + 260, 20),
+             size=22)
+    drawText(text=&quot;Score &quot; + str(score), pos=vec2(BOARD_X, 58), size=20)
+    drawText(text=&quot;Best &quot; + str(best), pos=vec2(BOARD_X + 150, 58), size=20)
+
+    allowed = misses_allowed()
+    for i in range(allowed):
+        if i &lt; misses:
+            colour = (240, 90, 90)
+        else:
+            colour = (70, 66, 100)
+        drawRect(pos=vec2(BOARD_X + BOARD_W - allowed * 16 + i * 16, 62),
+                 width=12, height=16, color=colour, radius=3)
+
+
+# ------------------------------------------------------- 10. start the game
+
+new_game()
+say(&quot;Turn the launcher with the left and right arrows. &quot;
+    &quot;Fire with space.\n\n&quot;
+    &quot;Three of a kind touching pop. Don&#x27;t let the pieces reach the red line!&quot;,
+    button=&quot;Play&quot;)</code></pre>
+
+<h2 id="make-it-yours">Make it yours</h2>
+
+<p><a href="../../play/?game=pop_drop">Open the whole game in the playground →</a>
+It goes straight into the editor, ready to change and run.</p>
+
+<ul>
+<li><strong>Change how it feels.</strong> <code>SHOT_SPEED</code> and
+<code>TURN_SPEED</code> are in the settings. A slower shot is easier to
+follow off the walls.</li>
+<li><strong>Change the difficulty.</strong> <code>misses_allowed()</code>
+decides how often the ceiling comes down. <code>max(4, 8 - level)</code>
+never goes below 4; make it <code>max(6, 10 - level)</code> for an easier
+game.</li>
+<li><strong>A new kind of piece.</strong> Load another picture, say
+<code>loadSprite("grape", "images/grape.png")</code>, add
+<code>"grape"</code> to <code>KINDS</code>, and give it an entry in
+<code>PIECES</code>. Forget the <code>PIECES</code> entry and the game stops
+with <code>KeyError: 'grape'</code> the first time one is drawn, because
+there's no colour or size to look up.</li>
+<li><strong>Need four to pop.</strong> Change <code>len(group) &gt;= 3</code>
+in <code>settle</code> to <code>4</code>. It's much harder, and the next piece
+matters a lot more.</li>
+</ul>
+
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>
