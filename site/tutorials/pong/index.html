@@ -1,0 +1,1537 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Pong · KayPy</title>
+<meta name="description" content="How Pong was built, a step at a time: paddles, a ball that carries its own speed, bouncing, a computer player, points, and a ball that gets faster — in plain Python a student can copy.">
+<meta property="og:title" content="Building Pong · KayPy">
+<meta property="og:description" content="How Pong was built, a step at a time.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All eight lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li><li><a class="dropdown-item" href="../../learn/functions/">6 — Functions</a></li><li><a class="dropdown-item" href="../../learn/decorators/">7 — Decorators</a></li><li><a class="dropdown-item" href="../../learn/dictionaries/">8 — Dictionaries</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../../tutorials/" aria-current="page">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <article class="prose">
+<h1 id="building-pong">Building Pong</h1>
+
+<p><a href="../../static/games/pong/">Play it first →</a> Two paddles and a
+ball. You are on the left, the computer is on the right, and you hit the ball
+back and forth until one of you misses. Every hit makes the ball a little
+faster, and where it hits your paddle decides which way it goes. First to 7
+wins.</p>
+
+<p>This is how it was built, a step at a time. Every numbered step below is a
+whole program: copy it into
+<a href="../../play/">the playground</a>, press Run, and it works. Each step
+is the one before it with something added, so you can build the game the way
+it was built. Then break something on purpose and see what changes. That
+teaches you more than reading does.</p>
+
+<p>There is nothing clever in it. No list comprehensions, no tricks, and every
+kaypy function it uses is on the <a href="../../api/">API page</a>. There are
+no pictures at all: the paddles, the ball and the net are rectangles.</p>
+
+<p>If you haven't built a game yet, start with
+<a href="../bomb-dodge/">Bomb Dodge</a>. Pong moves the same way, so it
+makes a good second one.</p>
+
+<h2 id="the-one-big-idea">The one big idea: the ball carries its own speed</h2>
+
+<p>A game object can carry values of its own. Write <code>ball.dx = 360</code>
+and from then on the ball <em>has</em> a <code>dx</code>, just as it has a
+<code>pos</code>. Here <code>dx</code> is how fast the ball goes across, and
+<code>dy</code> how fast it goes down, both in pixels per second. A negative
+<code>dx</code> means it is going left; a negative <code>dy</code> means it is
+going up.</p>
+
+<p>Every frame, the ball moves by its speed. Bouncing is just making one of
+the two speeds negative. Hit the top and <code>dy</code> turns round; hit a
+paddle and <code>dx</code> does. Nothing has an <code>area()</code> or a
+<code>body()</code>. The code works out for itself what the ball is
+touching.</p>
+
+<h2 id="step-1-the-paddles">Step 1 — the paddles</h2>
+
+<p>The court, and a paddle you can move. The computer's paddle is there too,
+but it doesn't move yet.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 40])
+
+PADDLE_W = 16          # how wide a paddle is
+PADDLE_H = 100         # and how tall
+PADDLE_GAP = 30        # how far each paddle is from its edge of the window
+PADDLE_SPEED = 480     # how fast your paddle moves, in pixels per second
+
+# The net: a dashed line down the middle. It is only a picture.
+for y in range(10, height(), 40):
+    add([rect(4, 20), pos(width() / 2 - 2, y), color(90, 100, 130)])
+
+# anchor(&quot;center&quot;) means pos() is the middle of the paddle.
+player = add([rect(PADDLE_W, PADDLE_H), anchor(&quot;center&quot;),
+              pos(PADDLE_GAP, height() / 2), color(120, 220, 255)])
+cpu = add([rect(PADDLE_W, PADDLE_H), anchor(&quot;center&quot;),
+           pos(width() - PADDLE_GAP, height() / 2), color(255, 140, 120)])
+
+
+@onKeyDown(&quot;up&quot;)
+def move_up():
+    player.move(0, -PADDLE_SPEED)
+    keep_on_screen()
+
+
+@onKeyDown(&quot;down&quot;)
+def move_down():
+    player.move(0, PADDLE_SPEED)
+    keep_on_screen()
+
+
+@onMouseDown
+def move_to_mouse():
+    if mousePos().y &lt; player.pos.y - 10:
+        player.move(0, -PADDLE_SPEED)
+    if mousePos().y &gt; player.pos.y + 10:
+        player.move(0, PADDLE_SPEED)
+    keep_on_screen()
+
+
+def keep_on_screen():
+    player.pos.y = clamp(player.pos.y, PADDLE_H / 2,
+                         height() - PADDLE_H / 2)</code></pre>
+
+<p>Hold <strong>up</strong> or <strong>down</strong> and your paddle moves.
+Hold the mouse down somewhere and it moves towards it. On a phone, a finger
+does the same thing.</p>
+
+<ul>
+<li><strong>The settings come first.</strong> Names in capitals, like
+<code>PADDLE_SPEED</code>, are numbers you set once and never change while
+the game runs. Putting them at the top means you can find them, and change
+the game without hunting through it.</li>
+<li><strong>The net</strong> is a dashed line made of rectangles 4 pixels
+wide and 20 tall. <code>range(10, height(), 40)</code> counts 10, 50, 90, and
+so on down the window, one rectangle every 40 pixels.</li>
+<li><code>anchor("center")</code> makes <code>pos()</code> mean the middle of
+the paddle, not its top-left corner. Everything below is easier for it:
+the paddle's top is <code>player.pos.y - PADDLE_H / 2</code> and its bottom
+is <code>player.pos.y + PADDLE_H / 2</code>.</li>
+<li><code>@onKeyDown("up")</code> runs <code>move_up</code> every frame the
+up arrow is held, about sixty times a second, so the paddle keeps moving
+until you let go. <code>player.move(0, -PADDLE_SPEED)</code> moves it up at
+<code>PADDLE_SPEED</code> pixels a <em>second</em>: up is negative, because
+<code>y</code> counts down from the top of the window.</li>
+<li><code>@onMouseDown</code> runs <code>move_to_mouse</code> every frame the
+mouse button is held, or a finger is on the screen. More than 10 pixels above
+the paddle's middle and the paddle moves up; more than 10 below and it moves
+down. Within 10 pixels counts as there.</li>
+</ul>
+
+<p><strong><code>keep_on_screen()</code> stops the paddle at the
+edges.</strong> <code>clamp(player.pos.y, PADDLE_H / 2, height() - PADDLE_H /
+2)</code> gives back <code>player.pos.y</code>, unless it is less than 50
+(then it gives 50) or more than 550 (then it gives 550). The paddle is 100
+tall, so 50 is half of it, and the paddle stops with its end touching the
+edge.</p>
+
+<div class="callout"><p><strong>Something to break.</strong> Take
+<code>keep_on_screen()</code> out of <code>move_up</code> and hold up. There's
+no error message. The paddle goes off the top of the window and keeps
+going: three seconds of holding up took it to <code>y</code> = −1161, more
+than a thousand pixels above the window. Hold down for as long to bring it
+back.</p></div>
+
+<h2 id="step-2-the-ball">Step 2 — the ball</h2>
+
+<p>A ball that moves by itself and bounces off the edges of the window. For
+now, all four edges are walls.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 40])
+
+PADDLE_W = 16          # how wide a paddle is
+PADDLE_H = 100         # and how tall
+PADDLE_GAP = 30        # how far each paddle is from its edge of the window
+PADDLE_SPEED = 480     # how fast your paddle moves, in pixels per second
+
+BALL_SIZE = 16
+BALL_SPEED = 360       # how fast the ball goes, in pixels per second
+
+# The net: a dashed line down the middle. It is only a picture.
+for y in range(10, height(), 40):
+    add([rect(4, 20), pos(width() / 2 - 2, y), color(90, 100, 130)])
+
+# anchor(&quot;center&quot;) means pos() is the middle of the paddle.
+player = add([rect(PADDLE_W, PADDLE_H), anchor(&quot;center&quot;),
+              pos(PADDLE_GAP, height() / 2), color(120, 220, 255)])
+cpu = add([rect(PADDLE_W, PADDLE_H), anchor(&quot;center&quot;),
+           pos(width() - PADDLE_GAP, height() / 2), color(255, 140, 120)])
+
+# The ball carries its own speed: dx across and dy down, in pixels per
+# second. A negative dx means it is going left, a negative dy up.
+ball = add([rect(BALL_SIZE, BALL_SIZE), anchor(&quot;center&quot;),
+            pos(width() / 2, height() / 2)])
+ball.dx = BALL_SPEED
+ball.dy = rand(-BALL_SPEED / 2, BALL_SPEED / 2)
+
+
+@onKeyDown(&quot;up&quot;)
+def move_up():
+    player.move(0, -PADDLE_SPEED)
+    keep_on_screen()
+
+
+@onKeyDown(&quot;down&quot;)
+def move_down():
+    player.move(0, PADDLE_SPEED)
+    keep_on_screen()
+
+
+@onMouseDown
+def move_to_mouse():
+    if mousePos().y &lt; player.pos.y - 10:
+        player.move(0, -PADDLE_SPEED)
+    if mousePos().y &gt; player.pos.y + 10:
+        player.move(0, PADDLE_SPEED)
+    keep_on_screen()
+
+
+def keep_on_screen():
+    player.pos.y = clamp(player.pos.y, PADDLE_H / 2,
+                         height() - PADDLE_H / 2)
+
+
+@onUpdate
+def move_ball():
+    ball.pos.x = ball.pos.x + ball.dx * dt()
+    ball.pos.y = ball.pos.y + ball.dy * dt()
+
+    # Off the top or the bottom: put it back on the edge, and turn it round.
+    if ball.pos.y &lt; BALL_SIZE / 2:
+        ball.pos.y = BALL_SIZE / 2
+        ball.dy = -ball.dy
+    if ball.pos.y &gt; height() - BALL_SIZE / 2:
+        ball.pos.y = height() - BALL_SIZE / 2
+        ball.dy = -ball.dy
+
+    # The sides are walls too, for now.
+    if ball.pos.x &lt; BALL_SIZE / 2:
+        ball.pos.x = BALL_SIZE / 2
+        ball.dx = -ball.dx
+    if ball.pos.x &gt; width() - BALL_SIZE / 2:
+        ball.pos.x = width() - BALL_SIZE / 2
+        ball.dx = -ball.dx</code></pre>
+
+<p><strong>The ball's own values.</strong> <code>ball.dx = BALL_SPEED</code>
+gives the ball a <code>dx</code>, 360, so it starts off to the right.
+<code>rand(-BALL_SPEED / 2, BALL_SPEED / 2)</code> picks a random
+<code>dy</code> between −180 and 180, so it goes off at a slant, up or down,
+and differently every time you press Run.</p>
+
+<p><strong>Moving.</strong> <code>@onUpdate</code> runs
+<code>move_ball</code> once a frame. <code>ball.dx * dt()</code> is how far
+the ball goes across in one frame: <code>dt()</code> is how long the frame
+took, about 1/60 of a second, so at 360 pixels a second the ball moves about 6
+pixels a frame. Multiplying by <code>dt()</code> is what makes the ball go
+the same speed on a fast computer and a slow one.</p>
+
+<p><strong>Bouncing.</strong> When the ball's middle is less than half a ball
+from the top, it has reached the top. It is put back exactly on the edge,
+and <code>ball.dy = -ball.dy</code> turns it round: −180 becomes 180, and the
+ball heads down. The other three edges work the same way.</p>
+
+<p>Putting it back on the edge matters more than it looks. A frame can carry
+the ball a few pixels <em>past</em> the edge. If it is turned round but left
+out there, and the next frame does not bring it all the way back in, it is
+still past the edge, so it is turned round again, the wrong way, and leaves
+the window. With the uneven frames a browser can have, that really
+happens.</p>
+
+<div class="callout"><p><strong>Two things to break.</strong></p>
+<p>Take out <code>ball.dy = -ball.dy</code> under the top edge, and keep the
+line that puts the ball back. There's no error. The first time the ball
+reaches the top it stays there, sliding along the top edge from wall to wall
+for ever: it is put back on the edge every frame, but never turned round.</p>
+<p>Take out the line <code>ball.dx = BALL_SPEED</code>. The game stops at
+once, with</p>
+<pre><code class="language-plaintext">AttributeError: GameObj has no attribute 'dx' — did you forget a component that provides it?</code></pre>
+<p>A game object only has a <code>dx</code> once you give it one. kaypy
+guesses you forgot a component, because that is usually why. Here, though,
+<code>dx</code> is a value of your own, and what's missing is the line that
+sets it.</p></div>
+
+<h2 id="step-3-hitting-it-back">Step 3 — hitting it back</h2>
+
+<p>The ball bounces off the paddles now, and the computer moves its paddle to
+meet it. The sides aren't walls any more: a ball that gets past a paddle goes
+off the side, and comes back from the middle going the other way.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 40])
+
+PADDLE_W = 16          # how wide a paddle is
+PADDLE_H = 100         # and how tall
+PADDLE_GAP = 30        # how far each paddle is from its edge of the window
+PADDLE_SPEED = 480     # how fast your paddle moves, in pixels per second
+
+BALL_SIZE = 16
+BALL_SPEED = 360       # how fast the ball goes, in pixels per second
+BALL_ANGLE = 0.75      # how steeply the ends of a paddle send the ball
+
+CPU_SPEED = 300        # how fast the computer&#x27;s paddle can move
+
+# The net: a dashed line down the middle. It is only a picture.
+for y in range(10, height(), 40):
+    add([rect(4, 20), pos(width() / 2 - 2, y), color(90, 100, 130)])
+
+# anchor(&quot;center&quot;) means pos() is the middle of the paddle.
+player = add([rect(PADDLE_W, PADDLE_H), anchor(&quot;center&quot;),
+              pos(PADDLE_GAP, height() / 2), color(120, 220, 255)])
+cpu = add([rect(PADDLE_W, PADDLE_H), anchor(&quot;center&quot;),
+           pos(width() - PADDLE_GAP, height() / 2), color(255, 140, 120)])
+
+# The ball carries its own speed: dx across and dy down, in pixels per
+# second. A negative dx means it is going left, a negative dy up.
+ball = add([rect(BALL_SIZE, BALL_SIZE), anchor(&quot;center&quot;),
+            pos(width() / 2, height() / 2)])
+ball.dx = BALL_SPEED
+ball.dy = rand(-BALL_SPEED / 2, BALL_SPEED / 2)
+
+
+@onKeyDown(&quot;up&quot;)
+def move_up():
+    player.move(0, -PADDLE_SPEED)
+    keep_on_screen()
+
+
+@onKeyDown(&quot;down&quot;)
+def move_down():
+    player.move(0, PADDLE_SPEED)
+    keep_on_screen()
+
+
+@onMouseDown
+def move_to_mouse():
+    if mousePos().y &lt; player.pos.y - 10:
+        player.move(0, -PADDLE_SPEED)
+    if mousePos().y &gt; player.pos.y + 10:
+        player.move(0, PADDLE_SPEED)
+    keep_on_screen()
+
+
+def keep_on_screen():
+    player.pos.y = clamp(player.pos.y, PADDLE_H / 2,
+                         height() - PADDLE_H / 2)
+
+
+@onUpdate
+def computer():
+    # The computer follows the ball, but only when the ball is coming its
+    # way, and never faster than CPU_SPEED.
+    if ball.dx &gt; 0:
+        target = ball.pos.y
+    else:
+        target = height() / 2       # drift back to the middle
+    if target &lt; cpu.pos.y - 10:
+        cpu.move(0, -CPU_SPEED)
+    if target &gt; cpu.pos.y + 10:
+        cpu.move(0, CPU_SPEED)
+
+
+@onUpdate
+def move_ball():
+    # Where the ball is before it moves, to see what it crossed.
+    old_x = ball.pos.x
+    ball.pos.x = ball.pos.x + ball.dx * dt()
+    ball.pos.y = ball.pos.y + ball.dy * dt()
+
+    # Off the top or the bottom: put it back on the edge, and turn it round.
+    if ball.pos.y &lt; BALL_SIZE / 2:
+        ball.pos.y = BALL_SIZE / 2
+        ball.dy = -ball.dy
+    if ball.pos.y &gt; height() - BALL_SIZE / 2:
+        ball.pos.y = height() - BALL_SIZE / 2
+        ball.dy = -ball.dy
+
+    # Did it just cross the front of your paddle, going left?
+    edge = player.pos.x + PADDLE_W / 2 + BALL_SIZE / 2
+    if old_x &gt;= edge and ball.pos.x &lt; edge and touching(player):
+        ball.pos.x = edge
+        bounce(player, 1)
+
+    # The front of the computer&#x27;s paddle, going right.
+    edge = cpu.pos.x - PADDLE_W / 2 - BALL_SIZE / 2
+    if old_x &lt;= edge and ball.pos.x &gt; edge and touching(cpu):
+        ball.pos.x = edge
+        bounce(cpu, -1)
+
+    # Gone off the side: back to the middle, going the other way.
+    if ball.pos.x &lt; -BALL_SIZE or ball.pos.x &gt; width() + BALL_SIZE:
+        ball.pos = vec2(width() / 2, height() / 2)
+        ball.dx = -ball.dx
+
+
+def touching(paddle):
+    # Is the ball level with the paddle? Half the paddle and half the ball,
+    # up or down from the paddle&#x27;s middle.
+    return abs(ball.pos.y - paddle.pos.y) &lt; PADDLE_H / 2 + BALL_SIZE / 2
+
+
+def bounce(paddle, direction):
+    # direction is 1 to send the ball right, -1 to send it left.
+    ball.dx = BALL_SPEED * direction
+
+    # Where on the paddle it hit: -1 is the top end, 0 the middle, 1 the
+    # bottom end. That decides how steeply it comes off.
+    where = (ball.pos.y - paddle.pos.y) / (PADDLE_H / 2)
+    where = clamp(where, -1, 1)
+    ball.dy = where * BALL_SPEED * BALL_ANGLE</code></pre>
+
+<p><strong>Did the ball reach the paddle?</strong> The front of your paddle
+is its middle plus half its width. The ball's middle touches it at half a
+ball further on: that is <code>edge</code>, 46 pixels from the left of the
+window. The ball moves 6 pixels or so a frame, so it is hardly ever exactly
+<em>at</em> <code>edge</code>. So the question is whether it <em>crossed</em>
+the edge this frame. <code>old_x</code> is where the ball was before it
+moved. If it was in front of <code>edge</code> before and is behind it now,
+it has just crossed.</p>
+
+<p><strong>Was the paddle there?</strong> <code>touching()</code> asks
+whether the ball is level with the paddle: whether the distance between their
+middles, up and down, is less than half the paddle plus half the ball. It
+gives back <code>True</code> or <code>False</code>, which is why it can go
+straight into an <code>if</code>.</p>
+
+<p><strong>Where it hits decides where it goes.</strong>
+<code>bounce()</code> turns the ball round, then works out
+<code>where</code>: how far the ball is from the paddle's middle, divided by
+half the paddle. In the middle that is 0; at the top end, −1; at the bottom
+end, 1. A ball hitting 40 pixels below the middle gets <code>where</code> =
+0.8, and goes off downwards at <code>0.8 * 360 * 0.75</code>, 216 pixels a
+second. Hitting the ball with the end of the paddle is how you aim it.
+<code>clamp</code> keeps <code>where</code> between −1 and 1, because the
+ball can touch the paddle with its edge, a little beyond the paddle's end.</p>
+
+<p><strong>The computer</strong> moves its paddle towards the ball, but only
+when the ball is coming its way; otherwise it drifts back to the middle. It
+can never move faster than <code>CPU_SPEED</code>, 300 pixels a second. For
+now that is plenty: the steepest the ball can go is
+<code>0.75 * 360</code>, 270 pixels a second up or down. In step 5 the ball
+gets faster, and then a steep one can get away from it.</p>
+
+<div class="callout"><p><strong>Something to break.</strong> In
+<code>move_ball</code>, change <code>bounce(player, 1)</code> to
+<code>bounce(player, -1)</code>, so the ball is sent left instead of right.
+There's no error. The ball reaches your paddle and stops dead, stuck to the
+front of it. Every frame it moves left, crosses <code>edge</code>, and is put
+back on it, still going left. Move the paddle away and the ball is let go:
+it carries on off the side.</p></div>
+
+<h2 id="step-4-points-and-serving">Step 4 — points, and serving</h2>
+
+<p>A ball that goes off the side is a point to the player at the other end.
+The score goes at the top, and after each point the ball waits in the middle
+for a second, then is served towards whoever lost it.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 40])
+
+PADDLE_W = 16          # how wide a paddle is
+PADDLE_H = 100         # and how tall
+PADDLE_GAP = 30        # how far each paddle is from its edge of the window
+PADDLE_SPEED = 480     # how fast your paddle moves, in pixels per second
+
+BALL_SIZE = 16
+BALL_SPEED = 360       # how fast the ball goes, in pixels per second
+BALL_ANGLE = 0.75      # how steeply the ends of a paddle send the ball
+
+CPU_SPEED = 300        # how fast the computer&#x27;s paddle can move
+
+player_score = 0
+cpu_score = 0
+
+# The net: a dashed line down the middle. It is only a picture.
+for y in range(10, height(), 40):
+    add([rect(4, 20), pos(width() / 2 - 2, y), color(90, 100, 130)])
+
+# anchor(&quot;center&quot;) means pos() is the middle of the paddle.
+player = add([rect(PADDLE_W, PADDLE_H), anchor(&quot;center&quot;),
+              pos(PADDLE_GAP, height() / 2), color(120, 220, 255)])
+cpu = add([rect(PADDLE_W, PADDLE_H), anchor(&quot;center&quot;),
+           pos(width() - PADDLE_GAP, height() / 2), color(255, 140, 120)])
+
+# The ball carries its own speed: dx across and dy down, in pixels per
+# second. A negative dx means it is going left, a negative dy up.
+ball = add([rect(BALL_SIZE, BALL_SIZE), anchor(&quot;center&quot;),
+            pos(width() / 2, height() / 2)])
+ball.dx = 0
+ball.dy = 0
+
+player_label = add([text(&quot;0&quot;, size=56), pos(width() / 2 - 60, 50),
+                    anchor(&quot;center&quot;)])
+cpu_label = add([text(&quot;0&quot;, size=56), pos(width() / 2 + 60, 50),
+                 anchor(&quot;center&quot;)])
+
+
+@onKeyDown(&quot;up&quot;)
+def move_up():
+    player.move(0, -PADDLE_SPEED)
+    keep_on_screen()
+
+
+@onKeyDown(&quot;down&quot;)
+def move_down():
+    player.move(0, PADDLE_SPEED)
+    keep_on_screen()
+
+
+@onMouseDown
+def move_to_mouse():
+    if mousePos().y &lt; player.pos.y - 10:
+        player.move(0, -PADDLE_SPEED)
+    if mousePos().y &gt; player.pos.y + 10:
+        player.move(0, PADDLE_SPEED)
+    keep_on_screen()
+
+
+def keep_on_screen():
+    player.pos.y = clamp(player.pos.y, PADDLE_H / 2,
+                         height() - PADDLE_H / 2)
+
+
+@onUpdate
+def computer():
+    # The computer follows the ball, but only when the ball is coming its
+    # way, and never faster than CPU_SPEED.
+    if ball.dx &gt; 0:
+        target = ball.pos.y
+    else:
+        target = height() / 2       # drift back to the middle
+    if target &lt; cpu.pos.y - 10:
+        cpu.move(0, -CPU_SPEED)
+    if target &gt; cpu.pos.y + 10:
+        cpu.move(0, CPU_SPEED)
+
+
+def serve(direction):
+    # direction is 1 to serve to the right, -1 to the left. The ball starts
+    # in the middle and goes off at a random slant.
+    ball.pos = vec2(width() / 2, height() / 2)
+    ball.dx = BALL_SPEED * direction
+    ball.dy = rand(-BALL_SPEED / 2, BALL_SPEED / 2)
+
+
+# wait() runs a function later, and it has to be one that needs nothing
+# handed to it. So there is one for each way the ball can be served.
+def serve_left():
+    serve(-1)
+
+
+def serve_right():
+    serve(1)
+
+
+# The first serve goes towards you, a second and a half in.
+wait(1.5, serve_left)
+
+
+@onUpdate
+def move_ball():
+    # Where the ball is before it moves, to see what it crossed.
+    old_x = ball.pos.x
+    ball.pos.x = ball.pos.x + ball.dx * dt()
+    ball.pos.y = ball.pos.y + ball.dy * dt()
+
+    # Off the top or the bottom: put it back on the edge, and turn it round.
+    if ball.pos.y &lt; BALL_SIZE / 2:
+        ball.pos.y = BALL_SIZE / 2
+        ball.dy = -ball.dy
+    if ball.pos.y &gt; height() - BALL_SIZE / 2:
+        ball.pos.y = height() - BALL_SIZE / 2
+        ball.dy = -ball.dy
+
+    # Did it just cross the front of your paddle, going left?
+    edge = player.pos.x + PADDLE_W / 2 + BALL_SIZE / 2
+    if old_x &gt;= edge and ball.pos.x &lt; edge and touching(player):
+        ball.pos.x = edge
+        bounce(player, 1)
+
+    # The front of the computer&#x27;s paddle, going right.
+    edge = cpu.pos.x - PADDLE_W / 2 - BALL_SIZE / 2
+    if old_x &lt;= edge and ball.pos.x &gt; edge and touching(cpu):
+        ball.pos.x = edge
+        bounce(cpu, -1)
+
+    # Gone off the side: a point to whoever is at the other end.
+    if ball.pos.x &lt; -BALL_SIZE:
+        point_to(&quot;cpu&quot;)
+    if ball.pos.x &gt; width() + BALL_SIZE:
+        point_to(&quot;player&quot;)
+
+
+def touching(paddle):
+    # Is the ball level with the paddle? Half the paddle and half the ball,
+    # up or down from the paddle&#x27;s middle.
+    return abs(ball.pos.y - paddle.pos.y) &lt; PADDLE_H / 2 + BALL_SIZE / 2
+
+
+def bounce(paddle, direction):
+    # direction is 1 to send the ball right, -1 to send it left.
+    ball.dx = BALL_SPEED * direction
+
+    # Where on the paddle it hit: -1 is the top end, 0 the middle, 1 the
+    # bottom end. That decides how steeply it comes off.
+    where = (ball.pos.y - paddle.pos.y) / (PADDLE_H / 2)
+    where = clamp(where, -1, 1)
+    ball.dy = where * BALL_SPEED * BALL_ANGLE
+
+
+
+def point_to(who):
+    global player_score, cpu_score
+
+    # Park the ball in the middle, standing still, until the next serve.
+    ball.pos = vec2(width() / 2, height() / 2)
+    ball.dx = 0
+    ball.dy = 0
+
+    if who == &quot;player&quot;:
+        player_score = player_score + 1
+        player_label.text = str(player_score)
+        wait(1, serve_right)
+    else:
+        cpu_score = cpu_score + 1
+        cpu_label.text = str(cpu_score)
+        wait(1, serve_left)</code></pre>
+
+<p><strong>Scoring.</strong> <code>point_to("cpu")</code> or
+<code>point_to("player")</code> parks the ball in the middle with both its
+speeds at 0, adds one to the right score, and puts the new number on the
+screen. <code>str()</code> turns the number into text, because a
+<code>text()</code> object has to be given text.</p>
+
+<p><code>point_to</code> <em>changes</em> <code>player_score</code> and
+<code>cpu_score</code>, so it says <code>global</code> first. They were made
+outside the function, and a function that changes a variable from outside
+itself has to say so. Without it, Python decides they are new variables
+belonging to <code>point_to</code>, with no value yet. Leave it out and
+nothing goes wrong until the first point. If you don't move, that's about
+two and a half seconds in, and then:</p>
+
+<pre><code class="language-plaintext">UnboundLocalError: cannot access local variable 'cpu_score' where it is not associated with a value</code></pre>
+
+<p><strong>Serving.</strong> <code>serve(direction)</code> puts the ball in
+the middle and sends it off: <code>direction</code> is 1 for right, −1 for
+left. <code>wait(1, serve_right)</code> runs <code>serve_right</code> a
+second from now. <code>wait()</code> wants a function it can run later
+<em>with nothing handed to it</em>, and <code>serve</code> needs to be told
+which way. So there are two little functions, <code>serve_left</code> and
+<code>serve_right</code>, which each call <code>serve</code> the right
+way.</p>
+
+<div class="callout"><p><strong>Something to break.</strong> Put brackets
+after <code>serve_left</code> in the first serve:
+<code>wait(1.5, serve_left())</code>. There's no error message, which makes
+it a hard mistake to spot. The ball goes the moment you press Run, with no
+pause at all. Without brackets, <code>wait()</code> is handed the
+<em>function</em>, to run in 1.5 seconds. With them, Python runs
+<code>serve_left</code> right now, to find out what to hand over, and the
+ball is served then and there. <code>wait()</code> is handed what
+<code>serve_left</code> gave back, which is nothing, and has nothing left to
+do when the time comes.</p></div>
+
+<h2 id="step-5-faster-every-hit">Step 5 — faster every hit</h2>
+
+<p>A long rally gets exciting: every hit makes the ball a little faster.
+<code>BALL_SPEED</code> becomes three settings.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 40])
+
+PADDLE_W = 16          # how wide a paddle is
+PADDLE_H = 100         # and how tall
+PADDLE_GAP = 30        # how far each paddle is from its edge of the window
+PADDLE_SPEED = 480     # how fast your paddle moves, in pixels per second
+
+BALL_SIZE = 16
+BALL_START = 360       # how fast the ball goes at the start of each point
+BALL_GAIN = 25         # ...how much faster every hit makes it
+BALL_FASTEST = 750     # ...and the fastest it ever goes
+BALL_ANGLE = 0.75      # how steeply the ends of a paddle send the ball
+
+CPU_SPEED = 300        # how fast the computer&#x27;s paddle can move
+
+player_score = 0
+cpu_score = 0
+
+# The net: a dashed line down the middle. It is only a picture.
+for y in range(10, height(), 40):
+    add([rect(4, 20), pos(width() / 2 - 2, y), color(90, 100, 130)])
+
+# anchor(&quot;center&quot;) means pos() is the middle of the paddle.
+player = add([rect(PADDLE_W, PADDLE_H), anchor(&quot;center&quot;),
+              pos(PADDLE_GAP, height() / 2), color(120, 220, 255)])
+cpu = add([rect(PADDLE_W, PADDLE_H), anchor(&quot;center&quot;),
+           pos(width() - PADDLE_GAP, height() / 2), color(255, 140, 120)])
+
+# The ball carries its own speed: dx across and dy down, in pixels per
+# second. A negative dx means it is going left, a negative dy up.
+ball = add([rect(BALL_SIZE, BALL_SIZE), anchor(&quot;center&quot;),
+            pos(width() / 2, height() / 2)])
+ball.dx = 0
+ball.dy = 0
+
+player_label = add([text(&quot;0&quot;, size=56), pos(width() / 2 - 60, 50),
+                    anchor(&quot;center&quot;)])
+cpu_label = add([text(&quot;0&quot;, size=56), pos(width() / 2 + 60, 50),
+                 anchor(&quot;center&quot;)])
+
+
+@onKeyDown(&quot;up&quot;)
+def move_up():
+    player.move(0, -PADDLE_SPEED)
+    keep_on_screen()
+
+
+@onKeyDown(&quot;down&quot;)
+def move_down():
+    player.move(0, PADDLE_SPEED)
+    keep_on_screen()
+
+
+@onMouseDown
+def move_to_mouse():
+    if mousePos().y &lt; player.pos.y - 10:
+        player.move(0, -PADDLE_SPEED)
+    if mousePos().y &gt; player.pos.y + 10:
+        player.move(0, PADDLE_SPEED)
+    keep_on_screen()
+
+
+def keep_on_screen():
+    player.pos.y = clamp(player.pos.y, PADDLE_H / 2,
+                         height() - PADDLE_H / 2)
+
+
+@onUpdate
+def computer():
+    # The computer follows the ball, but only when the ball is coming its
+    # way, and never faster than CPU_SPEED.
+    if ball.dx &gt; 0:
+        target = ball.pos.y
+    else:
+        target = height() / 2       # drift back to the middle
+    if target &lt; cpu.pos.y - 10:
+        cpu.move(0, -CPU_SPEED)
+    if target &gt; cpu.pos.y + 10:
+        cpu.move(0, CPU_SPEED)
+
+
+def serve(direction):
+    # direction is 1 to serve to the right, -1 to the left. The ball starts
+    # in the middle and goes off at a random slant.
+    ball.pos = vec2(width() / 2, height() / 2)
+    ball.dx = BALL_START * direction
+    ball.dy = rand(-BALL_START / 2, BALL_START / 2)
+
+
+# wait() runs a function later, and it has to be one that needs nothing
+# handed to it. So there is one for each way the ball can be served.
+def serve_left():
+    serve(-1)
+
+
+def serve_right():
+    serve(1)
+
+
+# The first serve goes towards you, a second and a half in.
+wait(1.5, serve_left)
+
+
+@onUpdate
+def move_ball():
+    # Where the ball is before it moves, to see what it crossed.
+    old_x = ball.pos.x
+    ball.pos.x = ball.pos.x + ball.dx * dt()
+    ball.pos.y = ball.pos.y + ball.dy * dt()
+
+    # Off the top or the bottom: put it back on the edge, and turn it round.
+    if ball.pos.y &lt; BALL_SIZE / 2:
+        ball.pos.y = BALL_SIZE / 2
+        ball.dy = -ball.dy
+    if ball.pos.y &gt; height() - BALL_SIZE / 2:
+        ball.pos.y = height() - BALL_SIZE / 2
+        ball.dy = -ball.dy
+
+    # Did it just cross the front of your paddle, going left?
+    edge = player.pos.x + PADDLE_W / 2 + BALL_SIZE / 2
+    if old_x &gt;= edge and ball.pos.x &lt; edge and touching(player):
+        ball.pos.x = edge
+        bounce(player, 1)
+
+    # The front of the computer&#x27;s paddle, going right.
+    edge = cpu.pos.x - PADDLE_W / 2 - BALL_SIZE / 2
+    if old_x &lt;= edge and ball.pos.x &gt; edge and touching(cpu):
+        ball.pos.x = edge
+        bounce(cpu, -1)
+
+    # Gone off the side: a point to whoever is at the other end.
+    if ball.pos.x &lt; -BALL_SIZE:
+        point_to(&quot;cpu&quot;)
+    if ball.pos.x &gt; width() + BALL_SIZE:
+        point_to(&quot;player&quot;)
+
+
+def touching(paddle):
+    # Is the ball level with the paddle? Half the paddle and half the ball,
+    # up or down from the paddle&#x27;s middle.
+    return abs(ball.pos.y - paddle.pos.y) &lt; PADDLE_H / 2 + BALL_SIZE / 2
+
+
+def bounce(paddle, direction):
+    # direction is 1 to send the ball right, -1 to send it left. A little
+    # faster each hit, up to BALL_FASTEST.
+    speed = abs(ball.dx) + BALL_GAIN
+    if speed &gt; BALL_FASTEST:
+        speed = BALL_FASTEST
+    ball.dx = speed * direction
+
+    # Where on the paddle it hit: -1 is the top end, 0 the middle, 1 the
+    # bottom end. That decides how steeply it comes off.
+    where = (ball.pos.y - paddle.pos.y) / (PADDLE_H / 2)
+    where = clamp(where, -1, 1)
+    ball.dy = where * speed * BALL_ANGLE
+
+
+
+def point_to(who):
+    global player_score, cpu_score
+
+    # Park the ball in the middle, standing still, until the next serve.
+    ball.pos = vec2(width() / 2, height() / 2)
+    ball.dx = 0
+    ball.dy = 0
+
+    if who == &quot;player&quot;:
+        player_score = player_score + 1
+        player_label.text = str(player_score)
+        wait(1, serve_right)
+    else:
+        cpu_score = cpu_score + 1
+        cpu_label.text = str(cpu_score)
+        wait(1, serve_left)</code></pre>
+
+<p>Each point starts at <code>BALL_START</code>, 360 pixels a second. In
+<code>bounce</code>, <code>abs(ball.dx)</code> is how fast the ball is going
+across, without the minus sign that says it is going left. Every hit adds
+<code>BALL_GAIN</code>, 25, so after 10 hits the ball is going 610. The
+<code>if</code> stops it at <code>BALL_FASTEST</code>, 750, which it reaches
+on the 16th hit. Without that, a long enough rally would get too fast to
+see.</p>
+
+<p>The angle uses the new <code>speed</code> too, so a fast ball comes off
+the end of a paddle steeply enough to beat the computer, which is still
+limited to 300 pixels a second.</p>
+
+<div class="callout"><p><strong>Something to break.</strong> Leave out the
+<code>abs</code>: <code>speed = ball.dx + BALL_GAIN</code>. There's no error.
+The ball reaches your paddle and then creeps away from it, at 15 pixels a
+second. Going left, <code>dx</code> is −360, so <code>speed</code> is −335,
+and the ball is sent off at −335: still going left. Next frame it crosses
+<code>edge</code> again and bounces again, −310, and again, and again, 25 at
+a time, until <code>dx</code> gets past 0 to 15. <code>abs()</code> is what
+keeps the minus sign out of it.</p></div>
+
+<h2 id="step-6-winning-and-playing-again">Step 6 — winning, and playing again</h2>
+
+<p>First to 7 wins. Then press <strong>space</strong> or click to play
+again.</p>
+
+<p>Playing again means building everything fresh: new scores, a new ball,
+and no <code>wait()</code> from the last game still waiting to serve. That's
+what a <strong>scene</strong> is for. Everything from the net down moves
+inside <code>@scene("game")</code>, one step further in, and
+<code>go("game")</code> at the bottom builds it. Calling
+<code>go("game")</code> again throws the whole scene away, every object,
+handler and <code>wait()</code>, and builds it again.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 40])
+
+PADDLE_W = 16          # how wide a paddle is
+PADDLE_H = 100         # and how tall
+PADDLE_GAP = 30        # how far each paddle is from its edge of the window
+PADDLE_SPEED = 480     # how fast your paddle moves, in pixels per second
+
+CPU_SPEED = 300        # how fast the computer&#x27;s paddle can move
+
+BALL_SIZE = 16
+BALL_START = 360       # how fast the ball goes at the start of each point
+BALL_GAIN = 25         # ...how much faster every hit makes it
+BALL_FASTEST = 750     # ...and the fastest it ever goes
+BALL_ANGLE = 0.75      # how steeply the ends of a paddle send the ball
+
+WIN_SCORE = 7          # first to this many points wins
+
+player_score = 0
+cpu_score = 0
+playing = True
+
+
+@scene(&quot;game&quot;)
+def game():
+    global player_score, cpu_score, playing
+
+    # A new game, so everything starts again.
+    player_score = 0
+    cpu_score = 0
+    playing = True
+
+    # The net: a dashed line down the middle. It is only a picture.
+    for y in range(10, height(), 40):
+        add([rect(4, 20), pos(width() / 2 - 2, y), color(90, 100, 130)])
+
+    # anchor(&quot;center&quot;) means pos() is the middle of the paddle, which makes
+    # &quot;is the ball within the paddle?&quot; easy to work out below.
+    player = add([rect(PADDLE_W, PADDLE_H), anchor(&quot;center&quot;),
+                  pos(PADDLE_GAP, height() / 2), color(120, 220, 255)])
+    cpu = add([rect(PADDLE_W, PADDLE_H), anchor(&quot;center&quot;),
+               pos(width() - PADDLE_GAP, height() / 2), color(255, 140, 120)])
+
+    # The ball carries its own speed: dx across and dy down, in pixels per
+    # second. A negative dx means it is going left, a negative dy up.
+    ball = add([rect(BALL_SIZE, BALL_SIZE), anchor(&quot;center&quot;),
+                pos(width() / 2, height() / 2)])
+    ball.dx = 0
+    ball.dy = 0
+
+    player_label = add([text(&quot;0&quot;, size=56), pos(width() / 2 - 60, 50),
+                        anchor(&quot;center&quot;)])
+    cpu_label = add([text(&quot;0&quot;, size=56), pos(width() / 2 + 60, 50),
+                     anchor(&quot;center&quot;)])
+
+    # The message for the end of the game. width=560 wraps a long one onto
+    # more than one line.
+    message = add([text(&quot;&quot;, size=26, width=560),
+                   pos(width() / 2, height() - 120), anchor(&quot;center&quot;),
+                   z(10)])
+
+    # -------------------------------------------------------- your paddle
+    #
+    # onKeyDown runs its function every frame the key is held, so the
+    # paddle keeps moving until you let go.
+
+    @onKeyDown(&quot;up&quot;)
+    def move_up():
+        player.move(0, -PADDLE_SPEED)
+        keep_on_screen()
+
+    @onKeyDown(&quot;down&quot;)
+    def move_down():
+        player.move(0, PADDLE_SPEED)
+        keep_on_screen()
+
+    # Holding the mouse down -- or a finger, on a phone -- moves the paddle
+    # towards it. Within 10 pixels counts as there, and the paddle stops.
+    @onMouseDown
+    def move_to_mouse():
+        if mousePos().y &lt; player.pos.y - 10:
+            player.move(0, -PADDLE_SPEED)
+        if mousePos().y &gt; player.pos.y + 10:
+            player.move(0, PADDLE_SPEED)
+        keep_on_screen()
+
+    def keep_on_screen():
+        player.pos.y = clamp(player.pos.y, PADDLE_H / 2,
+                             height() - PADDLE_H / 2)
+
+    # ------------------------------------------------- the computer&#x27;s paddle
+    #
+    # The computer follows the ball, but only when the ball is coming its
+    # way, and never faster than CPU_SPEED. That is what makes it possible
+    # to beat: a fast ball at a steep angle gets past it.
+
+    @onUpdate
+    def computer():
+        if ball.dx &gt; 0:
+            target = ball.pos.y
+        else:
+            target = height() / 2       # drift back to the middle
+        if target &lt; cpu.pos.y - 10:
+            cpu.move(0, -CPU_SPEED)
+        if target &gt; cpu.pos.y + 10:
+            cpu.move(0, CPU_SPEED)
+
+    # ------------------------------------------------------------- serving
+
+    def serve(direction):
+        # direction is 1 to serve to the right, -1 to the left. The ball
+        # starts in the middle and goes off at a random slant.
+        ball.pos = vec2(width() / 2, height() / 2)
+        ball.dx = BALL_START * direction
+        ball.dy = rand(-BALL_START / 2, BALL_START / 2)
+
+    # wait() runs a function later, and it has to be one that needs nothing
+    # handed to it. So there is one for each way the ball can be served.
+    def serve_left():
+        serve(-1)
+
+    def serve_right():
+        serve(1)
+
+    # The first serve goes towards you, a second and a half in.
+    wait(1.5, serve_left)
+
+    # ------------------------------------------------------------ the ball
+
+    @onUpdate
+    def move_ball():
+        # Where the ball is before it moves, to see what it crossed.
+        old_x = ball.pos.x
+        ball.pos.x = ball.pos.x + ball.dx * dt()
+        ball.pos.y = ball.pos.y + ball.dy * dt()
+
+        # Off the top or the bottom: turn it round. Putting it back on the
+        # edge matters. A slow frame can carry the ball well past it, and if
+        # the next frame does not bring it back inside, it is turned round
+        # again -- the wrong way -- and leaves the window.
+        if ball.pos.y &lt; BALL_SIZE / 2:
+            ball.pos.y = BALL_SIZE / 2
+            ball.dy = -ball.dy
+        if ball.pos.y &gt; height() - BALL_SIZE / 2:
+            ball.pos.y = height() - BALL_SIZE / 2
+            ball.dy = -ball.dy
+
+        # Did it just cross the front of your paddle, going left? &quot;Just
+        # crossed&quot; -- it was on one side before it moved and is on the other
+        # now -- is what matters. The ball moves 6 to 12 pixels a frame, and
+        # more on a slow one, so it is hardly ever exactly AT the front.
+        edge = player.pos.x + PADDLE_W / 2 + BALL_SIZE / 2
+        if old_x &gt;= edge and ball.pos.x &lt; edge and touching(player):
+            ball.pos.x = edge
+            bounce(player, 1)
+
+        # The front of the computer&#x27;s paddle, going right.
+        edge = cpu.pos.x - PADDLE_W / 2 - BALL_SIZE / 2
+        if old_x &lt;= edge and ball.pos.x &gt; edge and touching(cpu):
+            ball.pos.x = edge
+            bounce(cpu, -1)
+
+        # Gone off the side: a point to whoever is at the other end.
+        if ball.pos.x &lt; -BALL_SIZE:
+            point_to(&quot;cpu&quot;)
+        if ball.pos.x &gt; width() + BALL_SIZE:
+            point_to(&quot;player&quot;)
+
+    def touching(paddle):
+        # Is the ball level with the paddle? Half the paddle and half the
+        # ball, up or down from the paddle&#x27;s middle.
+        return abs(ball.pos.y - paddle.pos.y) &lt; PADDLE_H / 2 + BALL_SIZE / 2
+
+    def bounce(paddle, direction):
+        # A little faster each hit, up to BALL_FASTEST.
+        speed = abs(ball.dx) + BALL_GAIN
+        if speed &gt; BALL_FASTEST:
+            speed = BALL_FASTEST
+        ball.dx = speed * direction
+
+        # Where on the paddle it hit: -1 is the top end, 0 the middle, 1 the
+        # bottom end. That decides how steeply it comes off.
+        where = (ball.pos.y - paddle.pos.y) / (PADDLE_H / 2)
+        where = clamp(where, -1, 1)
+        ball.dy = where * speed * BALL_ANGLE
+
+    # ------------------------------------------------------------ scoring
+
+    def point_to(who):
+        global player_score, cpu_score, playing
+
+        # Park the ball in the middle, standing still, until the next serve.
+        ball.pos = vec2(width() / 2, height() / 2)
+        ball.dx = 0
+        ball.dy = 0
+
+        if who == &quot;player&quot;:
+            player_score = player_score + 1
+            player_label.text = str(player_score)
+        else:
+            cpu_score = cpu_score + 1
+            cpu_label.text = str(cpu_score)
+
+        if player_score == WIN_SCORE or cpu_score == WIN_SCORE:
+            playing = False
+            ball.destroy()
+            if player_score == WIN_SCORE:
+                message.text = &quot;You win! Press SPACE or click to play again&quot;
+            else:
+                message.text = (&quot;The computer wins. Press SPACE or click &quot;
+                                &quot;to play again&quot;)
+            return
+
+        # The next serve goes towards whoever just lost the point.
+        if who == &quot;player&quot;:
+            wait(1, serve_right)
+        else:
+            wait(1, serve_left)
+
+    # Once the game is over, space or a click starts a new one.
+    def again():
+        if not playing:
+            go(&quot;game&quot;)
+
+    onKeyPress(&quot;space&quot;, again)
+    onClick(again)
+
+
+go(&quot;game&quot;)</code></pre>
+
+<p><strong>The variables live outside the scene.</strong>
+<code>player_score</code>, <code>cpu_score</code> and <code>playing</code> are
+made at the top, and the scene sets them back to their starting values every
+time it is built. It changes them, so it says <code>global</code> first, like
+<code>point_to</code>.</p>
+
+<p><strong>The end of a game.</strong> When either score reaches
+<code>WIN_SCORE</code>, <code>point_to</code> sets <code>playing</code> to
+<code>False</code>, destroys the ball, and says who won. The
+<code>return</code> leaves <code>point_to</code> straight away, before it can
+arrange another serve.</p>
+
+<p><strong><code>again</code></strong> only starts a new game when
+<code>playing</code> is <code>False</code>. That matters more here than in
+most games, because you play this one with the mouse.</p>
+
+<div class="callout"><p><strong>Something to break.</strong> Take the
+<code>if not playing:</code> out of <code>again</code>, so it always runs
+<code>go("game")</code>. There's no error. Then, in the middle of a game,
+hold the mouse down to move your paddle. Pressing the button is a click, so
+the game starts again from 0–0, every time you go to move.</p></div>
+
+<h2 id="step-7-the-whole-game">Step 7 — the whole game</h2>
+
+<p>This is the game exactly as it is on the <a href="../../games/">games
+page</a>. It adds three things to step 6:</p>
+
+<ul>
+<li><strong>Sounds</strong>: a beep when the ball hits a paddle, a smaller
+one off the top and bottom, a thump for a point, and a rising beep at the
+end. Each is <code>loadSound</code> once at the top and
+<code>play()</code> where it happens.</li>
+<li><strong>A message at the start</strong> saying how to move, which goes
+away when the first point is scored.</li>
+<li><strong>Comments</strong> that explain why each part is there, and the
+settings gathered into one block near the top.</li>
+</ul>
+
+<pre><code class="language-python">&quot;&quot;&quot;Pong -- the first video game anyone played at home. You against the
+computer.
+
+    up and down arrows      move your paddle
+    or hold the mouse (or a finger) where you want the paddle to go
+
+Your paddle is on the left. Hit the ball back past the computer&#x27;s paddle to
+score a point. Every hit makes the ball a little faster, and where it hits
+your paddle decides where it goes: the middle sends it straight, the ends
+send it off at an angle. First to 7 wins.
+
+HOW THIS FILE IS PUT TOGETHER
+
+    1. the window and the sounds
+    2. the settings
+    3. the game scene: the paddles, the ball, bouncing, scoring
+    4. start the game
+
+There are no pictures at all. The paddles, the ball and the net are
+rectangles, and the ball is a game object that carries its own speed.
+&quot;&quot;&quot;
+
+from kaypy import *
+
+# ----------------------------------------------------------------- 1. setup
+
+kaypy(width=800, height=600, background=[20, 24, 40])
+
+loadSound(&quot;hit&quot;, &quot;sounds/beep.wav&quot;)
+loadSound(&quot;wall&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;point&quot;, &quot;sounds/thump.wav&quot;)
+loadSound(&quot;win&quot;, &quot;sounds/rising_beep.wav&quot;)
+
+
+# -------------------------------------------------------------- 2. settings
+#
+# Everything you would want to change is here. Change one at a time and
+# play it.
+
+PADDLE_W = 16          # how wide a paddle is
+PADDLE_H = 100         # and how tall
+PADDLE_GAP = 30        # how far each paddle is from its edge of the window
+PADDLE_SPEED = 480     # how fast your paddle moves, in pixels per second
+
+CPU_SPEED = 300        # how fast the computer&#x27;s paddle can move
+
+BALL_SIZE = 16
+BALL_START = 360       # how fast the ball goes at the start of each point
+BALL_GAIN = 25         # ...how much faster every hit makes it
+BALL_FASTEST = 750     # ...and the fastest it ever goes
+BALL_ANGLE = 0.75      # how steeply the ends of a paddle send the ball
+
+WIN_SCORE = 7          # first to this many points wins
+
+
+# ------------------------------------------------------- 3. the game scene
+#
+# These change while you play. A function that CHANGES one has to say
+# `global` first, which means &quot;the one up here, not a new one of my own&quot;.
+
+player_score = 0
+cpu_score = 0
+playing = True
+
+
+@scene(&quot;game&quot;)
+def game():
+    global player_score, cpu_score, playing
+
+    # A new game, so everything starts again.
+    player_score = 0
+    cpu_score = 0
+    playing = True
+
+    # The net: a dashed line down the middle. It is only a picture.
+    for y in range(10, height(), 40):
+        add([rect(4, 20), pos(width() / 2 - 2, y), color(90, 100, 130)])
+
+    # anchor(&quot;center&quot;) means pos() is the middle of the paddle, which makes
+    # &quot;is the ball within the paddle?&quot; easy to work out below.
+    player = add([rect(PADDLE_W, PADDLE_H), anchor(&quot;center&quot;),
+                  pos(PADDLE_GAP, height() / 2), color(120, 220, 255)])
+    cpu = add([rect(PADDLE_W, PADDLE_H), anchor(&quot;center&quot;),
+               pos(width() - PADDLE_GAP, height() / 2), color(255, 140, 120)])
+
+    # The ball carries its own speed: dx across and dy down, in pixels per
+    # second. A negative dx means it is going left, a negative dy up.
+    ball = add([rect(BALL_SIZE, BALL_SIZE), anchor(&quot;center&quot;),
+                pos(width() / 2, height() / 2)])
+    ball.dx = 0
+    ball.dy = 0
+
+    player_label = add([text(&quot;0&quot;, size=56), pos(width() / 2 - 60, 50),
+                        anchor(&quot;center&quot;)])
+    cpu_label = add([text(&quot;0&quot;, size=56), pos(width() / 2 + 60, 50),
+                     anchor(&quot;center&quot;)])
+
+    # width=560 wraps a long message onto more than one line.
+    message = add([text(&quot;Up and down arrows, or hold the mouse where you &quot;
+                        &quot;want your paddle. First to &quot; + str(WIN_SCORE)
+                        + &quot; wins!&quot;, size=26, width=560),
+                   pos(width() / 2, height() - 120), anchor(&quot;center&quot;),
+                   z(10)])
+
+    # -------------------------------------------------------- your paddle
+    #
+    # onKeyDown runs its function every frame the key is held, so the
+    # paddle keeps moving until you let go.
+
+    @onKeyDown(&quot;up&quot;)
+    def move_up():
+        player.move(0, -PADDLE_SPEED)
+        keep_on_screen()
+
+    @onKeyDown(&quot;down&quot;)
+    def move_down():
+        player.move(0, PADDLE_SPEED)
+        keep_on_screen()
+
+    # Holding the mouse down -- or a finger, on a phone -- moves the paddle
+    # towards it. Within 10 pixels counts as there, and the paddle stops.
+    @onMouseDown
+    def move_to_mouse():
+        if mousePos().y &lt; player.pos.y - 10:
+            player.move(0, -PADDLE_SPEED)
+        if mousePos().y &gt; player.pos.y + 10:
+            player.move(0, PADDLE_SPEED)
+        keep_on_screen()
+
+    def keep_on_screen():
+        player.pos.y = clamp(player.pos.y, PADDLE_H / 2,
+                             height() - PADDLE_H / 2)
+
+    # ------------------------------------------------- the computer&#x27;s paddle
+    #
+    # The computer follows the ball, but only when the ball is coming its
+    # way, and never faster than CPU_SPEED. That is what makes it possible
+    # to beat: a fast ball at a steep angle gets past it.
+
+    @onUpdate
+    def computer():
+        if ball.dx &gt; 0:
+            target = ball.pos.y
+        else:
+            target = height() / 2       # drift back to the middle
+        if target &lt; cpu.pos.y - 10:
+            cpu.move(0, -CPU_SPEED)
+        if target &gt; cpu.pos.y + 10:
+            cpu.move(0, CPU_SPEED)
+
+    # ------------------------------------------------------------- serving
+
+    def serve(direction):
+        # direction is 1 to serve to the right, -1 to the left. The ball
+        # starts in the middle and goes off at a random slant.
+        ball.pos = vec2(width() / 2, height() / 2)
+        ball.dx = BALL_START * direction
+        ball.dy = rand(-BALL_START / 2, BALL_START / 2)
+
+    # wait() runs a function later, and it has to be one that needs nothing
+    # handed to it. So there is one for each way the ball can be served.
+    def serve_left():
+        serve(-1)
+
+    def serve_right():
+        serve(1)
+
+    # The first serve goes towards you, a second and a half in.
+    wait(1.5, serve_left)
+
+    # ------------------------------------------------------------ the ball
+
+    @onUpdate
+    def move_ball():
+        # Where the ball is before it moves, to see what it crossed.
+        old_x = ball.pos.x
+        ball.pos.x = ball.pos.x + ball.dx * dt()
+        ball.pos.y = ball.pos.y + ball.dy * dt()
+
+        # Off the top or the bottom: turn it round. Putting it back on the
+        # edge matters. A slow frame can carry the ball well past it, and if
+        # the next frame does not bring it back inside, it is turned round
+        # again -- the wrong way -- and leaves the window.
+        if ball.pos.y &lt; BALL_SIZE / 2:
+            ball.pos.y = BALL_SIZE / 2
+            ball.dy = -ball.dy
+            play(&quot;wall&quot;)
+        if ball.pos.y &gt; height() - BALL_SIZE / 2:
+            ball.pos.y = height() - BALL_SIZE / 2
+            ball.dy = -ball.dy
+            play(&quot;wall&quot;)
+
+        # Did it just cross the front of your paddle, going left? &quot;Just
+        # crossed&quot; -- it was on one side before it moved and is on the other
+        # now -- is what matters. The ball moves 6 to 12 pixels a frame, and
+        # more on a slow one, so it is hardly ever exactly AT the front.
+        edge = player.pos.x + PADDLE_W / 2 + BALL_SIZE / 2
+        if old_x &gt;= edge and ball.pos.x &lt; edge and touching(player):
+            ball.pos.x = edge
+            bounce(player, 1)
+
+        # The front of the computer&#x27;s paddle, going right.
+        edge = cpu.pos.x - PADDLE_W / 2 - BALL_SIZE / 2
+        if old_x &lt;= edge and ball.pos.x &gt; edge and touching(cpu):
+            ball.pos.x = edge
+            bounce(cpu, -1)
+
+        # Gone off the side: a point to whoever is at the other end.
+        if ball.pos.x &lt; -BALL_SIZE:
+            point_to(&quot;cpu&quot;)
+        if ball.pos.x &gt; width() + BALL_SIZE:
+            point_to(&quot;player&quot;)
+
+    def touching(paddle):
+        # Is the ball level with the paddle? Half the paddle and half the
+        # ball, up or down from the paddle&#x27;s middle.
+        return abs(ball.pos.y - paddle.pos.y) &lt; PADDLE_H / 2 + BALL_SIZE / 2
+
+    def bounce(paddle, direction):
+        # A little faster each hit, up to BALL_FASTEST.
+        speed = abs(ball.dx) + BALL_GAIN
+        if speed &gt; BALL_FASTEST:
+            speed = BALL_FASTEST
+        ball.dx = speed * direction
+
+        # Where on the paddle it hit: -1 is the top end, 0 the middle, 1 the
+        # bottom end. That decides how steeply it comes off.
+        where = (ball.pos.y - paddle.pos.y) / (PADDLE_H / 2)
+        where = clamp(where, -1, 1)
+        ball.dy = where * speed * BALL_ANGLE
+        play(&quot;hit&quot;)
+
+    # ------------------------------------------------------------ scoring
+
+    def point_to(who):
+        global player_score, cpu_score, playing
+
+        # Park the ball in the middle, standing still, until the next serve.
+        ball.pos = vec2(width() / 2, height() / 2)
+        ball.dx = 0
+        ball.dy = 0
+        message.text = &quot;&quot;
+
+        if who == &quot;player&quot;:
+            player_score = player_score + 1
+            player_label.text = str(player_score)
+        else:
+            cpu_score = cpu_score + 1
+            cpu_label.text = str(cpu_score)
+
+        if player_score == WIN_SCORE or cpu_score == WIN_SCORE:
+            playing = False
+            ball.destroy()
+            play(&quot;win&quot;)
+            if player_score == WIN_SCORE:
+                message.text = &quot;You win! Press SPACE or click to play again&quot;
+            else:
+                message.text = (&quot;The computer wins. Press SPACE or click &quot;
+                                &quot;to play again&quot;)
+            return
+
+        play(&quot;point&quot;)
+        # The next serve goes towards whoever just lost the point.
+        if who == &quot;player&quot;:
+            wait(1, serve_right)
+        else:
+            wait(1, serve_left)
+
+    # Once the game is over, space or a click starts a new one.
+    def again():
+        if not playing:
+            go(&quot;game&quot;)
+
+    onKeyPress(&quot;space&quot;, again)
+    onClick(again)
+
+
+# ------------------------------------------------------- 4. start the game
+
+go(&quot;game&quot;)</code></pre>
+
+<h2 id="make-it-yours">Make it yours</h2>
+
+<p><a href="../../play/?game=pong">Open the whole game in the playground →</a>
+It goes straight into the editor, ready to change and run.</p>
+
+<ul>
+<li><strong>Make the computer easier or harder.</strong>
+<code>CPU_SPEED</code> is how fast it can move. Make it smaller and you'll
+beat it more often; make it bigger and you won't.</li>
+<li><strong>Change the shape of the game.</strong> A bigger
+<code>PADDLE_H</code> is easier to hit with. A bigger
+<code>BALL_GAIN</code> makes rallies get fast sooner. A smaller
+<code>WIN_SCORE</code> makes a quicker game.</li>
+<li><strong>Two players.</strong> Take out the computer's
+<code>@onUpdate</code>. Change your paddle's keys to <code>"w"</code> and
+<code>"s"</code>, so two people at one keyboard aren't in each other's way,
+and give the right-hand paddle two handlers of its own with
+<code>@onKeyDown("up")</code> and <code>@onKeyDown("down")</code>, moving
+<code>cpu</code> instead of <code>player</code>.</li>
+<li><strong>A different ball.</strong> Make it a picture: load one with
+<code>loadSprite("apple", "images/apple.png")</code> at the top and use
+<code>sprite("apple")</code> instead of <code>rect(BALL_SIZE,
+BALL_SIZE)</code>. Click <strong>Sprites</strong> in the playground to see
+what there is. If the picture is much bigger than 16 pixels, add
+<code>scale()</code> to shrink it, or change <code>BALL_SIZE</code> to
+match.</li>
+</ul>
+
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>

@@ -77,6 +77,7 @@ PAGES = [
     "api/index.html",
     "tutorials/index.html",
     "tutorials/bomb-dodge/index.html",
+    "tutorials/pong/index.html",
     "tutorials/flappy-bean/index.html",
     "tutorials/coin-rush/index.html",
     "tutorials/coin-dash/index.html",

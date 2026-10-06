@@ -172,12 +172,15 @@ def game():
 
     @onUpdate
     def move_ball():
+        # Where the ball is before it moves, to see what it crossed.
+        old_x = ball.pos.x
         ball.pos.x = ball.pos.x + ball.dx * dt()
         ball.pos.y = ball.pos.y + ball.dy * dt()
 
         # Off the top or the bottom: turn it round. Putting it back on the
-        # edge matters -- left past it, the ball can turn round again next
-        # frame, and again, and get stuck wobbling along the wall.
+        # edge matters. A slow frame can carry the ball well past it, and if
+        # the next frame does not bring it back inside, it is turned round
+        # again -- the wrong way -- and leaves the window.
         if ball.pos.y < BALL_SIZE / 2:
             ball.pos.y = BALL_SIZE / 2
             ball.dy = -ball.dy
@@ -187,19 +190,20 @@ def game():
             ball.dy = -ball.dy
             play("wall")
 
-        # Reaching your paddle, going left?
+        # Did it just cross the front of your paddle, going left? "Just
+        # crossed" -- it was on one side before it moved and is on the other
+        # now -- is what matters. The ball moves 6 to 12 pixels a frame, and
+        # more on a slow one, so it is hardly ever exactly AT the front.
         edge = player.pos.x + PADDLE_W / 2 + BALL_SIZE / 2
-        if ball.dx < 0 and ball.pos.x <= edge and ball.pos.x > edge - 20:
-            if touching(player):
-                ball.pos.x = edge
-                bounce(player, 1)
+        if old_x >= edge and ball.pos.x < edge and touching(player):
+            ball.pos.x = edge
+            bounce(player, 1)
 
-        # Reaching the computer's, going right?
+        # The front of the computer's paddle, going right.
         edge = cpu.pos.x - PADDLE_W / 2 - BALL_SIZE / 2
-        if ball.dx > 0 and ball.pos.x >= edge and ball.pos.x < edge + 20:
-            if touching(cpu):
-                ball.pos.x = edge
-                bounce(cpu, -1)
+        if old_x <= edge and ball.pos.x > edge and touching(cpu):
+            ball.pos.x = edge
+            bounce(cpu, -1)
 
         # Gone off the side: a point to whoever is at the other end.
         if ball.pos.x < -BALL_SIZE:
