@@ -225,6 +225,7 @@
    * their edits rather than loading the original over them. */
   var GAMES = {
     bomb_dodge: { title: "Bomb Dodge", file: "bomb_dodge/bomb_dodge.py" },
+    pong: { title: "Pong", file: "pong/pong.py" },
     flappy_bean: { title: "Flappy Bean", file: "flappy_bean/flappy_bean.py" },
     coin_rush: { title: "Coin Rush", file: "coin_rush/coin_rush.py" },
     coin_dash: { title: "Coin Dash", file: "coin_dash/coin_dash.py" },
