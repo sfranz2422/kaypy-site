@@ -1,11 +1,11 @@
 {
- "kaypy": "0.14.1",
- "kaypy_commit": "cb78c5f",
+ "kaypy": "0.14.2",
+ "kaypy_commit": "7a95878",
  "from": "/Users/franz/pyide",
- "vendored_at": "2026-10-02T16:37:11Z",
+ "vendored_at": "2026-10-06T11:34:54Z",
  "files": {
-  "engine/kaypy_bundle.json": "d23404a94121fb5b",
-  "engine/kaypy.json": "9ddc846b6d266178",
+  "engine/kaypy_bundle.json": "4c677304c81cc7e0",
+  "engine/kaypy.json": "03a7277900deddac",
   "play/runtime.js": "005202e983b4ff0f",
   "play/game.js": "a329002b0b960d86",
   "play/export.js": "3c3dece34f0719ce",

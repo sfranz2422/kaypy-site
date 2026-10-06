@@ -150,6 +150,32 @@ blocks = [code for code, _start in found]
 check("the page has examples", len(blocks) > 50, "%d blocks" % len(blocks))
 
 
+class _InstantClock:
+    """A frame clock that never sleeps: every frame is a sixtieth of a
+    second long, and takes no time at all to wait for."""
+
+    def tick(self, *_):
+        return 1000 / 60
+
+
+# Three seconds of game, after each example has set itself up. Building the
+# objects is not enough: offscreen(destroy=True) in kaypy 0.14.1 built fine
+# and crashed the first time the bean reached the edge -- the API page's own
+# example did it, and this file, which only ran the setup, passed it for
+# weeks. Three seconds gets that bean (500 pixels a second, from x=0) past
+# 800 plus its distance of 100.
+FRAMES = 180
+
+
+def run_frames(eng):
+    eng.clock = _InstantClock()
+    os.environ["KAYPY_TEST_MAX_FRAMES"] = str(FRAMES)
+    try:
+        eng.run()
+    finally:
+        os.environ["KAYPY_TEST_MAX_FRAMES"] = "0"
+
+
 def reset():
     if ke._engine is not None:
         ke._engine._started = True      # stop atexit re-entering the loop
@@ -199,6 +225,8 @@ for i, source in enumerate(blocks):
     _t0 = _now()
     try:
         exec(compile(full, "<%s>" % owner, "exec"), {"__name__": "__main__"})
+        if ke._engine is not None and not ke._engine._started:
+            run_frames(ke._engine)
         if os.environ.get("API_TRACE"):
             print("    %6.2fs  %s" % (_now() - _t0, owner), flush=True)
     except Exception as exc:                                    # noqa: BLE001
