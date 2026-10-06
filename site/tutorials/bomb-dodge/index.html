@@ -1,0 +1,1043 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Bomb Dodge · KayPy</title>
+<meta name="description" content="How Bomb Dodge was built, a step at a time: Bean running, bombs falling, points, getting hit, and a game that gets harder — in plain Python a student can copy.">
+<meta property="og:title" content="Building Bomb Dodge · KayPy">
+<meta property="og:description" content="How Bomb Dodge was built, a step at a time.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All eight lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li><li><a class="dropdown-item" href="../../learn/functions/">6 — Functions</a></li><li><a class="dropdown-item" href="../../learn/decorators/">7 — Decorators</a></li><li><a class="dropdown-item" href="../../learn/dictionaries/">8 — Dictionaries</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../../tutorials/" aria-current="page">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <article class="prose">
+<h1 id="building-bomb-dodge">Building Bomb Dodge</h1>
+
+<p><a href="../../static/games/bomb_dodge/">Play it first →</a> Bombs fall
+from the sky and Bean runs left and right along the grass to stay out of
+the way. Every bomb that lands on the grass is a point. The more points you
+have, the faster they fall and the more of them there are. One hit and it's
+over.</p>
+
+<p>This is how it was built, a step at a time. Every numbered step below is a
+whole program: copy it into
+<a href="../../play/">the playground</a>, press Run, and it works. Each step
+is the one before it with something added, so you can build the game the way
+it was built. Then break something on purpose and see what changes. That
+teaches you more than reading does.</p>
+
+<p>There is nothing clever in it. No list comprehensions, no tricks, and every
+kaypy function it uses is on the <a href="../../api/">API page</a>. There are
+only two pictures, Bean and the bomb.</p>
+
+<p>It is the smallest game on the site, which makes it the one to build
+first. After it, try <a href="../flappy-bean/">Flappy Bean</a>.</p>
+
+<h2 id="the-one-big-idea">The one big idea: the bombs do their own falling</h2>
+
+<p>There is no gravity in this game, and nothing is solid. Nothing has an
+<code>area()</code> or a <code>body()</code>. Each bomb moves itself a little
+way down every frame, and then asks two questions: <em>am I close to
+Bean?</em> and <em>have I reached the grass?</em> That's the whole game.
+Everything else is keeping score.</p>
+
+<h2 id="step-1-bean-runs">Step 1 — Bean runs</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+GROUND = 60           # how tall the strip of grass is
+BEAN_SPEED = 420      # how fast Bean runs, in pixels per second
+
+kaypy(width=800, height=600, background=[121, 189, 220])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+# The grass.
+add([rect(width(), GROUND), pos(0, height() - GROUND), color(96, 156, 76)])
+
+# anchor(&quot;bot&quot;) means pos() is where Bean&#x27;s feet are, so Bean stands on
+# the grass.
+bean = add([sprite(&quot;bean&quot;), pos(width() / 2, height() - GROUND),
+            anchor(&quot;bot&quot;)])
+
+
+@onUpdate
+def each_frame():
+    if isKeyDown(&quot;left&quot;):
+        bean.move(-BEAN_SPEED, 0)
+    if isKeyDown(&quot;right&quot;):
+        bean.move(BEAN_SPEED, 0)
+
+    # Holding the mouse down -- or a finger, on a phone -- runs Bean
+    # towards it.
+    if isMouseDown():
+        if mousePos().x &lt; bean.pos.x - 10:
+            bean.move(-BEAN_SPEED, 0)
+        if mousePos().x &gt; bean.pos.x + 10:
+            bean.move(BEAN_SPEED, 0)
+
+    # Keep Bean on the screen. 32 is half of Bean&#x27;s width.
+    bean.pos.x = clamp(bean.pos.x, 32, width() - 32)</code></pre>
+
+<p>Hold <strong>left</strong> or <strong>right</strong> and Bean runs. Hold
+the mouse down somewhere and Bean runs towards it. On a phone, a finger does
+the same thing.</p>
+
+<ul>
+<li><code>anchor("bot")</code> makes <code>pos()</code> mean the bottom
+middle of Bean, its feet. Put Bean's feet at <code>height() - GROUND</code>,
+the top of the grass, and Bean stands on it. No gravity is needed, because
+Bean never jumps.</li>
+<li><code>@onUpdate</code> runs <code>each_frame</code> about sixty times a
+second. <code>isKeyDown("left")</code> is true for as long as the key is
+held, so Bean keeps running until you let go.</li>
+<li><code>bean.move(-BEAN_SPEED, 0)</code> moves Bean left at
+<code>BEAN_SPEED</code> pixels per <em>second</em>. kaypy works out how far
+that is for one frame, so Bean runs at the same speed on a fast computer and
+a slow one.</li>
+<li>For the mouse, <code>mousePos().x</code> is where the mouse is, across
+the window. If it is more than 10 pixels to the left of Bean, Bean runs
+left; more than 10 to the right, Bean runs right. Within 10 pixels counts as
+there, and Bean stops.</li>
+</ul>
+
+<p><strong>The last line keeps Bean on the screen.</strong>
+<code>clamp(bean.pos.x, 32, width() - 32)</code> gives back
+<code>bean.pos.x</code>, unless it is less than 32 (then it gives 32) or more
+than 768 (then it gives 768). Bean is 64 pixels wide, so 32 is half of Bean,
+and Bean stops with its side touching the edge.</p>
+
+<div class="callout"><p><strong>Take that line out and hold left.</strong>
+There's no error message. Bean runs off the edge of the window and keeps
+going: three seconds of holding left took it to <code>x</code> = −853. Hold
+right for as long to bring it back.</p></div>
+
+<h2 id="step-2-bombs-fall">Step 2 — bombs fall</h2>
+
+<p>Every 0.9 seconds a bomb appears just above the window, somewhere along
+the top, and falls, spinning as it goes.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+GROUND = 60           # how tall the strip of grass is
+BEAN_SPEED = 420      # how fast Bean runs, in pixels per second
+BOMB_SIZE = 0.5       # how big a bomb is: 1 is the whole picture
+FALL_SPEED = 200      # how fast the bombs fall, in pixels per second
+WAIT = 0.9            # seconds between bombs
+
+kaypy(width=800, height=600, background=[121, 189, 220])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;bomb&quot;, &quot;images/bomb.png&quot;)
+
+# The grass.
+add([rect(width(), GROUND), pos(0, height() - GROUND), color(96, 156, 76)])
+
+# anchor(&quot;bot&quot;) means pos() is where Bean&#x27;s feet are, so Bean stands on
+# the grass. z(5) draws Bean in front of the bombs.
+bean = add([sprite(&quot;bean&quot;), pos(width() / 2, height() - GROUND),
+            anchor(&quot;bot&quot;), z(5)])
+
+next_bomb = 1         # seconds until the next bomb
+
+
+@onUpdate
+def each_frame():
+    global next_bomb
+
+    if isKeyDown(&quot;left&quot;):
+        bean.move(-BEAN_SPEED, 0)
+    if isKeyDown(&quot;right&quot;):
+        bean.move(BEAN_SPEED, 0)
+
+    # Holding the mouse down -- or a finger, on a phone -- runs Bean
+    # towards it.
+    if isMouseDown():
+        if mousePos().x &lt; bean.pos.x - 10:
+            bean.move(-BEAN_SPEED, 0)
+        if mousePos().x &gt; bean.pos.x + 10:
+            bean.move(BEAN_SPEED, 0)
+
+    # Keep Bean on the screen. 32 is half of Bean&#x27;s width.
+    bean.pos.x = clamp(bean.pos.x, 32, width() - 32)
+
+    # Time for another bomb?
+    next_bomb = next_bomb - dt()
+    if next_bomb &lt;= 0:
+        drop_bomb()
+        next_bomb = WAIT
+
+
+def drop_bomb():
+    # Somewhere along the top, just above the window. rotate(0) lets it
+    # spin.
+    x = rand(30, width() - 30)
+    add([sprite(&quot;bomb&quot;), pos(x, -40), anchor(&quot;center&quot;),
+         scale(BOMB_SIZE), rotate(0), &quot;bomb&quot;])
+
+
+@onUpdate(&quot;bomb&quot;)
+def fall(bomb):
+    bomb.move(0, FALL_SPEED)
+    bomb.angle = bomb.angle + 90 * dt()
+
+    # Reached the grass? Throw it away.
+    if bomb.pos.y &gt; height() - GROUND:
+        bomb.destroy()</code></pre>
+
+<p><strong>The countdown.</strong> <code>next_bomb</code> is how many seconds
+until the next bomb. <code>dt()</code> is how long the last frame took, so
+taking it away every frame counts down in real seconds. When it reaches zero,
+<code>drop_bomb()</code> makes a bomb and the countdown starts again from
+<code>WAIT</code>.</p>
+
+<p><strong>Making a bomb.</strong> <code>rand(30, width() - 30)</code> picks
+a random <code>x</code> across the top, and <code>pos(x, -40)</code> puts the
+bomb just above the window, so it falls into view rather than popping into
+it. <code>scale(BOMB_SIZE)</code> draws the picture at half size. The tag
+<code>"bomb"</code> is a name for every bomb at once.</p>
+
+<p><strong>Falling.</strong> <code>@onUpdate("bomb")</code> runs
+<code>fall</code> once a frame for <em>every</em> object tagged
+<code>"bomb"</code>, handing each one in as <code>bomb</code>. Each one moves
+down at <code>FALL_SPEED</code> and turns 90 degrees a second. When it gets
+to the grass it is destroyed. Without that, the game would keep every bomb it
+ever made, falling for ever out of sight.</p>
+
+<p>Bean now has <code>z(5)</code>. Things are drawn in the order they were
+added, so bombs, added after Bean, would be drawn over it. A higher
+<code>z</code> is drawn in front.</p>
+
+<div class="callout"><p><strong>Two things to break.</strong></p>
+<p>Take out <code>global next_bomb</code> and the game stops on its first
+frame with</p>
+<pre><code class="language-plaintext">UnboundLocalError: cannot access local variable 'next_bomb' where it is not associated with a value</code></pre>
+<p><code>each_frame</code> <em>changes</em> <code>next_bomb</code>, and a
+function that changes a variable from outside itself has to say
+<code>global</code> first. Without it, Python decides
+<code>next_bomb</code> is a new variable belonging to the function, which
+has no value yet when the function tries to take <code>dt()</code> away from
+it.</p>
+<p>Take <code>rotate(0)</code> out of the bomb's list and the first bomb to
+appear stops the game with</p>
+<pre><code class="language-plaintext">AttributeError: GameObj has no attribute 'angle' — did you forget a component that provides it?</code></pre>
+<p>A bomb only <em>has</em> an <code>angle</code> if it has
+<code>rotate()</code>. The message says exactly that, which is worth
+remembering: "has no attribute" in kaypy nearly always means a component is
+missing from the list.</p></div>
+
+<p>Bombs fall straight through Bean for now. That's step 4.</p>
+
+<h2 id="step-3-points">Step 3 — points</h2>
+
+<p>Every bomb that reaches the grass is a point, and the score goes at the
+top of the window.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+GROUND = 60           # how tall the strip of grass is
+BEAN_SPEED = 420      # how fast Bean runs, in pixels per second
+BOMB_SIZE = 0.5       # how big a bomb is: 1 is the whole picture
+FALL_SPEED = 200      # how fast the bombs fall, in pixels per second
+WAIT = 0.9            # seconds between bombs
+
+kaypy(width=800, height=600, background=[121, 189, 220])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;bomb&quot;, &quot;images/bomb.png&quot;)
+
+# The grass.
+add([rect(width(), GROUND), pos(0, height() - GROUND), color(96, 156, 76)])
+
+# anchor(&quot;bot&quot;) means pos() is where Bean&#x27;s feet are, so Bean stands on
+# the grass. z(5) draws Bean in front of the bombs.
+bean = add([sprite(&quot;bean&quot;), pos(width() / 2, height() - GROUND),
+            anchor(&quot;bot&quot;), z(5)])
+
+score_label = add([text(&quot;0&quot;, size=48), pos(width() / 2, 40),
+                   anchor(&quot;center&quot;), z(10)])
+
+score = 0
+next_bomb = 1         # seconds until the next bomb
+
+
+@onUpdate
+def each_frame():
+    global next_bomb
+
+    if isKeyDown(&quot;left&quot;):
+        bean.move(-BEAN_SPEED, 0)
+    if isKeyDown(&quot;right&quot;):
+        bean.move(BEAN_SPEED, 0)
+
+    # Holding the mouse down -- or a finger, on a phone -- runs Bean
+    # towards it.
+    if isMouseDown():
+        if mousePos().x &lt; bean.pos.x - 10:
+            bean.move(-BEAN_SPEED, 0)
+        if mousePos().x &gt; bean.pos.x + 10:
+            bean.move(BEAN_SPEED, 0)
+
+    # Keep Bean on the screen. 32 is half of Bean&#x27;s width.
+    bean.pos.x = clamp(bean.pos.x, 32, width() - 32)
+
+    # Time for another bomb?
+    next_bomb = next_bomb - dt()
+    if next_bomb &lt;= 0:
+        drop_bomb()
+        next_bomb = WAIT
+
+
+def drop_bomb():
+    # Somewhere along the top, just above the window. rotate(0) lets it
+    # spin.
+    x = rand(30, width() - 30)
+    add([sprite(&quot;bomb&quot;), pos(x, -40), anchor(&quot;center&quot;),
+         scale(BOMB_SIZE), rotate(0), &quot;bomb&quot;])
+
+
+@onUpdate(&quot;bomb&quot;)
+def fall(bomb):
+    global score
+
+    bomb.move(0, FALL_SPEED)
+    bomb.angle = bomb.angle + 90 * dt()
+
+    # Reached the grass? That is a point.
+    if bomb.pos.y &gt; height() - GROUND:
+        bomb.destroy()
+        score = score + 1
+        score_label.text = str(score)</code></pre>
+
+<p>Three things were added: <code>score = 0</code>, a
+<code>text()</code> object to show it, and three lines in <code>fall</code>
+where a bomb reaches the grass. <code>score_label.text = str(score)</code>
+changes what the label says. <code>str()</code> turns the number into text,
+because <code>text</code> has to be text.</p>
+
+<p><code>fall</code> now changes <code>score</code>, so it says
+<code>global score</code>, for the same reason as <code>next_bomb</code> in
+step 2. Leave it out and nothing goes wrong until the first bomb lands —
+nearly four seconds in — and then:</p>
+
+<pre><code class="language-plaintext">UnboundLocalError: cannot access local variable 'score' where it is not associated with a value</code></pre>
+
+<p>Stand still and watch: bombs go straight through Bean, and you get the
+points anyway. Not much of a game yet.</p>
+
+<h2 id="step-4-getting-hit-and-playing-again">Step 4 — getting hit, and playing again</h2>
+
+<p>A bomb that gets close enough to Bean now blows up, and the game is over.
+Press <strong>space</strong> or click to play again.</p>
+
+<p>Playing again means throwing away every bomb and building everything
+fresh. That's what a <strong>scene</strong> is for. Everything from the
+grass down moves inside <code>@scene("game")</code>, one step further in,
+and <code>go("game")</code> at the bottom builds it. Calling
+<code>go("game")</code> again throws the whole scene away and builds it from
+the start.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+GROUND = 60           # how tall the strip of grass is
+BEAN_SPEED = 420      # how fast Bean runs, in pixels per second
+BOMB_SIZE = 0.5       # how big a bomb is: 1 is the whole picture
+HIT_DISTANCE = 42     # how close a bomb has to get to Bean to hit it
+FALL_SPEED = 200      # how fast the bombs fall, in pixels per second
+WAIT = 0.9            # seconds between bombs
+
+kaypy(width=800, height=600, background=[121, 189, 220])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;bomb&quot;, &quot;images/bomb.png&quot;)
+loadSound(&quot;boom&quot;, &quot;sounds/small_boom.wav&quot;)
+
+score = 0
+alive = True
+next_bomb = 0         # seconds until the next bomb
+
+
+@scene(&quot;game&quot;)
+def game():
+    global score, alive, next_bomb
+
+    # A new game, so everything starts again.
+    score = 0
+    alive = True
+    next_bomb = 1
+
+    # The grass.
+    add([rect(width(), GROUND), pos(0, height() - GROUND),
+         color(96, 156, 76)])
+
+    # anchor(&quot;bot&quot;) means pos() is where Bean&#x27;s feet are, so Bean stands
+    # on the grass. z(5) draws Bean in front of the bombs.
+    bean = add([sprite(&quot;bean&quot;), pos(width() / 2, height() - GROUND),
+                anchor(&quot;bot&quot;), z(5)])
+
+    score_label = add([text(&quot;0&quot;, size=48), pos(width() / 2, 40),
+                       anchor(&quot;center&quot;), z(10)])
+
+    # width=560 wraps a long message onto more than one line.
+    message = add([text(&quot;&quot;, size=26, width=560),
+                   pos(width() / 2, height() / 2), anchor(&quot;center&quot;), z(10)])
+
+    @onUpdate
+    def each_frame():
+        global next_bomb
+
+        if not alive:
+            return
+
+        if isKeyDown(&quot;left&quot;):
+            bean.move(-BEAN_SPEED, 0)
+        if isKeyDown(&quot;right&quot;):
+            bean.move(BEAN_SPEED, 0)
+
+        # Holding the mouse down -- or a finger, on a phone -- runs Bean
+        # towards it.
+        if isMouseDown():
+            if mousePos().x &lt; bean.pos.x - 10:
+                bean.move(-BEAN_SPEED, 0)
+            if mousePos().x &gt; bean.pos.x + 10:
+                bean.move(BEAN_SPEED, 0)
+
+        # Keep Bean on the screen. 32 is half of Bean&#x27;s width.
+        bean.pos.x = clamp(bean.pos.x, 32, width() - 32)
+
+        # Time for another bomb?
+        next_bomb = next_bomb - dt()
+        if next_bomb &lt;= 0:
+            drop_bomb()
+            next_bomb = WAIT
+
+    def drop_bomb():
+        # Somewhere along the top, just above the window. rotate(0) lets it
+        # spin.
+        x = rand(30, width() - 30)
+        add([sprite(&quot;bomb&quot;), pos(x, -40), anchor(&quot;center&quot;),
+             scale(BOMB_SIZE), rotate(0), &quot;bomb&quot;])
+
+    @onUpdate(&quot;bomb&quot;)
+    def fall(bomb):
+        global score
+
+        if not alive:
+            return
+
+        bomb.move(0, FALL_SPEED)
+        bomb.angle = bomb.angle + 90 * dt()
+
+        # Close enough to Bean to hit it? 27 pixels up from Bean&#x27;s feet is
+        # the middle of Bean.
+        middle = vec2(bean.pos.x, bean.pos.y - 27)
+        if bomb.pos.dist(middle) &lt; HIT_DISTANCE:
+            hit(bomb)
+            return
+
+        # Reached the grass? That is a point.
+        if bomb.pos.y &gt; height() - GROUND:
+            bomb.destroy()
+            score = score + 1
+            score_label.text = str(score)
+
+    def hit(bomb):
+        global alive
+
+        alive = False
+        play(&quot;boom&quot;)
+        shake(12)
+        addKaboom(bomb.pos)
+
+        # Bean goes, and so does every bomb still falling.
+        bean.destroy()
+        destroyAll(&quot;bomb&quot;)
+
+        message.text = (str(score)
+                        + &quot; points -- press SPACE or click to play again&quot;)
+
+    # Once the game is over, space or a click starts a new one.
+    def again():
+        if not alive:
+            go(&quot;game&quot;)
+
+    onKeyPress(&quot;space&quot;, again)
+    onClick(again)
+
+
+go(&quot;game&quot;)</code></pre>
+
+<p><strong>Close enough.</strong> <code>bean.pos</code> is Bean's feet, so
+27 pixels up, half of Bean's height, is the middle of Bean.
+<code>bomb.pos.dist(middle)</code> is how far the middle of the bomb is from
+the middle of Bean, in a straight line. Less than <code>HIT_DISTANCE</code>,
+42 pixels, is a hit. Make <code>HIT_DISTANCE</code> bigger and the bombs get
+you from further away; smaller, and you can get away with near misses.</p>
+
+<p><strong>One hit.</strong> <code>hit()</code> does everything that
+happens when you lose: a sound, a shake, an explosion where the bomb was,
+and then Bean and every bomb are destroyed. <code>destroyAll("bomb")</code>
+gets rid of everything tagged <code>"bomb"</code> in one line.</p>
+
+<p><strong><code>alive</code></strong> is what stops the game. Once it is
+<code>False</code>, <code>each_frame</code> returns straight away, so Bean
+can't move and no more bombs are dropped. <code>fall</code> checks it too.
+With every bomb destroyed it never has anything to do, but it keeps the rule
+simple: once <code>alive</code> is <code>False</code>, nothing moves. And
+<code>again</code> only starts a new game when you are not
+<code>alive</code>, so clicking to move Bean doesn't restart the game you are
+in the middle of.</p>
+
+<p><strong>The variables live outside the scene.</strong>
+<code>score</code>, <code>alive</code> and <code>next_bomb</code> are made at
+the top, and the scene sets them back to their starting values every time it
+is built. Leave out <code>score = 0</code> inside the scene and the next
+game carries on from the last one's score. The label says 0 at the start,
+because it is made new, but if the last game ended on 19 points, the first
+bomb to land makes it 20.</p>
+
+<div class="callout"><p><strong>Take out <code>destroyAll("bomb")</code></strong>
+and there's no error. The bombs that were still falling stop where they are,
+because <code>fall</code> does nothing once <code>alive</code> is
+<code>False</code>, and hang in the air over the game-over message.</p></div>
+
+<h2 id="step-5-harder-as-you-go">Step 5 — harder as you go</h2>
+
+<p>The fall speed and the time between bombs were fixed numbers. Now each
+one is worked out from the score by a small function.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+GROUND = 60           # how tall the strip of grass is
+BEAN_SPEED = 420      # how fast Bean runs, in pixels per second
+BOMB_SIZE = 0.5       # how big a bomb is: 1 is the whole picture
+HIT_DISTANCE = 42     # how close a bomb has to get to Bean to hit it
+FALL_START = 200      # how fast the bombs fall, to begin with
+FALL_FASTEST = 520    # ...the fastest they ever fall
+FALL_GAIN = 8         # ...and how much faster each point makes them
+
+WAIT_START = 0.9      # seconds between bombs, to begin with
+WAIT_SHORTEST = 0.3   # ...the shortest wait there ever is
+WAIT_DROP = 0.015     # ...and how much shorter each point makes it
+
+kaypy(width=800, height=600, background=[121, 189, 220])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;bomb&quot;, &quot;images/bomb.png&quot;)
+loadSound(&quot;boom&quot;, &quot;sounds/small_boom.wav&quot;)
+
+score = 0
+
+
+def fall_speed():
+    speed = FALL_START + score * FALL_GAIN
+    if speed &gt; FALL_FASTEST:
+        speed = FALL_FASTEST
+    return speed
+
+
+def bomb_wait():
+    seconds = WAIT_START - score * WAIT_DROP
+    if seconds &lt; WAIT_SHORTEST:
+        seconds = WAIT_SHORTEST
+    return seconds
+
+
+alive = True
+next_bomb = 0         # seconds until the next bomb
+
+
+@scene(&quot;game&quot;)
+def game():
+    global score, alive, next_bomb
+
+    # A new game, so everything starts again.
+    score = 0
+    alive = True
+    next_bomb = 1
+
+    # The grass.
+    add([rect(width(), GROUND), pos(0, height() - GROUND),
+         color(96, 156, 76)])
+
+    # anchor(&quot;bot&quot;) means pos() is where Bean&#x27;s feet are, so Bean stands
+    # on the grass. z(5) draws Bean in front of the bombs.
+    bean = add([sprite(&quot;bean&quot;), pos(width() / 2, height() - GROUND),
+                anchor(&quot;bot&quot;), z(5)])
+
+    score_label = add([text(&quot;0&quot;, size=48), pos(width() / 2, 40),
+                       anchor(&quot;center&quot;), z(10)])
+
+    # width=560 wraps a long message onto more than one line.
+    message = add([text(&quot;&quot;, size=26, width=560),
+                   pos(width() / 2, height() / 2), anchor(&quot;center&quot;), z(10)])
+
+    @onUpdate
+    def each_frame():
+        global next_bomb
+
+        if not alive:
+            return
+
+        if isKeyDown(&quot;left&quot;):
+            bean.move(-BEAN_SPEED, 0)
+        if isKeyDown(&quot;right&quot;):
+            bean.move(BEAN_SPEED, 0)
+
+        # Holding the mouse down -- or a finger, on a phone -- runs Bean
+        # towards it.
+        if isMouseDown():
+            if mousePos().x &lt; bean.pos.x - 10:
+                bean.move(-BEAN_SPEED, 0)
+            if mousePos().x &gt; bean.pos.x + 10:
+                bean.move(BEAN_SPEED, 0)
+
+        # Keep Bean on the screen. 32 is half of Bean&#x27;s width.
+        bean.pos.x = clamp(bean.pos.x, 32, width() - 32)
+
+        # Time for another bomb?
+        next_bomb = next_bomb - dt()
+        if next_bomb &lt;= 0:
+            drop_bomb()
+            next_bomb = bomb_wait()
+
+    def drop_bomb():
+        # Somewhere along the top, just above the window. rotate(0) lets it
+        # spin.
+        x = rand(30, width() - 30)
+        add([sprite(&quot;bomb&quot;), pos(x, -40), anchor(&quot;center&quot;),
+             scale(BOMB_SIZE), rotate(0), &quot;bomb&quot;])
+
+    @onUpdate(&quot;bomb&quot;)
+    def fall(bomb):
+        global score
+
+        if not alive:
+            return
+
+        bomb.move(0, fall_speed())
+        bomb.angle = bomb.angle + 90 * dt()
+
+        # Close enough to Bean to hit it? 27 pixels up from Bean&#x27;s feet is
+        # the middle of Bean.
+        middle = vec2(bean.pos.x, bean.pos.y - 27)
+        if bomb.pos.dist(middle) &lt; HIT_DISTANCE:
+            hit(bomb)
+            return
+
+        # Reached the grass? That is a point.
+        if bomb.pos.y &gt; height() - GROUND:
+            bomb.destroy()
+            score = score + 1
+            score_label.text = str(score)
+
+    def hit(bomb):
+        global alive
+
+        alive = False
+        play(&quot;boom&quot;)
+        shake(12)
+        addKaboom(bomb.pos)
+
+        # Bean goes, and so does every bomb still falling.
+        bean.destroy()
+        destroyAll(&quot;bomb&quot;)
+
+        message.text = (str(score)
+                        + &quot; points -- press SPACE or click to play again&quot;)
+
+    # Once the game is over, space or a click starts a new one.
+    def again():
+        if not alive:
+            go(&quot;game&quot;)
+
+    onKeyPress(&quot;space&quot;, again)
+    onClick(again)
+
+
+go(&quot;game&quot;)</code></pre>
+
+<p>Take <code>fall_speed()</code>. It starts at <code>FALL_START</code>, 200
+pixels a second, and adds 8 for every point. At 10 points that's
+<code>200 + 10 * 8</code>, which is 280. At 50 points it would be 600, but
+the <code>if</code> stops it at <code>FALL_FASTEST</code>, 520.
+<code>bomb_wait()</code> works the same way: 0.9 seconds between bombs to
+begin with, 0.015 less for every point, and never less than 0.3.</p>
+
+<p>Those stops matter. Without them the bombs keep getting faster and closer
+together until nobody could dodge them. With them, the game gets hard by
+about 40 points and then stays there, which is a game people keep playing.</p>
+
+<p>The two functions are outside the scene, near the top, with the other
+settings. They only <em>read</em> <code>score</code>, so they don't need
+<code>global</code>. Only a function that changes a variable does.</p>
+
+<h2 id="step-6-the-whole-game">Step 6 — the whole game</h2>
+
+<p>This is the game exactly as it is on the <a href="../../games/">games
+page</a>. It adds three things to step 5:</p>
+
+<ul>
+<li><strong>A best score that is remembered.</strong>
+<code>getData(BEST_KEY, 0)</code> reads the best score saved last time, or 0
+if there isn't one, and <code>setData</code> saves a new one when you beat
+it. <code>BEST_KEY</code> is <code>"bomb_dodge_best"</code> rather than just
+<code>"best"</code>, because every game on a website shares the same storage,
+and another game saving its own <code>"best"</code> would overwrite
+yours.</li>
+<li><strong>A message at the start</strong> saying how to move, which goes
+away when you score your first point.</li>
+<li><strong>"1 point", not "1 points".</strong> An <code>if</code> picks the
+right word.</li>
+</ul>
+
+<p>It also has all the numbers worth changing in one settings block near the
+top, and comments that explain why each part is there.</p>
+
+<pre><code class="language-python">&quot;&quot;&quot;Bomb Dodge -- bombs fall from the sky. Don&#x27;t get hit.
+
+    left and right arrows   move
+    or hold the mouse (or a finger) where you want Bean to go
+
+Every bomb that lands on the grass instead of on Bean is a point. The more
+points you have, the faster the bombs fall and the more of them there are.
+One hit and it is game over. Your best score is remembered.
+
+HOW THIS FILE IS PUT TOGETHER
+
+    1. the window, the pictures and the sound
+    2. the settings
+    3. how hard the game is
+    4. the game scene: Bean, the bombs, points, getting hit
+    5. start the game
+
+This is the smallest game on the site, and a good one to start from. Swap
+the bomb for an apple, make Bean faster, make the bombs bigger -- every
+number is in the settings.
+&quot;&quot;&quot;
+
+from kaypy import *
+
+# ----------------------------------------------------------------- 1. setup
+
+kaypy(width=800, height=600, background=[121, 189, 220])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;bomb&quot;, &quot;images/bomb.png&quot;)
+loadSound(&quot;boom&quot;, &quot;sounds/small_boom.wav&quot;)
+
+
+# -------------------------------------------------------------- 2. settings
+#
+# Everything you would want to change is here. Change one at a time and
+# play it.
+
+GROUND = 60            # how tall the strip of grass is
+BEAN_SPEED = 420       # how fast Bean runs, in pixels per second
+
+BOMB_SIZE = 0.5        # how big a bomb is: 1 is the whole picture
+HIT_DISTANCE = 42      # how close a bomb has to get to Bean to hit it
+
+FALL_START = 200       # how fast the bombs fall, to begin with
+FALL_FASTEST = 520     # ...the fastest they ever fall
+FALL_GAIN = 8          # ...and how much faster each point makes them
+
+WAIT_START = 0.9       # seconds between bombs, to begin with
+WAIT_SHORTEST = 0.3    # ...the shortest wait there ever is
+WAIT_DROP = 0.015      # ...and how much shorter each point makes it
+
+# The name the best score is saved under. Every game on a website shares
+# the same storage, so the game&#x27;s own name goes in it.
+BEST_KEY = &quot;bomb_dodge_best&quot;
+
+
+# -------------------------------------------------- 3. how hard the game is
+#
+# Each of these works out a number from the score. They get harder as the
+# score goes up, and they stop somewhere, so the game ends up hard but never
+# impossible.
+
+score = 0
+
+
+def fall_speed():
+    speed = FALL_START + score * FALL_GAIN
+    if speed &gt; FALL_FASTEST:
+        speed = FALL_FASTEST
+    return speed
+
+
+def bomb_wait():
+    seconds = WAIT_START - score * WAIT_DROP
+    if seconds &lt; WAIT_SHORTEST:
+        seconds = WAIT_SHORTEST
+    return seconds
+
+
+# ------------------------------------------------------- 4. the game scene
+#
+# These change while you play. A function that CHANGES one has to say
+# `global` first, which means &quot;the one up here, not a new one of my own&quot;.
+
+alive = True
+next_bomb = 0       # seconds until the next bomb
+
+
+@scene(&quot;game&quot;)
+def game():
+    global score, alive, next_bomb
+
+    # A new game, so everything starts again.
+    score = 0
+    alive = True
+    next_bomb = 1
+    best = getData(BEST_KEY, 0)
+
+    # The grass. It is only a picture: nothing here uses area() or body(),
+    # because the code below works out for itself what is touching what.
+    add([rect(width(), GROUND), pos(0, height() - GROUND),
+         color(96, 156, 76)])
+
+    # anchor(&quot;bot&quot;) means pos() is where Bean&#x27;s feet are, so Bean stands
+    # on the grass. z(5) draws Bean in front of the bombs.
+    bean = add([sprite(&quot;bean&quot;), pos(width() / 2, height() - GROUND),
+                anchor(&quot;bot&quot;), z(5)])
+
+    score_label = add([text(&quot;0&quot;, size=48), pos(width() / 2, 40),
+                       anchor(&quot;center&quot;), z(10)])
+    best_label = add([text(&quot;best &quot; + str(best), size=18), pos(12, 12),
+                      opacity(0.75), z(10)])
+
+    # width=560 wraps a long message onto more than one line.
+    message = add([text(&quot;Arrow keys to move, or hold the mouse where you &quot;
+                        &quot;want to go. Don&#x27;t get hit!&quot;, size=26, width=560),
+                   pos(width() / 2, height() / 2), anchor(&quot;center&quot;), z(10)])
+
+    # --------------------------------------------------------- every frame
+
+    @onUpdate
+    def each_frame():
+        global next_bomb
+
+        if not alive:
+            return
+
+        # Running. isKeyDown() is true for as long as the key is held.
+        if isKeyDown(&quot;left&quot;):
+            bean.move(-BEAN_SPEED, 0)
+        if isKeyDown(&quot;right&quot;):
+            bean.move(BEAN_SPEED, 0)
+
+        # Holding the mouse down -- or a finger, on a phone -- runs Bean
+        # towards it, and stops once it is within 10 pixels -- close
+        # enough to count as under your finger.
+        if isMouseDown():
+            if mousePos().x &lt; bean.pos.x - 10:
+                bean.move(-BEAN_SPEED, 0)
+            if mousePos().x &gt; bean.pos.x + 10:
+                bean.move(BEAN_SPEED, 0)
+
+        # Keep Bean on the screen. 32 is half of Bean&#x27;s width.
+        bean.pos.x = clamp(bean.pos.x, 32, width() - 32)
+
+        # Time for another bomb? dt() is how long this frame took, so
+        # taking it away every frame counts down in real seconds.
+        next_bomb = next_bomb - dt()
+        if next_bomb &lt;= 0:
+            drop_bomb()
+            next_bomb = bomb_wait()
+
+    # --------------------------------------------------------------- bombs
+
+    def drop_bomb():
+        # Somewhere along the top, just above the window so it falls in
+        # rather than popping into view. rotate(0) lets it spin.
+        x = rand(30, width() - 30)
+        add([sprite(&quot;bomb&quot;), pos(x, -40), anchor(&quot;center&quot;),
+             scale(BOMB_SIZE), rotate(0), &quot;bomb&quot;])
+
+    # Every bomb runs this, every frame.
+    @onUpdate(&quot;bomb&quot;)
+    def fall(bomb):
+        global score
+
+        if not alive:
+            return
+
+        bomb.move(0, fall_speed())
+        bomb.angle = bomb.angle + 90 * dt()
+
+        # Close enough to Bean to hit it? Bean&#x27;s pos() is its feet, so
+        # 27 pixels up -- half its height -- is the middle of Bean.
+        middle = vec2(bean.pos.x, bean.pos.y - 27)
+        if bomb.pos.dist(middle) &lt; HIT_DISTANCE:
+            hit(bomb)
+            return
+
+        # Reached the grass without hitting Bean? That is a point.
+        if bomb.pos.y &gt; height() - GROUND:
+            bomb.destroy()
+            score = score + 1
+            score_label.text = str(score)
+            if score == 1:
+                message.text = &quot;&quot;
+
+    # -------------------------------------------------------- getting hit
+
+    def hit(bomb):
+        global alive
+
+        alive = False
+        play(&quot;boom&quot;)
+        shake(12)
+        addKaboom(bomb.pos)
+
+        # Bean goes, and so does every bomb still falling. Left where they
+        # are, they hang in the air and cover up the message below.
+        bean.destroy()
+        destroyAll(&quot;bomb&quot;)
+
+        if score &gt; best:
+            setData(BEST_KEY, score)
+            best_label.text = &quot;best &quot; + str(score)
+
+        if score == 1:
+            message.text = &quot;1 point -- press SPACE or click to play again&quot;
+        else:
+            message.text = (str(score)
+                            + &quot; points -- press SPACE or click to play again&quot;)
+
+    # Once the game is over, space or a click starts a new one.
+    def again():
+        if not alive:
+            go(&quot;game&quot;)
+
+    onKeyPress(&quot;space&quot;, again)
+    onClick(again)
+
+
+# ------------------------------------------------------- 5. start the game
+
+go(&quot;game&quot;)</code></pre>
+
+<h2 id="make-it-yours">Make it yours</h2>
+
+<p><a href="../../play/?game=bomb_dodge">Open the whole game in the playground →</a>
+It goes straight into the editor, ready to change and run.</p>
+
+<ul>
+<li><strong>Change the numbers.</strong> Make <code>BEAN_SPEED</code> 250
+and Bean feels heavy; make it 700 and Bean darts about. Make
+<code>BOMB_SIZE</code> 1 and the bombs are twice the size, and then
+<code>HIT_DISTANCE</code> wants to be bigger to match.</li>
+<li><strong>Something else falls.</strong> Change
+<code>"images/bomb.png"</code> to <code>"images/apple.png"</code> or
+<code>"images/pizza.png"</code>. Click <strong>Sprites</strong> in the
+playground to see what there is.</li>
+<li><strong>A sound for each point.</strong> <code>loadSound("point",
+"sounds/small_beep.wav")</code> near the top, and <code>play("point")</code>
+where a bomb reaches the grass.</li>
+<li><strong>Some bombs fall faster than others.</strong> Give each bomb its
+own speed when it is made, with <code>{"speed": rand(150, 300)}</code> in its
+list, and use <code>bomb.speed</code> in <code>fall</code> instead of
+<code>fall_speed()</code>.</li>
+</ul>
+
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>

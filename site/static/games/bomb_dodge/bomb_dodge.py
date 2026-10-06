@@ -133,8 +133,8 @@ def game():
             bean.move(BEAN_SPEED, 0)
 
         # Holding the mouse down -- or a finger, on a phone -- runs Bean
-        # towards it. The 10 stops Bean twitching from side to side once
-        # it is already there.
+        # towards it, and stops once it is within 10 pixels -- close
+        # enough to count as under your finger.
         if isMouseDown():
             if mousePos().x < bean.pos.x - 10:
                 bean.move(-BEAN_SPEED, 0)
