@@ -9,8 +9,9 @@ of it, so plant pineapples first, then beans to shoot the zombies. Each row
 has a lawnmower that clears the row the first time a zombie gets through --
 but only the first time. If a zombie reaches the house, the level is lost.
 
-Every level brings a new plant and a new kind of zombie. The level you
-reached is remembered.
+There are eight levels. Each of the first four brings a new plant, and
+every level after that a new kind of zombie. The level you reached is
+remembered.
 
 THE PLANTS
 
@@ -19,6 +20,15 @@ THE PLANTS
     brock       a wall: takes a long time to eat
     bomb        blows up every zombie in the squares around it
     onion       shoots icy peas that slow zombies down
+
+THE ZOMBIES
+
+    zombie          the ordinary kind
+    tiny zombie     fast, but only takes 5 peas
+    big zombie      slow, and takes 30
+    skeleton        quick, and takes 12
+    ice zombie      icy peas don't slow it down
+    ogre            very slow, and takes 60 peas -- or one bomb
 
 HOW THIS FILE IS PUT TOGETHER
 
@@ -73,6 +83,15 @@ loadSprite("tiny_zombie", "dungeon/tiny_zombie.png", sliceX=8, anims={
 loadSprite("big_zombie", "dungeon/big_zombie.png", sliceX=8, anims={
     "walk": {"from": 4, "to": 7, "speed": 6, "loop": True},
 })
+loadSprite("skelet", "dungeon/skelet.png", sliceX=8, anims={
+    "walk": {"from": 4, "to": 7, "speed": 10, "loop": True},
+})
+loadSprite("ice_zombie", "dungeon/ice_zombie.png", sliceX=4, anims={
+    "walk": {"from": 0, "to": 3, "speed": 6, "loop": True},
+})
+loadSprite("dungeon_ogre", "dungeon/dungeon_ogre.png", sliceX=8, anims={
+    "walk": {"from": 4, "to": 7, "speed": 5, "loop": True},
+})
 
 loadSound("collect", "sounds/small_beep.wav")
 loadSound("plant", "sounds/thump.wav")
@@ -114,28 +133,38 @@ PLANTS = {
               "scale": 0.6, "w": 77, "h": 101},
 }
 
-# Each zombie: how many peas it takes, and how fast it walks.
+# Each zombie: how many peas it takes, how fast it walks, and whether an
+# icy pea slows it down.
 ZOMBIES = {
-    "zombie": {"hp": 10, "speed": 16, "scale": 4},
-    "tiny_zombie": {"hp": 5, "speed": 32, "scale": 3},
-    "big_zombie": {"hp": 30, "speed": 10, "scale": 2.2},
+    "zombie": {"hp": 10, "speed": 16, "scale": 4, "slows": True},
+    "tiny_zombie": {"hp": 5, "speed": 32, "scale": 3, "slows": True},
+    "big_zombie": {"hp": 30, "speed": 10, "scale": 2.2, "slows": True},
+    "skelet": {"hp": 12, "speed": 22, "scale": 4, "slows": True},
+    "ice_zombie": {"hp": 15, "speed": 18, "scale": 4, "slows": False},
+    "dungeon_ogre": {"hp": 60, "speed": 8, "scale": 2.2, "slows": True},
 }
 
-# Each level: the plants you can use, and the waves of zombies. A wave is
-# a list of the zombies in it; they come one after another, in random rows.
-# The last wave of every level is the big one.
+# Each level: the plants you can use, the waves of zombies, and the news
+# you're told when you reach it. A wave is a list of the zombies in it; they
+# come one after another, in random rows. The last wave of every level is
+# the big one.
 LEVELS = [
     {"plants": ["pineapple", "bean"],
+     "news": "",
      "waves": [["zombie"], ["zombie"], ["zombie", "zombie"], ["zombie"],
                ["zombie", "zombie"],
                ["zombie", "zombie", "zombie", "zombie"]]},
     {"plants": ["pineapple", "bean", "brock"],
+     "news": "You have a new plant: the brock. It doesn't shoot, "
+             "but it takes zombies a long time to eat.",
      "waves": [["zombie"], ["tiny_zombie"], ["zombie", "zombie"],
                ["tiny_zombie", "zombie"],
                ["zombie", "tiny_zombie", "zombie"],
                ["zombie", "zombie", "tiny_zombie", "tiny_zombie",
                 "zombie"]]},
     {"plants": ["pineapple", "bean", "brock", "bomb"],
+     "news": "You have a new plant: the bomb. It blows up every zombie "
+             "in the squares around it.",
      "waves": [["zombie"], ["zombie", "tiny_zombie"], ["big_zombie"],
                ["zombie", "zombie", "tiny_zombie"],
                ["big_zombie", "zombie"],
@@ -143,6 +172,8 @@ LEVELS = [
                ["big_zombie", "big_zombie", "zombie", "zombie",
                 "tiny_zombie", "tiny_zombie"]]},
     {"plants": ["pineapple", "bean", "brock", "bomb", "onion"],
+     "news": "You have a new plant: the onion. Its icy peas slow zombies "
+             "down.",
      "waves": [["zombie", "zombie"], ["tiny_zombie", "tiny_zombie"],
                ["big_zombie", "zombie"],
                ["zombie", "zombie", "tiny_zombie", "zombie"],
@@ -153,6 +184,55 @@ LEVELS = [
                ["big_zombie", "big_zombie", "big_zombie", "zombie",
                 "zombie", "zombie", "tiny_zombie", "tiny_zombie",
                 "tiny_zombie"]]},
+    {"plants": ["pineapple", "bean", "brock", "bomb", "onion"],
+     "news": "Skeletons are coming! They're quick, and it takes 12 peas "
+             "to stop one.",
+     "waves": [["zombie"], ["skelet"],
+               ["zombie", "tiny_zombie", "skelet"],
+               ["big_zombie", "skelet"],
+               ["skelet", "skelet", "zombie"],
+               ["tiny_zombie", "tiny_zombie", "skelet", "zombie"],
+               ["big_zombie", "skelet", "skelet", "zombie"],
+               ["skelet", "skelet", "skelet", "big_zombie", "zombie",
+                "zombie", "tiny_zombie", "tiny_zombie", "skelet"]]},
+    {"plants": ["pineapple", "bean", "brock", "bomb", "onion"],
+     "news": "Ice zombies are coming! Icy peas don't slow them down.",
+     "waves": [["zombie"], ["ice_zombie"], ["skelet", "zombie"],
+               ["big_zombie", "ice_zombie"],
+               ["ice_zombie", "tiny_zombie", "tiny_zombie"],
+               ["skelet", "ice_zombie", "zombie"],
+               ["big_zombie", "ice_zombie", "skelet"],
+               ["ice_zombie", "ice_zombie", "zombie", "zombie", "skelet"],
+               ["ice_zombie", "ice_zombie", "ice_zombie", "big_zombie",
+                "skelet", "skelet", "zombie", "zombie", "tiny_zombie"]]},
+    {"plants": ["pineapple", "bean", "brock", "bomb", "onion"],
+     "news": "An ogre is coming! It takes 60 peas to stop one -- "
+             "or one bomb.",
+     "waves": [["zombie"], ["zombie", "skelet"], ["ice_zombie", "zombie"],
+               ["big_zombie", "tiny_zombie", "tiny_zombie"],
+               ["dungeon_ogre"],
+               ["skelet", "ice_zombie", "zombie"],
+               ["big_zombie", "big_zombie", "zombie"],
+               ["dungeon_ogre", "skelet", "zombie"],
+               ["dungeon_ogre", "dungeon_ogre", "big_zombie", "big_zombie",
+                "ice_zombie", "ice_zombie", "skelet", "skelet", "zombie",
+                "zombie"]]},
+    {"plants": ["pineapple", "bean", "brock", "bomb", "onion"],
+     "news": "The last level: everything at once. Good luck!",
+     "waves": [["zombie", "zombie", "zombie"], ["skelet", "skelet"],
+               ["ice_zombie", "big_zombie"],
+               ["tiny_zombie", "tiny_zombie", "tiny_zombie", "skelet"],
+               ["dungeon_ogre", "zombie", "zombie"],
+               ["big_zombie", "big_zombie", "ice_zombie", "skelet"],
+               ["skelet", "skelet", "skelet", "ice_zombie", "ice_zombie"],
+               ["dungeon_ogre", "big_zombie", "zombie", "zombie",
+                "tiny_zombie", "tiny_zombie"],
+               ["dungeon_ogre", "dungeon_ogre", "ice_zombie", "skelet",
+                "skelet"],
+               ["dungeon_ogre", "dungeon_ogre", "dungeon_ogre",
+                "big_zombie", "big_zombie", "ice_zombie", "ice_zombie",
+                "skelet", "skelet", "skelet", "zombie", "zombie",
+                "tiny_zombie", "tiny_zombie"]]},
 ]
 
 LEVEL_KEY = "garden_guard_level"
@@ -242,12 +322,10 @@ def level_won():
     over = True
     play("win")
     if level + 1 < len(LEVELS):
-        new_plant = LEVELS[level + 1]["plants"][-1]
         level = level + 1
         setData(LEVEL_KEY, level)
 
-        @say("Level " + str(level) + " cleared!\n\n"
-             "You have a new plant: the " + new_plant + ".",
+        @say("Level " + str(level) + " cleared!\n\n" + LEVELS[level]["news"],
              button="Next level")
         def next_level():
             start_level()
@@ -501,7 +579,7 @@ def hit(pea, zombie):
         return
     pea.destroy()
     zombie.hurt(1)
-    if pea.icy:
+    if pea.icy and ZOMBIES[zombie.kind]["slows"]:
         zombie.slow_left = SLOW_TIME
     if not zombie.isAlive():
         zombie.destroy()
