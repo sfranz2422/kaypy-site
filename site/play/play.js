@@ -475,7 +475,7 @@
 
     status("");
     clearOutput();
-    write("Game running. Click the picture first so the keys reach it.\n", "dim");
+    write("Game running. Click the picture to play, and the editor to type.\n", "dim");
     stage.hidden = false;
     /* SDL takes the keyboard for the canvas while a game runs, so a text
        field in the output pane would collect nothing. input() falls back to a
