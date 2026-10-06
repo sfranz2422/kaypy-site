@@ -97,13 +97,20 @@ only two pictures, Bean and the bomb.</p>
 <p>It is the smallest game on the site, which makes it the one to build
 first. After it, try <a href="../flappy-bean/">Flappy Bean</a>.</p>
 
-<h2 id="the-one-big-idea">The one big idea: the bombs do their own falling</h2>
+<h2 id="the-one-big-idea">The one big idea: kaypy calls you</h2>
 
-<p>There is no gravity in this game, and nothing is solid. Nothing has an
+<p>You never write a loop that checks the keyboard sixty times a second.
+You write a function, and tell kaypy <em>when</em> to run it:
+<code>@onKeyDown("left")</code> says "run this every frame the left arrow is
+held", and <code>wait(1, drop_bomb)</code> says "run this in a second". The
+game is a handful of small functions like that, each one doing a single
+job.</p>
+
+<p>There is no gravity, and nothing is solid. Nothing has an
 <code>area()</code> or a <code>body()</code>. Each bomb moves itself a little
-way down every frame, and then asks two questions: <em>am I close to
-Bean?</em> and <em>have I reached the grass?</em> That's the whole game.
-Everything else is keeping score.</p>
+way down every frame, and asks two questions: <em>am I close to Bean?</em>
+and <em>have I reached the grass?</em> That's the whole game. Everything else
+is keeping score.</p>
 
 <h2 id="step-1-bean-runs">Step 1 — Bean runs</h2>
 
@@ -125,22 +132,31 @@ bean = add([sprite(&quot;bean&quot;), pos(width() / 2, height() - GROUND),
             anchor(&quot;bot&quot;)])
 
 
-@onUpdate
-def each_frame():
-    if isKeyDown(&quot;left&quot;):
+@onKeyDown(&quot;left&quot;)
+def run_left():
+    bean.move(-BEAN_SPEED, 0)
+    keep_on_screen()
+
+
+@onKeyDown(&quot;right&quot;)
+def run_right():
+    bean.move(BEAN_SPEED, 0)
+    keep_on_screen()
+
+
+# Holding the mouse down -- or a finger, on a phone -- runs Bean
+# towards it. Within 10 pixels counts as there, and Bean stops.
+@onMouseDown
+def run_to_mouse():
+    if mousePos().x &lt; bean.pos.x - 10:
         bean.move(-BEAN_SPEED, 0)
-    if isKeyDown(&quot;right&quot;):
+    if mousePos().x &gt; bean.pos.x + 10:
         bean.move(BEAN_SPEED, 0)
+    keep_on_screen()
 
-    # Holding the mouse down -- or a finger, on a phone -- runs Bean
-    # towards it.
-    if isMouseDown():
-        if mousePos().x &lt; bean.pos.x - 10:
-            bean.move(-BEAN_SPEED, 0)
-        if mousePos().x &gt; bean.pos.x + 10:
-            bean.move(BEAN_SPEED, 0)
 
-    # Keep Bean on the screen. 32 is half of Bean&#x27;s width.
+def keep_on_screen():
+    # 32 is half of Bean&#x27;s width.
     bean.pos.x = clamp(bean.pos.x, 32, width() - 32)</code></pre>
 
 <p>Hold <strong>left</strong> or <strong>right</strong> and Bean runs. Hold
@@ -152,29 +168,38 @@ the same thing.</p>
 middle of Bean, its feet. Put Bean's feet at <code>height() - GROUND</code>,
 the top of the grass, and Bean stands on it. No gravity is needed, because
 Bean never jumps.</li>
-<li><code>@onUpdate</code> runs <code>each_frame</code> about sixty times a
-second. <code>isKeyDown("left")</code> is true for as long as the key is
-held, so Bean keeps running until you let go.</li>
+<li><code>@onKeyDown("left")</code> runs <code>run_left</code> every frame
+the left arrow is held down, about sixty times a second, so Bean keeps
+running until you let go. <code>@onKeyDown("right")</code> does the same for
+the right arrow.</li>
 <li><code>bean.move(-BEAN_SPEED, 0)</code> moves Bean left at
 <code>BEAN_SPEED</code> pixels per <em>second</em>. kaypy works out how far
 that is for one frame, so Bean runs at the same speed on a fast computer and
 a slow one.</li>
-<li>For the mouse, <code>mousePos().x</code> is where the mouse is, across
-the window. If it is more than 10 pixels to the left of Bean, Bean runs
-left; more than 10 to the right, Bean runs right. Within 10 pixels counts as
-there, and Bean stops.</li>
+<li><code>@onMouseDown</code> runs <code>run_to_mouse</code> every frame the
+mouse button is held, or a finger is on the screen.
+<code>mousePos().x</code> is where it is, across the window. More than 10
+pixels to the left of Bean and Bean runs left; more than 10 to the right and
+Bean runs right. Within 10 pixels counts as there, and Bean stops.</li>
 </ul>
 
-<p><strong>The last line keeps Bean on the screen.</strong>
+<p><strong><code>keep_on_screen()</code> stops Bean at the edges.</strong>
+All three handlers call it straight after moving.
 <code>clamp(bean.pos.x, 32, width() - 32)</code> gives back
 <code>bean.pos.x</code>, unless it is less than 32 (then it gives 32) or more
 than 768 (then it gives 768). Bean is 64 pixels wide, so 32 is half of Bean,
-and Bean stops with its side touching the edge.</p>
+and Bean stops with its side touching the edge. It is a function of its own
+so that the three handlers can share it rather than each having a copy.</p>
 
-<div class="callout"><p><strong>Take that line out and hold left.</strong>
-There's no error message. Bean runs off the edge of the window and keeps
-going: three seconds of holding left took it to <code>x</code> = −853. Hold
-right for as long to bring it back.</p></div>
+<div class="callout"><p><strong>Two things to break.</strong></p>
+<p>Take <code>keep_on_screen()</code> out of <code>run_left</code> and hold
+left. There's no error message. Bean runs off the edge of the window and
+keeps going: three seconds of holding left took it to <code>x</code> = −853.
+Hold right for as long to bring it back.</p>
+<p>Write <code>@onKeyDown</code> without the <code>("left")</code>. There's
+no error message either, and the left arrow does nothing at all. kaypy
+needs to be told <em>which</em> key; without it, the function is never
+connected to the keyboard.</p></div>
 
 <h2 id="step-2-bombs-fall">Step 2 — bombs fall</h2>
 
@@ -202,34 +227,33 @@ add([rect(width(), GROUND), pos(0, height() - GROUND), color(96, 156, 76)])
 bean = add([sprite(&quot;bean&quot;), pos(width() / 2, height() - GROUND),
             anchor(&quot;bot&quot;), z(5)])
 
-next_bomb = 1         # seconds until the next bomb
+
+@onKeyDown(&quot;left&quot;)
+def run_left():
+    bean.move(-BEAN_SPEED, 0)
+    keep_on_screen()
 
 
-@onUpdate
-def each_frame():
-    global next_bomb
+@onKeyDown(&quot;right&quot;)
+def run_right():
+    bean.move(BEAN_SPEED, 0)
+    keep_on_screen()
 
-    if isKeyDown(&quot;left&quot;):
+
+# Holding the mouse down -- or a finger, on a phone -- runs Bean
+# towards it. Within 10 pixels counts as there, and Bean stops.
+@onMouseDown
+def run_to_mouse():
+    if mousePos().x &lt; bean.pos.x - 10:
         bean.move(-BEAN_SPEED, 0)
-    if isKeyDown(&quot;right&quot;):
+    if mousePos().x &gt; bean.pos.x + 10:
         bean.move(BEAN_SPEED, 0)
+    keep_on_screen()
 
-    # Holding the mouse down -- or a finger, on a phone -- runs Bean
-    # towards it.
-    if isMouseDown():
-        if mousePos().x &lt; bean.pos.x - 10:
-            bean.move(-BEAN_SPEED, 0)
-        if mousePos().x &gt; bean.pos.x + 10:
-            bean.move(BEAN_SPEED, 0)
 
-    # Keep Bean on the screen. 32 is half of Bean&#x27;s width.
+def keep_on_screen():
+    # 32 is half of Bean&#x27;s width.
     bean.pos.x = clamp(bean.pos.x, 32, width() - 32)
-
-    # Time for another bomb?
-    next_bomb = next_bomb - dt()
-    if next_bomb &lt;= 0:
-        drop_bomb()
-        next_bomb = WAIT
 
 
 def drop_bomb():
@@ -238,6 +262,13 @@ def drop_bomb():
     x = rand(30, width() - 30)
     add([sprite(&quot;bomb&quot;), pos(x, -40), anchor(&quot;center&quot;),
          scale(BOMB_SIZE), rotate(0), &quot;bomb&quot;])
+
+    # And the next one, a little later.
+    wait(WAIT, drop_bomb)
+
+
+# The first bomb, a second after the game starts.
+wait(1, drop_bomb)
 
 
 @onUpdate(&quot;bomb&quot;)
@@ -249,11 +280,11 @@ def fall(bomb):
     if bomb.pos.y &gt; height() - GROUND:
         bomb.destroy()</code></pre>
 
-<p><strong>The countdown.</strong> <code>next_bomb</code> is how many seconds
-until the next bomb. <code>dt()</code> is how long the last frame took, so
-taking it away every frame counts down in real seconds. When it reaches zero,
-<code>drop_bomb()</code> makes a bomb and the countdown starts again from
-<code>WAIT</code>.</p>
+<p><strong>One bomb leads to the next.</strong> <code>wait(1,
+drop_bomb)</code> at the bottom runs <code>drop_bomb</code> once, a second
+after the game starts. <code>drop_bomb</code> makes a bomb, and its last line
+is <code>wait(WAIT, drop_bomb)</code>: run me again in 0.9 seconds. So every
+bomb arranges the next one, and they keep coming without a loop anywhere.</p>
 
 <p><strong>Making a bomb.</strong> <code>rand(30, width() - 30)</code> picks
 a random <code>x</code> across the top, and <code>pos(x, -40)</code> puts the
@@ -273,15 +304,14 @@ added, so bombs, added after Bean, would be drawn over it. A higher
 <code>z</code> is drawn in front.</p>
 
 <div class="callout"><p><strong>Two things to break.</strong></p>
-<p>Take out <code>global next_bomb</code> and the game stops on its first
-frame with</p>
-<pre><code class="language-plaintext">UnboundLocalError: cannot access local variable 'next_bomb' where it is not associated with a value</code></pre>
-<p><code>each_frame</code> <em>changes</em> <code>next_bomb</code>, and a
-function that changes a variable from outside itself has to say
-<code>global</code> first. Without it, Python decides
-<code>next_bomb</code> is a new variable belonging to the function, which
-has no value yet when the function tries to take <code>dt()</code> away from
-it.</p>
+<p>Put brackets after <code>drop_bomb</code> in the last line:
+<code>wait(WAIT, drop_bomb())</code>. A second in, the game stops with</p>
+<pre><code class="language-plaintext">RecursionError: maximum recursion depth exceeded</code></pre>
+<p>Without brackets, <code>wait()</code> is handed the <em>function</em>, to
+run later. With them, Python runs <code>drop_bomb</code> right now, to find
+out what to hand over. That <code>drop_bomb</code> gets to its last line and
+runs <code>drop_bomb</code> right now too, and so on, without ever stopping,
+until Python gives up. "Recursion" means a function running itself.</p>
 <p>Take <code>rotate(0)</code> out of the bomb's list and the first bomb to
 appear stops the game with</p>
 <pre><code class="language-plaintext">AttributeError: GameObj has no attribute 'angle' — did you forget a component that provides it?</code></pre>
@@ -322,34 +352,34 @@ score_label = add([text(&quot;0&quot;, size=48), pos(width() / 2, 40),
                    anchor(&quot;center&quot;), z(10)])
 
 score = 0
-next_bomb = 1         # seconds until the next bomb
 
 
-@onUpdate
-def each_frame():
-    global next_bomb
+@onKeyDown(&quot;left&quot;)
+def run_left():
+    bean.move(-BEAN_SPEED, 0)
+    keep_on_screen()
 
-    if isKeyDown(&quot;left&quot;):
+
+@onKeyDown(&quot;right&quot;)
+def run_right():
+    bean.move(BEAN_SPEED, 0)
+    keep_on_screen()
+
+
+# Holding the mouse down -- or a finger, on a phone -- runs Bean
+# towards it. Within 10 pixels counts as there, and Bean stops.
+@onMouseDown
+def run_to_mouse():
+    if mousePos().x &lt; bean.pos.x - 10:
         bean.move(-BEAN_SPEED, 0)
-    if isKeyDown(&quot;right&quot;):
+    if mousePos().x &gt; bean.pos.x + 10:
         bean.move(BEAN_SPEED, 0)
+    keep_on_screen()
 
-    # Holding the mouse down -- or a finger, on a phone -- runs Bean
-    # towards it.
-    if isMouseDown():
-        if mousePos().x &lt; bean.pos.x - 10:
-            bean.move(-BEAN_SPEED, 0)
-        if mousePos().x &gt; bean.pos.x + 10:
-            bean.move(BEAN_SPEED, 0)
 
-    # Keep Bean on the screen. 32 is half of Bean&#x27;s width.
+def keep_on_screen():
+    # 32 is half of Bean&#x27;s width.
     bean.pos.x = clamp(bean.pos.x, 32, width() - 32)
-
-    # Time for another bomb?
-    next_bomb = next_bomb - dt()
-    if next_bomb &lt;= 0:
-        drop_bomb()
-        next_bomb = WAIT
 
 
 def drop_bomb():
@@ -358,6 +388,13 @@ def drop_bomb():
     x = rand(30, width() - 30)
     add([sprite(&quot;bomb&quot;), pos(x, -40), anchor(&quot;center&quot;),
          scale(BOMB_SIZE), rotate(0), &quot;bomb&quot;])
+
+    # And the next one, a little later.
+    wait(WAIT, drop_bomb)
+
+
+# The first bomb, a second after the game starts.
+wait(1, drop_bomb)
 
 
 @onUpdate(&quot;bomb&quot;)
@@ -379,10 +416,13 @@ where a bomb reaches the grass. <code>score_label.text = str(score)</code>
 changes what the label says. <code>str()</code> turns the number into text,
 because <code>text</code> has to be text.</p>
 
-<p><code>fall</code> now changes <code>score</code>, so it says
-<code>global score</code>, for the same reason as <code>next_bomb</code> in
-step 2. Leave it out and nothing goes wrong until the first bomb lands —
-nearly four seconds in — and then:</p>
+<p><code>fall</code> now <em>changes</em> <code>score</code>, so it says
+<code>global score</code> first. <code>score</code> was made outside the
+function, and a function that changes a variable from outside itself has to
+say <code>global</code>. Without it, Python decides <code>score</code> is a
+new variable belonging to <code>fall</code>, which has no value yet when
+<code>fall</code> tries to add 1 to it. Leave it out and nothing goes wrong
+until the first bomb lands — nearly four seconds in — and then:</p>
 
 <pre><code class="language-plaintext">UnboundLocalError: cannot access local variable 'score' where it is not associated with a value</code></pre>
 
@@ -418,17 +458,15 @@ loadSound(&quot;boom&quot;, &quot;sounds/small_boom.wav&quot;)
 
 score = 0
 alive = True
-next_bomb = 0         # seconds until the next bomb
 
 
 @scene(&quot;game&quot;)
 def game():
-    global score, alive, next_bomb
+    global score, alive
 
     # A new game, so everything starts again.
     score = 0
     alive = True
-    next_bomb = 1
 
     # The grass.
     add([rect(width(), GROUND), pos(0, height() - GROUND),
@@ -446,41 +484,47 @@ def game():
     message = add([text(&quot;&quot;, size=26, width=560),
                    pos(width() / 2, height() / 2), anchor(&quot;center&quot;), z(10)])
 
-    @onUpdate
-    def each_frame():
-        global next_bomb
+    @onKeyDown(&quot;left&quot;)
+    def run_left():
+        bean.move(-BEAN_SPEED, 0)
+        keep_on_screen()
 
+    @onKeyDown(&quot;right&quot;)
+    def run_right():
+        bean.move(BEAN_SPEED, 0)
+        keep_on_screen()
+
+    # Holding the mouse down -- or a finger, on a phone -- runs Bean
+    # towards it. Within 10 pixels counts as there, and Bean stops.
+    @onMouseDown
+    def run_to_mouse():
+        if mousePos().x &lt; bean.pos.x - 10:
+            bean.move(-BEAN_SPEED, 0)
+        if mousePos().x &gt; bean.pos.x + 10:
+            bean.move(BEAN_SPEED, 0)
+        keep_on_screen()
+
+    def keep_on_screen():
+        # 32 is half of Bean&#x27;s width.
+        bean.pos.x = clamp(bean.pos.x, 32, width() - 32)
+
+    def drop_bomb():
+        # Game over: no bomb, and no wait() for the next one either, so
+        # the bombs stop here.
         if not alive:
             return
 
-        if isKeyDown(&quot;left&quot;):
-            bean.move(-BEAN_SPEED, 0)
-        if isKeyDown(&quot;right&quot;):
-            bean.move(BEAN_SPEED, 0)
-
-        # Holding the mouse down -- or a finger, on a phone -- runs Bean
-        # towards it.
-        if isMouseDown():
-            if mousePos().x &lt; bean.pos.x - 10:
-                bean.move(-BEAN_SPEED, 0)
-            if mousePos().x &gt; bean.pos.x + 10:
-                bean.move(BEAN_SPEED, 0)
-
-        # Keep Bean on the screen. 32 is half of Bean&#x27;s width.
-        bean.pos.x = clamp(bean.pos.x, 32, width() - 32)
-
-        # Time for another bomb?
-        next_bomb = next_bomb - dt()
-        if next_bomb &lt;= 0:
-            drop_bomb()
-            next_bomb = WAIT
-
-    def drop_bomb():
         # Somewhere along the top, just above the window. rotate(0) lets it
         # spin.
         x = rand(30, width() - 30)
         add([sprite(&quot;bomb&quot;), pos(x, -40), anchor(&quot;center&quot;),
              scale(BOMB_SIZE), rotate(0), &quot;bomb&quot;])
+
+        # And the next one, a little later.
+        wait(WAIT, drop_bomb)
+
+    # The first bomb, a second after the game starts.
+    wait(1, drop_bomb)
 
     @onUpdate(&quot;bomb&quot;)
     def fall(bomb):
@@ -544,21 +588,27 @@ and then Bean and every bomb are destroyed. <code>destroyAll("bomb")</code>
 gets rid of everything tagged <code>"bomb"</code> in one line.</p>
 
 <p><strong><code>alive</code></strong> is what stops the game. Once it is
-<code>False</code>, <code>each_frame</code> returns straight away, so Bean
-can't move and no more bombs are dropped. <code>fall</code> checks it too.
-With every bomb destroyed it never has anything to do, but it keeps the rule
-simple: once <code>alive</code> is <code>False</code>, nothing moves. And
-<code>again</code> only starts a new game when you are not
-<code>alive</code>, so clicking to move Bean doesn't restart the game you are
-in the middle of.</p>
+<code>False</code>, <code>drop_bomb</code> returns straight away, before
+making a bomb <em>and</em> before its <code>wait()</code>, so the chain of
+bombs ends there. <code>fall</code> checks it too. With every bomb destroyed
+it never has anything to do, but it keeps the rule simple: once
+<code>alive</code> is <code>False</code>, nothing falls. The key handlers
+don't need to check: Bean has been destroyed, so there is nothing left on
+the screen for them to move. And <code>again</code> only starts a new game
+when you are not <code>alive</code>, so clicking to move Bean doesn't restart
+the game you are in the middle of.</p>
+
+<p><strong>Starting again clears everything.</strong> <code>go("game")</code>
+throws away every object, every handler and every <code>wait()</code> still
+waiting, before it builds the scene again. So a new game never has the old
+game's bombs, or a second chain of them, still going.</p>
 
 <p><strong>The variables live outside the scene.</strong>
-<code>score</code>, <code>alive</code> and <code>next_bomb</code> are made at
-the top, and the scene sets them back to their starting values every time it
-is built. Leave out <code>score = 0</code> inside the scene and the next
-game carries on from the last one's score. The label says 0 at the start,
-because it is made new, but if the last game ended on 19 points, the first
-bomb to land makes it 20.</p>
+<code>score</code> and <code>alive</code> are made at the top, and the scene
+sets them back to their starting values every time it is built. Leave out
+<code>score = 0</code> inside the scene and the next game carries on from the
+last one's score. The label says 0 at the start, because it is made new, but
+if the last game ended on 9 points, the first bomb to land makes it 10.</p>
 
 <div class="callout"><p><strong>Take out <code>destroyAll("bomb")</code></strong>
 and there's no error. The bombs that were still falling stop where they are,
@@ -608,17 +658,15 @@ def bomb_wait():
 
 
 alive = True
-next_bomb = 0         # seconds until the next bomb
 
 
 @scene(&quot;game&quot;)
 def game():
-    global score, alive, next_bomb
+    global score, alive
 
     # A new game, so everything starts again.
     score = 0
     alive = True
-    next_bomb = 1
 
     # The grass.
     add([rect(width(), GROUND), pos(0, height() - GROUND),
@@ -636,41 +684,47 @@ def game():
     message = add([text(&quot;&quot;, size=26, width=560),
                    pos(width() / 2, height() / 2), anchor(&quot;center&quot;), z(10)])
 
-    @onUpdate
-    def each_frame():
-        global next_bomb
+    @onKeyDown(&quot;left&quot;)
+    def run_left():
+        bean.move(-BEAN_SPEED, 0)
+        keep_on_screen()
 
+    @onKeyDown(&quot;right&quot;)
+    def run_right():
+        bean.move(BEAN_SPEED, 0)
+        keep_on_screen()
+
+    # Holding the mouse down -- or a finger, on a phone -- runs Bean
+    # towards it. Within 10 pixels counts as there, and Bean stops.
+    @onMouseDown
+    def run_to_mouse():
+        if mousePos().x &lt; bean.pos.x - 10:
+            bean.move(-BEAN_SPEED, 0)
+        if mousePos().x &gt; bean.pos.x + 10:
+            bean.move(BEAN_SPEED, 0)
+        keep_on_screen()
+
+    def keep_on_screen():
+        # 32 is half of Bean&#x27;s width.
+        bean.pos.x = clamp(bean.pos.x, 32, width() - 32)
+
+    def drop_bomb():
+        # Game over: no bomb, and no wait() for the next one either, so
+        # the bombs stop here.
         if not alive:
             return
 
-        if isKeyDown(&quot;left&quot;):
-            bean.move(-BEAN_SPEED, 0)
-        if isKeyDown(&quot;right&quot;):
-            bean.move(BEAN_SPEED, 0)
-
-        # Holding the mouse down -- or a finger, on a phone -- runs Bean
-        # towards it.
-        if isMouseDown():
-            if mousePos().x &lt; bean.pos.x - 10:
-                bean.move(-BEAN_SPEED, 0)
-            if mousePos().x &gt; bean.pos.x + 10:
-                bean.move(BEAN_SPEED, 0)
-
-        # Keep Bean on the screen. 32 is half of Bean&#x27;s width.
-        bean.pos.x = clamp(bean.pos.x, 32, width() - 32)
-
-        # Time for another bomb?
-        next_bomb = next_bomb - dt()
-        if next_bomb &lt;= 0:
-            drop_bomb()
-            next_bomb = bomb_wait()
-
-    def drop_bomb():
         # Somewhere along the top, just above the window. rotate(0) lets it
         # spin.
         x = rand(30, width() - 30)
         add([sprite(&quot;bomb&quot;), pos(x, -40), anchor(&quot;center&quot;),
              scale(BOMB_SIZE), rotate(0), &quot;bomb&quot;])
+
+        # And the next one, a little later.
+        wait(bomb_wait(), drop_bomb)
+
+    # The first bomb, a second after the game starts.
+    wait(1, drop_bomb)
 
     @onUpdate(&quot;bomb&quot;)
     def fall(bomb):
@@ -726,7 +780,9 @@ pixels a second, and adds 8 for every point. At 10 points that's
 <code>200 + 10 * 8</code>, which is 280. At 50 points it would be 600, but
 the <code>if</code> stops it at <code>FALL_FASTEST</code>, 520.
 <code>bomb_wait()</code> works the same way: 0.9 seconds between bombs to
-begin with, 0.015 less for every point, and never less than 0.3.</p>
+begin with, 0.015 less for every point, and never less than 0.3. It is
+called in <code>drop_bomb</code>'s <code>wait()</code>, so each bomb works
+out how long until the next one from the score at the moment it falls.</p>
 
 <p>Those stops matter. Without them the bombs keep getting faster and closer
 together until nobody could dodge them. With them, the game gets hard by
@@ -844,17 +900,15 @@ def bomb_wait():
 # `global` first, which means &quot;the one up here, not a new one of my own&quot;.
 
 alive = True
-next_bomb = 0       # seconds until the next bomb
 
 
 @scene(&quot;game&quot;)
 def game():
-    global score, alive, next_bomb
+    global score, alive
 
     # A new game, so everything starts again.
     score = 0
     alive = True
-    next_bomb = 1
     best = getData(BEST_KEY, 0)
 
     # The grass. It is only a picture: nothing here uses area() or body(),
@@ -877,48 +931,55 @@ def game():
                         &quot;want to go. Don&#x27;t get hit!&quot;, size=26, width=560),
                    pos(width() / 2, height() / 2), anchor(&quot;center&quot;), z(10)])
 
-    # --------------------------------------------------------- every frame
+    # ------------------------------------------------------------ running
+    #
+    # onKeyDown runs its function every frame the key is held, so Bean
+    # keeps running until you let go.
 
-    @onUpdate
-    def each_frame():
-        global next_bomb
+    @onKeyDown(&quot;left&quot;)
+    def run_left():
+        bean.move(-BEAN_SPEED, 0)
+        keep_on_screen()
 
-        if not alive:
-            return
+    @onKeyDown(&quot;right&quot;)
+    def run_right():
+        bean.move(BEAN_SPEED, 0)
+        keep_on_screen()
 
-        # Running. isKeyDown() is true for as long as the key is held.
-        if isKeyDown(&quot;left&quot;):
+    # Holding the mouse down -- or a finger, on a phone -- runs Bean
+    # towards it. Within 10 pixels counts as there, and Bean stops.
+    @onMouseDown
+    def run_to_mouse():
+        if mousePos().x &lt; bean.pos.x - 10:
             bean.move(-BEAN_SPEED, 0)
-        if isKeyDown(&quot;right&quot;):
+        if mousePos().x &gt; bean.pos.x + 10:
             bean.move(BEAN_SPEED, 0)
+        keep_on_screen()
 
-        # Holding the mouse down -- or a finger, on a phone -- runs Bean
-        # towards it, and stops once it is within 10 pixels -- close
-        # enough to count as under your finger.
-        if isMouseDown():
-            if mousePos().x &lt; bean.pos.x - 10:
-                bean.move(-BEAN_SPEED, 0)
-            if mousePos().x &gt; bean.pos.x + 10:
-                bean.move(BEAN_SPEED, 0)
-
-        # Keep Bean on the screen. 32 is half of Bean&#x27;s width.
+    def keep_on_screen():
+        # 32 is half of Bean&#x27;s width.
         bean.pos.x = clamp(bean.pos.x, 32, width() - 32)
-
-        # Time for another bomb? dt() is how long this frame took, so
-        # taking it away every frame counts down in real seconds.
-        next_bomb = next_bomb - dt()
-        if next_bomb &lt;= 0:
-            drop_bomb()
-            next_bomb = bomb_wait()
 
     # --------------------------------------------------------------- bombs
 
     def drop_bomb():
+        # Game over: no bomb, and no wait() for the next one either, so
+        # the bombs stop here.
+        if not alive:
+            return
+
         # Somewhere along the top, just above the window so it falls in
         # rather than popping into view. rotate(0) lets it spin.
         x = rand(30, width() - 30)
         add([sprite(&quot;bomb&quot;), pos(x, -40), anchor(&quot;center&quot;),
              scale(BOMB_SIZE), rotate(0), &quot;bomb&quot;])
+
+        # And the next one, a little later. No brackets after drop_bomb:
+        # wait() is handed the function, to run when the time is up.
+        wait(bomb_wait(), drop_bomb)
+
+    # The first bomb, a second after the game starts.
+    wait(1, drop_bomb)
 
     # Every bomb runs this, every frame.
     @onUpdate(&quot;bomb&quot;)
