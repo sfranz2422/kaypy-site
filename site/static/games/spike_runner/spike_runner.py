@@ -5,21 +5,22 @@
 The cube never stops running. Jump over the spikes, onto the blocks and
 across the gaps. In mid-air, a yellow orb gives you a second jump: hold
 jump as you go through it. Touch a spike, run into the side of a
-block or fall into a gap, and you start again from the beginning. The bar
-at the top shows how far you got, and your best is remembered.
+block or fall into a gap, and you start that level again. Finish a level
+and the next one starts, a little harder. The bar at the top shows how far
+you got, and your best on each level is remembered.
 
 HOW THIS FILE IS PUT TOGETHER
 
     1. the window, the pictures and the sounds
     2. the settings
-    3. the level, in sections
+    3. the levels, in sections
     4. what each letter turns into
     5. the run: the cube, jumping, crashing, the camera, the progress bar
     6. start the game
 
-The level is a row of short sections, each a picture made of letters. Add
-a section, swap two round, or draw a new one -- you never have to touch the
-code to change the level.
+Each level is a row of short sections, each a picture made of letters. Add
+a section, swap two round, draw a new one, or make a whole new level -- you
+never have to touch the code to change the levels.
 """
 
 from kaypy import *
@@ -49,18 +50,20 @@ loadSound("win", "sounds/rising_beep.wav")
 # Every number worth changing is here.
 
 SPEED = 420           # how fast the cube runs, in pixels per second
-JUMP = 1000           # how hard a jump is: two and a half tiles high
+JUMP = 1100           # how hard a jump is: about three tiles high
 ORB_JUMP = 1150       # how hard an orb throws you, a little more
 SPIN = 520            # how fast the cube turns in the air, degrees a second
-SPIKE_REACH = 22      # how close to a spike's middle counts as touching it
+SPIKE_REACH = 16      # how close to a spike's middle counts as touching it
+ORB_REACH = 56        # how close to an orb counts as going through it
 MUSIC = False         # True plays music -- see the loadSound line above
 
 # The name the best score is saved under. Every game on a website shares
-# the same storage, so the game's own name goes in it.
-BEST_KEY = "spike_runner_best"
+# the same storage, so the game's own name goes in it. Each level gets its
+# own best: the level's number goes on the end, as in spike_runner_best_2.
+BEST_KEY = "spike_runner_best_"
 
 
-# --------------------------------------------------------- 3. the level
+# -------------------------------------------------------- 3. the levels
 #
 # One letter is one tile.
 #
@@ -70,7 +73,7 @@ BEST_KEY = "spike_runner_best"
 # A space is empty. The bottom row is the floor: leave a gap in it and the
 # cube can fall through.
 #
-# The level is a row of SECTIONS, joined end to end. Every section has to
+# A level is a row of sections, joined end to end. Every section has to
 # have the same number of rows -- 9 -- but each can be as wide as you like.
 
 START = [
@@ -166,7 +169,7 @@ ORB_GAP = [
     "       o            ",
     "                    ",
     "                    ",
-    "#####       ########",
+    "#####      #########",
 ]
 
 TUNNEL = [
@@ -202,7 +205,43 @@ ORB_CHAIN = [
     "       o   o            ",
     "                        ",
     "                        ",
-    "#####          #########",
+    "#####         ##########",
+]
+
+HOPS = [
+    "                        ",
+    "                        ",
+    "                        ",
+    "                        ",
+    "                        ",
+    "                        ",
+    "                        ",
+    "                        ",
+    "#####  ###  ###  #######",
+]
+
+PILLARS = [
+    "                        ",
+    "                        ",
+    "                        ",
+    "                        ",
+    "                        ",
+    "                        ",
+    "                        ",
+    "     ##^^^##^^^##       ",
+    "########################",
+]
+
+ORB_SPIKES = [
+    "                    ",
+    "                    ",
+    "                    ",
+    "                    ",
+    "                    ",
+    "       o            ",
+    "                    ",
+    "     ^^^^^^         ",
+    "####################",
 ]
 
 FINISH = [
@@ -217,15 +256,31 @@ FINISH = [
     "####################",
 ]
 
-SECTIONS = [
-    START, ONE_SPIKE, ONE_SPIKE, TWO_SPIKES, STEPS, GAP, THREE_SPIKES,
-    PLATFORMS, ORB_GAP, TWO_SPIKES, TUNNEL, GAP, STAIRS_UP, ORB_CHAIN,
-    THREE_SPIKES, PLATFORMS, ORB_GAP, STEPS, FINISH,
+# A level is a list of sections, played left to right. LEVELS is the list
+# of levels, easiest first; each starts with START and ends with FINISH.
+# The names are shown as the level begins, in the same order.
+
+LEVELS = [
+    [START, ONE_SPIKE, ONE_SPIKE, TWO_SPIKES, GAP, ONE_SPIKE, TWO_SPIKES,
+     FINISH],
+    [START, ONE_SPIKE, STEPS, GAP, TWO_SPIKES, PLATFORMS, THREE_SPIKES,
+     FINISH],
+    [START, TWO_SPIKES, ORB_GAP, GAP, ORB_GAP, THREE_SPIKES, ORB_CHAIN,
+     FINISH],
+    [START, STEPS, TUNNEL, HOPS, STAIRS_UP, ORB_SPIKES, GAP, FINISH],
+    [START, HOPS, PILLARS, ORB_CHAIN, TUNNEL, ORB_SPIKES, PILLARS, STAIRS_UP,
+     FINISH],
+    [START, ONE_SPIKE, TWO_SPIKES, STEPS, GAP, THREE_SPIKES, PLATFORMS,
+     ORB_GAP, TWO_SPIKES, TUNNEL, GAP, STAIRS_UP, ORB_CHAIN, THREE_SPIKES,
+     PLATFORMS, ORB_GAP, STEPS, FINISH],
 ]
+
+LEVEL_NAMES = ["First jumps", "Blocks", "Orbs", "Up the stairs", "Pillars",
+               "The long run"]
 
 
 def join_sections(sections):
-    """Glue the sections together, side by side, into one long level.
+    """Glue the sections together, side by side, into one level.
 
     Row 0 of the level is row 0 of every section, one after another, and
     the same for every other row.
@@ -237,7 +292,7 @@ def join_sections(sections):
         section = sections[number]
         for line in section:
             if len(line) != len(section[0]):
-                print("Section", number + 1, "in SECTIONS has rows of",
+                print("Section", number + 1, "of this level has rows of",
                       "different widths. Count the letters on each row.")
 
     level = []
@@ -249,10 +304,7 @@ def join_sections(sections):
     return level
 
 
-LEVEL = join_sections(SECTIONS)
-LEVEL_WIDTH = len(LEVEL[0]) * TILE
-
-# The level is 9 rows tall and the window is 14. Starting the level 4 rows
+# A level is 9 rows tall and the window is 14. Starting the level 4 rows
 # down leaves sky above it and puts the floor near the bottom.
 TOP = TILE * 4
 
@@ -296,12 +348,13 @@ music = None
 
 # ------------------------------------------------------------- 5. the run
 #
-# The scene is CALLED "run". A new attempt is the same scene built again,
-# so everything starts from the beginning. The function is not called
-# play(), because kaypy already has a play() for sounds.
+# The scene is CALLED "run", and it is given two numbers: which level, and
+# which attempt at it. A new attempt is the same scene built again, so
+# everything starts from the beginning. The function is not called play(),
+# because kaypy already has a play() for sounds.
 
 @scene("run")
-def run(number):
+def run(level, number):
     global attempt, crashed, finished, last_x, expected, music
 
     attempt = number
@@ -309,7 +362,11 @@ def run(number):
     finished = False
     expected = 0
 
-    addLevel(LEVEL, {
+    # Level 1 is LEVELS[0]: lists count from 0, levels from 1.
+    level_map = join_sections(LEVELS[level - 1])
+    level_width = len(level_map[0]) * TILE
+
+    addLevel(level_map, {
         "tileWidth": TILE,
         "tileHeight": TILE,
         "pos": vec2(0, TOP),
@@ -318,9 +375,11 @@ def run(number):
 
     cube = get("player")[0]
     last_x = cube.pos.x
-    best = getData(BEST_KEY, 0)
+    best = getData(BEST_KEY + str(level), 0)
 
     # Written into the level at the start, so it scrolls away as you go.
+    add([text("Level " + str(level) + ": " + LEVEL_NAMES[level - 1], size=30),
+         pos(cube.pos.x + 60, TOP + TILE)])
     add([text("Attempt " + str(attempt), size=44),
          pos(cube.pos.x + 60, TOP + TILE * 2)])
 
@@ -351,7 +410,7 @@ def run(number):
             # A circle's pos is its top-left corner; its middle is one
             # radius (14) in from there.
             middle = vec2(orb.pos.x + 14, orb.pos.y + 14)
-            if not orb.used and cube.pos.dist(middle) < 40:
+            if not orb.used and cube.pos.dist(middle) < ORB_REACH:
                 orb.used = True
                 orb.opacity = 0.3
                 cube.jump(ORB_JUMP)
@@ -404,7 +463,7 @@ def run(number):
             crash()
             return
 
-        if cube.pos.x > LEVEL_WIDTH - TILE * 6:
+        if cube.pos.x > level_width - TILE * 6:
             finish()
 
         # The camera keeps the cube a quarter of the way across the window,
@@ -426,24 +485,24 @@ def run(number):
 
     @onDraw
     def progress_bar():
-        done = clamp(cube.pos.x / (LEVEL_WIDTH - TILE * 6), 0, 1)
+        done = clamp(cube.pos.x / (level_width - TILE * 6), 0, 1)
         drawRect(pos=vec2(280, 18), width=400, height=14,
                  color=(20, 30, 70), fixed=True)
         drawRect(pos=vec2(280, 18), width=400 * done, height=14,
                  color=(120, 255, 140), fixed=True)
         drawText(text=str(int(done * 100)) + "%", pos=vec2(692, 12),
                  size=22, fixed=True)
-        drawText(text="best " + str(best) + "%", pos=vec2(16, 12),
-                 size=20, fixed=True)
+        drawText(text="level " + str(level) + "   best " + str(best) + "%",
+                 pos=vec2(16, 12), size=20, fixed=True)
 
     # ------------------------------------------------- crashing, winning
 
     def percent():
-        return int(clamp(cube.pos.x / (LEVEL_WIDTH - TILE * 6), 0, 1) * 100)
+        return int(clamp(cube.pos.x / (level_width - TILE * 6), 0, 1) * 100)
 
     def save_best(score):
         if score > best:
-            setData(BEST_KEY, score)
+            setData(BEST_KEY + str(level), score)
 
     def crash():
         global crashed
@@ -468,7 +527,7 @@ def run(number):
 
         @wait(0.7)
         def again():
-            go("run", attempt + 1)
+            go("run", level, attempt + 1)
 
     def finish():
         global finished
@@ -484,11 +543,20 @@ def run(number):
         else:
             tries = "in " + str(attempt) + " attempts."
 
-        @say("Level complete, " + tries, button="Play again")
-        def play_again():
-            go("run", 1)
+        # After the last level there is no next one, so start over.
+        if level < len(LEVELS):
+            @say("Level " + str(level) + " complete, " + tries,
+                 button="Next level")
+            def next_level():
+                go("run", level + 1, 1)
+        else:
+            @say("Level " + str(level) + " complete, " + tries +
+                 " That was the last one: you beat the game!",
+                 button="Play again")
+            def play_again():
+                go("run", 1, 1)
 
 
 # ------------------------------------------------------- 6. start the game
 
-go("run", 1)
+go("run", 1, 1)
