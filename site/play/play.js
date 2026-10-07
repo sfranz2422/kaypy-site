@@ -224,6 +224,7 @@
    * this very game. Then ?game= comes off the address, so a refresh keeps
    * their edits rather than loading the original over them. */
   var GAMES = {
+    ghost_chase: { title: "Ghost Chase", file: "ghost_chase/ghost_chase.py" },
     bomb_dodge: { title: "Bomb Dodge", file: "bomb_dodge/bomb_dodge.py" },
     pong: { title: "Pong", file: "pong/pong.py" },
     flappy_bean: { title: "Flappy Bean", file: "flappy_bean/flappy_bean.py" },

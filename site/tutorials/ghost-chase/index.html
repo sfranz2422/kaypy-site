@@ -1,0 +1,911 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Ghost Chase · KayPy</title>
+<meta name="description" content="How Ghost Chase was built, a step at a time: Bean running, coins to grab, winning, and ghosts that chase — with variables, if, a for loop and a list, before you have learned functions.">
+<meta property="og:title" content="Building Ghost Chase · KayPy">
+<meta property="og:description" content="How Ghost Chase was built, a step at a time.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All eight lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li><li><a class="dropdown-item" href="../../learn/functions/">6 — Functions</a></li><li><a class="dropdown-item" href="../../learn/decorators/">7 — Decorators</a></li><li><a class="dropdown-item" href="../../learn/dictionaries/">8 — Dictionaries</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../../tutorials/" aria-current="page">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <article class="prose">
+<h1 id="building-ghost-chase">Building Ghost Chase</h1>
+
+<p><a href="../../static/games/ghost_chase/">Play it first →</a> Coins are
+scattered around the screen and Bean runs about with the arrow keys picking
+them up. Two ghosts drift after Bean the whole time. Grab every coin and you
+win. Let a ghost touch you and you lose.</p>
+
+<p>This is how it was built, a step at a time. Every numbered step below is a
+whole program: copy it into
+<a href="../../play/">the playground</a>, press Run, and it works. Each step
+is the one before it with something added, so you can build the game the way
+it was built. Then break something on purpose and see what changes. That
+teaches you more than reading does.</p>
+
+<p>It is the easiest game on the site, and it is written for someone who has
+done the first five <a href="../../learn/">Learn Python</a> lessons and not
+the sixth. It uses <a href="../../learn/variables/">variables</a>,
+<a href="../../learn/conditionals/"><code>if</code></a>, a
+<a href="../../learn/loops/"><code>for</code> loop</a> and a
+<a href="../../learn/lists/">list</a>, and nothing you have to write a
+function for. After it, try <a href="../bomb-dodge/">Bomb Dodge</a>, which
+does need functions.</p>
+
+<h2 id="the-one-big-idea">The one big idea: the @ lines are recipes</h2>
+
+<p>You will see blocks like this all through the game:</p>
+
+<pre><code class="language-python">@onKeyDown(&quot;left&quot;)
+def move_left():
+    bean.move(-BEAN_SPEED, 0)</code></pre>
+
+<p>Read it as a sentence: <em>while the left arrow is held down, do the
+indented lines.</em> The <code>@</code> line says <em>when</em>. The
+<code>def</code> line gives the block a name, ends with a colon, and that is
+all it does for now. The indented lines are <em>what happens</em>, and they
+are ordinary Python: variables, <code>if</code>, anything you know.</p>
+
+<p>You don't need to understand <code>def</code> yet to use this, the same
+way you used <code>print()</code> long before you knew how it worked. Copy the
+shape, change the key or the name, and it works. When you get to
+<a href="../../learn/functions/">Lesson 6</a> you will find out what
+<code>def</code> really is, and then <a href="../../learn/decorators/">Lesson
+7</a> explains the <code>@</code>.</p>
+
+<p>The other big idea is that kaypy does a lot of the work for you. Nothing
+in this game moves the ghosts: one word in their list,
+<code>follow()</code>, makes them chase Bean for ever. Nothing checks whether
+Bean is touching a coin, either: <code>area()</code> does that, and tells
+you when it happens.</p>
+
+<h2 id="step-1-bean-runs">Step 1 — Bean runs</h2>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[40, 44, 70])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+BEAN_SPEED = 260       # how fast Bean runs, in pixels per second
+
+# anchor(&quot;center&quot;) means pos() is the middle of the picture.
+bean = add([sprite(&quot;bean&quot;), pos(center()), anchor(&quot;center&quot;), area()])
+
+
+@onKeyDown(&quot;left&quot;)
+def move_left():
+    bean.move(-BEAN_SPEED, 0)
+
+
+@onKeyDown(&quot;right&quot;)
+def move_right():
+    bean.move(BEAN_SPEED, 0)
+
+
+@onKeyDown(&quot;up&quot;)
+def move_up():
+    bean.move(0, -BEAN_SPEED)
+
+
+@onKeyDown(&quot;down&quot;)
+def move_down():
+    bean.move(0, BEAN_SPEED)
+
+
+# Holding the mouse down -- or a finger, on a phone -- runs Bean towards it.
+@onMouseDown
+def move_to_mouse():
+    bean.moveTo(mousePos(), BEAN_SPEED)
+
+
+# Every frame, put Bean back inside the window if it has gone past an
+# edge. 32 is half of Bean&#x27;s width, and 27 is half its height.
+@onUpdate
+def stay_on_screen():
+    bean.pos.x = clamp(bean.pos.x, 32, width() - 32)
+    bean.pos.y = clamp(bean.pos.y, 27, height() - 27)</code></pre>
+
+<p>Hold the arrow keys and Bean runs about. Hold two at once, like
+<strong>up</strong> and <strong>right</strong>, and Bean runs diagonally.
+Run into an edge and Bean stops there. Hold the mouse down somewhere and
+Bean runs towards it. On a phone, a finger does the same thing.</p>
+
+<ul>
+<li><code>BEAN_SPEED = 260</code> is a variable, and it is in capitals
+because it is a setting: something you set once at the top and might want
+to change. It is used four times below, so changing it here changes all
+four.</li>
+<li><code>pos(center())</code> puts Bean in the middle of the window, and
+<code>anchor("center")</code> means <code>pos()</code> is the middle of the
+<em>picture</em>, rather than its top-left corner. <code>area()</code> gives
+Bean a collision box. Nothing bumps into Bean yet, but by step 3 the coins
+will.</li>
+<li><code>@onKeyDown("left")</code> runs the lines under it every frame the
+left arrow is held down, about sixty times a second, so Bean keeps running
+until you let go.</li>
+<li><code>bean.move(-BEAN_SPEED, 0)</code> moves Bean left at
+<code>BEAN_SPEED</code> pixels per <em>second</em>. The first number is
+across (minus is left) and the second is down (minus is up). kaypy works out
+how far that is for one frame, so Bean runs at the same speed on a fast
+computer and a slow one.</li>
+<li><code>@onMouseDown</code> runs the lines under it every frame the
+mouse button is held, or a finger is on the screen.
+<code>bean.moveTo(mousePos(), BEAN_SPEED)</code> moves Bean towards wherever
+the mouse is, at the same speed as the arrow keys, and stops when it gets
+there.</li>
+<li><code>@onUpdate</code> runs the lines under it every single frame,
+whatever is happening.</li>
+</ul>
+
+<p><strong><code>stay_on_screen</code> stops Bean at the edges.</strong>
+<code>clamp(bean.pos.x, 32, width() - 32)</code> gives back
+<code>bean.pos.x</code>, unless it is less than 32 (then it gives 32) or more
+than 768 (then it gives 768). Putting that back into
+<code>bean.pos.x</code> means Bean can never be further left than 32 or
+further right than 768. Bean is 64 pixels wide, so 32 is half of Bean, and
+Bean stops with its side touching the edge. The second line does the same
+for up and down: Bean is 54 pixels tall, and half of that is 27.</p>
+
+<div class="callout"><p><strong>Two things to break.</strong></p>
+<p>Delete the <code>@onUpdate</code> line above
+<code>stay_on_screen</code> and hold left. There's no error message. Bean
+runs off the edge of the window and keeps going: three seconds of holding
+left took it to <code>x</code> = −385. Without the <code>@</code> line,
+kaypy is never told to run those lines, so they never do.</p>
+<p>Write <code>@onKeyDown</code> without the <code>("left")</code>. There's
+no error message either, and the left arrow does nothing at all. kaypy
+needs to be told <em>which</em> key; without it, the block is never
+connected to the keyboard.</p></div>
+
+<h2 id="step-2-coins">Step 2 — coins</h2>
+
+<p>Twenty coins appear in random places. Run it a few times: they are
+somewhere different every time.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[40, 44, 70])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+
+BEAN_SPEED = 260       # how fast Bean runs, in pixels per second
+COINS = 20             # how many coins there are to grab
+
+# anchor(&quot;center&quot;) means pos() is the middle of the picture.
+bean = add([sprite(&quot;bean&quot;), pos(center()), anchor(&quot;center&quot;), area()])
+
+
+@onKeyDown(&quot;left&quot;)
+def move_left():
+    bean.move(-BEAN_SPEED, 0)
+
+
+@onKeyDown(&quot;right&quot;)
+def move_right():
+    bean.move(BEAN_SPEED, 0)
+
+
+@onKeyDown(&quot;up&quot;)
+def move_up():
+    bean.move(0, -BEAN_SPEED)
+
+
+@onKeyDown(&quot;down&quot;)
+def move_down():
+    bean.move(0, BEAN_SPEED)
+
+
+# Holding the mouse down -- or a finger, on a phone -- runs Bean towards it.
+@onMouseDown
+def move_to_mouse():
+    bean.moveTo(mousePos(), BEAN_SPEED)
+
+
+# Every frame, put Bean back inside the window if it has gone past an
+# edge. 32 is half of Bean&#x27;s width, and 27 is half its height.
+@onUpdate
+def stay_on_screen():
+    bean.pos.x = clamp(bean.pos.x, 32, width() - 32)
+    bean.pos.y = clamp(bean.pos.y, 27, height() - 27)
+
+
+# A for loop puts COINS coins in random places. rand() picks a number
+# between the two you give it. The top 80 pixels are left for the words.
+for i in range(COINS):
+    x = rand(40, width() - 40)
+    y = rand(100, height() - 40)
+    add([sprite(&quot;coin&quot;), pos(x, y), anchor(&quot;center&quot;), area(), &quot;coin&quot;])</code></pre>
+
+<ul>
+<li><code>for i in range(COINS):</code> runs the indented lines
+<code>COINS</code> times, which is 20. That is the whole reason there are
+twenty coins and not one.</li>
+<li><code>rand(40, width() - 40)</code> picks a random number between 40 and
+760, so every time round the loop, <code>x</code> is somewhere new across
+the window. <code>y</code> starts at 100 rather than 40, to leave the top of
+the window clear for the words in step 3.</li>
+<li><code>"coin"</code> at the end of the list is a <strong>tag</strong>: a
+label stuck on the coin. It doesn't change how the coin looks. It is how,
+in step 3, we will ask "is Bean touching a coin?" and "how many coins are
+left?"</li>
+</ul>
+
+<p>Walk Bean over a coin. Nothing happens yet. That's the next step.</p>
+
+<div class="callout"><p><strong>Break it.</strong> Take the four spaces off
+the front of the <code>add(...)</code> line, so it is no longer inside the
+loop. There's no error message. The loop still runs twenty times, picking
+twenty <code>x</code>s and twenty <code>y</code>s, but only the last one is
+used: the <code>add</code> runs once, after the loop has finished, and there
+is one coin. In Python the indent is what says which lines are inside the
+loop.</p></div>
+
+<h2 id="step-3-grabbing-coins">Step 3 — grabbing coins</h2>
+
+<p>Now Bean picks up any coin it touches, with a beep, and the words at the
+top count down how many are left.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[40, 44, 70])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSound(&quot;beep&quot;, &quot;sounds/small_beep.wav&quot;)
+
+BEAN_SPEED = 260       # how fast Bean runs, in pixels per second
+COINS = 20             # how many coins there are to grab
+
+# anchor(&quot;center&quot;) means pos() is the middle of the picture.
+bean = add([sprite(&quot;bean&quot;), pos(center()), anchor(&quot;center&quot;), area()])
+
+
+@onKeyDown(&quot;left&quot;)
+def move_left():
+    bean.move(-BEAN_SPEED, 0)
+
+
+@onKeyDown(&quot;right&quot;)
+def move_right():
+    bean.move(BEAN_SPEED, 0)
+
+
+@onKeyDown(&quot;up&quot;)
+def move_up():
+    bean.move(0, -BEAN_SPEED)
+
+
+@onKeyDown(&quot;down&quot;)
+def move_down():
+    bean.move(0, BEAN_SPEED)
+
+
+# Holding the mouse down -- or a finger, on a phone -- runs Bean towards it.
+@onMouseDown
+def move_to_mouse():
+    bean.moveTo(mousePos(), BEAN_SPEED)
+
+
+# Every frame, put Bean back inside the window if it has gone past an
+# edge. 32 is half of Bean&#x27;s width, and 27 is half its height.
+@onUpdate
+def stay_on_screen():
+    bean.pos.x = clamp(bean.pos.x, 32, width() - 32)
+    bean.pos.y = clamp(bean.pos.y, 27, height() - 27)
+
+
+# A for loop puts COINS coins in random places. rand() picks a number
+# between the two you give it. The top 80 pixels are left for the words.
+for i in range(COINS):
+    x = rand(40, width() - 40)
+    y = rand(100, height() - 40)
+    add([sprite(&quot;coin&quot;), pos(x, y), anchor(&quot;center&quot;), area(), &quot;coin&quot;])
+
+label = add([text(&quot;Coins left: &quot; + str(COINS), size=28),
+             pos(width() / 2, 30), anchor(&quot;center&quot;), z(10)])
+
+
+# This runs when Bean touches anything tagged &quot;coin&quot;, and the coin it
+# touched is handed in as `coin`.
+@bean.onCollide(&quot;coin&quot;)
+def grab(coin):
+    coin.destroy()
+    play(&quot;beep&quot;)
+
+    # get(&quot;coin&quot;) is a list of every coin still in the game.
+    coins_left = len(get(&quot;coin&quot;))
+    label.text = &quot;Coins left: &quot; + str(coins_left)</code></pre>
+
+<ul>
+<li><code>label = add([text(...), ...])</code> puts words on the screen and
+keeps hold of them in a variable, so we can change them later.
+<code>z(10)</code> draws them in front of everything else.</li>
+<li><code>@bean.onCollide("coin")</code> runs the lines under it the moment
+Bean touches anything tagged <code>"coin"</code>. Both Bean and the coin
+need <code>area()</code> for that to work.</li>
+<li><code>def grab(coin):</code> has something between its brackets. That is
+how kaypy hands you the coin Bean touched: inside the block,
+<code>coin</code> is that one coin and no other.
+<code>coin.destroy()</code> takes it out of the game.</li>
+<li><code>get("coin")</code> gives back a <strong>list</strong> of every
+coin still in the game, and <code>len()</code> tells you how long a list
+is. So <code>len(get("coin"))</code> is how many coins are left. The coin we
+just destroyed is not in it any more.</li>
+<li><code>label.text = ...</code> changes the words on the screen.
+<code>str()</code> turns the number into text, because you can only
+<code>+</code> text to text.</li>
+</ul>
+
+<p>Every so often a coin lands right where Bean starts. Bean is touching it
+from the very first frame, so it goes straight away, with a beep, and the
+count starts at 19. That isn't a mistake in your code: it's the game doing
+exactly what you told it.</p>
+
+<div class="callout"><p><strong>Two things to break.</strong></p>
+<p>Take the <code>str()</code> off, so the line is
+<code>"Coins left: " + coins_left</code>. The game starts as normal, and the
+moment Bean touches a coin it stops with
+<code>TypeError: can only concatenate str (not "int") to str</code>. "Can
+only concatenate str" means "you can only <code>+</code> text to text", and
+<code>coins_left</code> is a number.</p>
+<p>Take <code>area()</code> out of the coin's list. There's no error
+message, and Bean walks straight over every coin. A coin without
+<code>area()</code> has no collision box, so as far as kaypy knows nothing
+is ever touching it. This is the commonest reason a collision "doesn't
+work".</p></div>
+
+<h2 id="step-4-winning">Step 4 — winning</h2>
+
+<p>Three lines, at the end of <code>grab</code>: when the last coin goes,
+you've won.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[40, 44, 70])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSound(&quot;beep&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;win&quot;, &quot;sounds/rising_beep.wav&quot;)
+
+BEAN_SPEED = 260       # how fast Bean runs, in pixels per second
+COINS = 20             # how many coins there are to grab
+
+# anchor(&quot;center&quot;) means pos() is the middle of the picture.
+bean = add([sprite(&quot;bean&quot;), pos(center()), anchor(&quot;center&quot;), area()])
+
+
+@onKeyDown(&quot;left&quot;)
+def move_left():
+    bean.move(-BEAN_SPEED, 0)
+
+
+@onKeyDown(&quot;right&quot;)
+def move_right():
+    bean.move(BEAN_SPEED, 0)
+
+
+@onKeyDown(&quot;up&quot;)
+def move_up():
+    bean.move(0, -BEAN_SPEED)
+
+
+@onKeyDown(&quot;down&quot;)
+def move_down():
+    bean.move(0, BEAN_SPEED)
+
+
+# Holding the mouse down -- or a finger, on a phone -- runs Bean towards it.
+@onMouseDown
+def move_to_mouse():
+    bean.moveTo(mousePos(), BEAN_SPEED)
+
+
+# Every frame, put Bean back inside the window if it has gone past an
+# edge. 32 is half of Bean&#x27;s width, and 27 is half its height.
+@onUpdate
+def stay_on_screen():
+    bean.pos.x = clamp(bean.pos.x, 32, width() - 32)
+    bean.pos.y = clamp(bean.pos.y, 27, height() - 27)
+
+
+# A for loop puts COINS coins in random places. rand() picks a number
+# between the two you give it. The top 80 pixels are left for the words.
+for i in range(COINS):
+    x = rand(40, width() - 40)
+    y = rand(100, height() - 40)
+    add([sprite(&quot;coin&quot;), pos(x, y), anchor(&quot;center&quot;), area(), &quot;coin&quot;])
+
+label = add([text(&quot;Coins left: &quot; + str(COINS), size=28),
+             pos(width() / 2, 30), anchor(&quot;center&quot;), z(10)])
+
+
+# This runs when Bean touches anything tagged &quot;coin&quot;, and the coin it
+# touched is handed in as `coin`.
+@bean.onCollide(&quot;coin&quot;)
+def grab(coin):
+    coin.destroy()
+    play(&quot;beep&quot;)
+
+    # get(&quot;coin&quot;) is a list of every coin still in the game.
+    coins_left = len(get(&quot;coin&quot;))
+    label.text = &quot;Coins left: &quot; + str(coins_left)
+
+    if coins_left == 0:
+        play(&quot;win&quot;)
+        label.text = &quot;You got them all!&quot;</code></pre>
+
+<ul>
+<li><code>if coins_left == 0:</code> is indented to line up with the lines
+above it, so it is part of <code>grab</code>. It is asked every time a coin
+is grabbed, and it is only true once: when that was the last one.</li>
+<li><code>==</code> asks whether two things are equal. A single
+<code>=</code> stores something in a variable. They are easy to mix up.</li>
+<li>The new <code>label.text</code> replaces the "Coins left: 0" that was
+put there two lines earlier, so you never see that.</li>
+</ul>
+
+<div class="callout"><p><strong>Break it.</strong> Write
+<code>if coins_left = 0:</code>, with one <code>=</code>. Nothing runs at
+all: Python reads the whole program before it starts, and stops on that
+line with
+<code>SyntaxError: invalid syntax. Maybe you meant '==' or ':=' instead of
+'='?</code> The error is right. You did mean <code>==</code>.</p></div>
+
+<h2 id="step-5-a-ghost">Step 5 — a ghost</h2>
+
+<p>A ghost starts in the top-left corner and drifts after Bean. If it
+touches Bean, Bean explodes and the game is over. Stand still and see how
+long it takes: about three and a half seconds.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[40, 44, 70])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSprite(&quot;ghosty&quot;, &quot;images/ghosty.png&quot;)
+loadSound(&quot;beep&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;boom&quot;, &quot;sounds/small_boom.wav&quot;)
+loadSound(&quot;win&quot;, &quot;sounds/rising_beep.wav&quot;)
+
+BEAN_SPEED = 260       # how fast Bean runs, in pixels per second
+GHOST_SPEED = 100      # how fast the ghost chases -- try 200!
+COINS = 20             # how many coins there are to grab
+
+# anchor(&quot;center&quot;) means pos() is the middle of the picture.
+bean = add([sprite(&quot;bean&quot;), pos(center()), anchor(&quot;center&quot;), area()])
+
+
+@onKeyDown(&quot;left&quot;)
+def move_left():
+    bean.move(-BEAN_SPEED, 0)
+
+
+@onKeyDown(&quot;right&quot;)
+def move_right():
+    bean.move(BEAN_SPEED, 0)
+
+
+@onKeyDown(&quot;up&quot;)
+def move_up():
+    bean.move(0, -BEAN_SPEED)
+
+
+@onKeyDown(&quot;down&quot;)
+def move_down():
+    bean.move(0, BEAN_SPEED)
+
+
+# Holding the mouse down -- or a finger, on a phone -- runs Bean towards it.
+@onMouseDown
+def move_to_mouse():
+    bean.moveTo(mousePos(), BEAN_SPEED)
+
+
+# Every frame, put Bean back inside the window if it has gone past an
+# edge. 32 is half of Bean&#x27;s width, and 27 is half its height.
+@onUpdate
+def stay_on_screen():
+    bean.pos.x = clamp(bean.pos.x, 32, width() - 32)
+    bean.pos.y = clamp(bean.pos.y, 27, height() - 27)
+
+
+# A for loop puts COINS coins in random places. rand() picks a number
+# between the two you give it. The top 80 pixels are left for the words.
+for i in range(COINS):
+    x = rand(40, width() - 40)
+    y = rand(100, height() - 40)
+    add([sprite(&quot;coin&quot;), pos(x, y), anchor(&quot;center&quot;), area(), &quot;coin&quot;])
+
+# follow(bean, speed=GHOST_SPEED) is the whole ghost: it moves itself
+# towards Bean, every frame, for ever. No code of ours moves it.
+add([sprite(&quot;ghosty&quot;), pos(60, 60), anchor(&quot;center&quot;), area(),
+     follow(bean, speed=GHOST_SPEED), &quot;ghost&quot;])
+
+label = add([text(&quot;Coins left: &quot; + str(COINS), size=28),
+             pos(width() / 2, 30), anchor(&quot;center&quot;), z(10)])
+
+
+# This runs when Bean touches anything tagged &quot;coin&quot;, and the coin it
+# touched is handed in as `coin`.
+@bean.onCollide(&quot;coin&quot;)
+def grab(coin):
+    coin.destroy()
+    play(&quot;beep&quot;)
+
+    # get(&quot;coin&quot;) is a list of every coin still in the game.
+    coins_left = len(get(&quot;coin&quot;))
+    label.text = &quot;Coins left: &quot; + str(coins_left)
+
+    if coins_left == 0:
+        play(&quot;win&quot;)
+        destroyAll(&quot;ghost&quot;)
+        label.text = &quot;You got them all!&quot;
+
+
+@bean.onCollide(&quot;ghost&quot;)
+def caught(ghost):
+    play(&quot;boom&quot;)
+    shake(12)
+    addKaboom(bean.pos)
+    bean.destroy()
+    label.text = &quot;Caught!&quot;</code></pre>
+
+<ul>
+<li><code>follow(bean, speed=GHOST_SPEED)</code> is the whole ghost. It
+moves the ghost towards Bean, at <code>GHOST_SPEED</code> pixels a second,
+every frame, for ever. There is no code of ours moving it, and that is
+why it is the easiest enemy there is.</li>
+<li>Bean is faster than the ghost, 260 to 100, so you can always run away.
+The trouble is that the coins aren't always where the ghost isn't.</li>
+<li><code>@bean.onCollide("ghost")</code> is the same recipe as grabbing a
+coin, with a different tag. <code>shake(12)</code> shakes the screen,
+<code>addKaboom(bean.pos)</code> draws an explosion where Bean is, and
+<code>bean.destroy()</code> takes Bean out of the game. With nothing left
+to follow, the ghost stops where it is.</li>
+<li>Winning now does one more thing: <code>destroyAll("ghost")</code> takes
+away every ghost, so one can't catch you after you've won.</li>
+</ul>
+
+<div class="callout"><p><strong>Two things to break.</strong></p>
+<p>Leave the speed out: <code>follow(bean)</code>. There's no error
+message, and you lose before you can press anything: caught after 0.08
+seconds. Without a speed, <code>follow()</code> doesn't chase — it puts the
+ghost exactly where Bean is, every frame. That is what you would want for a
+name tag that hangs over a player, and not for a ghost.</p>
+<p>Put quotes round it: <code>follow("bean", speed=GHOST_SPEED)</code>.
+Nothing runs, and the message says what went wrong:
+<code>TypeError: follow('bean') — follow() takes a game object to follow,
+the one add() gave back.</code> <code>"bean"</code> is the name of a
+picture. <code>bean</code>, with no quotes, is the variable holding Bean
+itself.</p></div>
+
+<h2 id="step-6-the-whole-game">Step 6 — the whole game</h2>
+
+<p>This is the game exactly as it is on the <a href="../../games/">games
+page</a>. It adds three things to step 5:</p>
+
+<ul>
+<li><strong>A second ghost</strong>, in the top-right corner. It is the
+same <code>add</code> line with a different <code>pos</code>.</li>
+<li><strong>SPACE plays again.</strong> This is the one big change. Every
+line that makes the game is now indented under
+<code>@scene("game")</code> and <code>def game():</code>, and the very last
+line is <code>go("game")</code>, which runs them. Pressing space runs
+<code>go("game")</code> again: kaypy throws away everything in the game —
+Bean, coins, ghosts, words, and the key handlers too — and runs the scene
+from the top, so you get new coins in new places. To do this to your own
+step 5, add the two scene lines above the <code>bean = add(...)</code>
+line, select everything from there to the end, and press
+<strong>Tab</strong>: the playground indents all of it at once.</li>
+<li><strong>A click plays again too</strong>, so a phone with no space bar
+can. But a click is also how you move Bean, so <code>@onClick</code> only
+starts again once the game is over:
+<code>if not bean.exists() or len(get("coin")) == 0:</code>. Caught means
+Bean has been destroyed, so <code>bean.exists()</code> is
+<code>False</code>; won means there are no coins left. While you're still
+playing, neither is true and the click just moves Bean.</li>
+</ul>
+
+<p>It also has a note at the top saying how to play, the settings in one
+place, and comments that explain why each part is there. The
+<code>COINS</code> loop, <code>len(get("coin"))</code> and both
+<code>onCollide</code> blocks are exactly as they were.</p>
+
+<pre><code class="language-python">&quot;&quot;&quot;Ghost Chase -- grab every coin before the ghosts grab you.
+
+    arrow keys      move
+    or hold the mouse (or a finger) where you want Bean to go
+    SPACE           start again, or click once the game is over
+
+The ghosts never stop coming, but Bean is faster than they are. Get every
+coin and you win. Let a ghost touch you and you lose.
+
+HOW THIS FILE IS PUT TOGETHER
+
+    1. the window, the pictures and the sounds
+    2. the settings
+    3. the game: Bean, the coins, the ghosts, winning and losing
+    4. start the game
+
+This is the easiest game on the site. It uses variables, if, a for loop and
+a list -- nothing you have to write a function for. The @ lines are recipes:
+copy one, change the key or the tag, and it works.
+&quot;&quot;&quot;
+
+from kaypy import *
+
+# ----------------------------------------------------------------- 1. setup
+
+kaypy(width=800, height=600, background=[40, 44, 70])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;coin&quot;, &quot;images/coin.png&quot;)
+loadSprite(&quot;ghosty&quot;, &quot;images/ghosty.png&quot;)
+loadSound(&quot;beep&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;boom&quot;, &quot;sounds/small_boom.wav&quot;)
+loadSound(&quot;win&quot;, &quot;sounds/rising_beep.wav&quot;)
+
+
+# -------------------------------------------------------------- 2. settings
+#
+# Change one, press Run, and play it.
+
+BEAN_SPEED = 260       # how fast Bean runs, in pixels per second
+GHOST_SPEED = 100      # how fast the ghosts chase -- try 200!
+COINS = 20             # how many coins there are to grab
+
+
+# --------------------------------------------------------------- 3. the game
+#
+# Everything in the game is inside this scene, so that go(&quot;game&quot;) at the
+# bottom can throw it all away and start again.
+
+@scene(&quot;game&quot;)
+def game():
+
+    # ------------------------------------------------------------- Bean
+    #
+    # anchor(&quot;center&quot;) means pos() is the middle of the picture.
+
+    bean = add([sprite(&quot;bean&quot;), pos(center()), anchor(&quot;center&quot;), area()])
+
+    @onKeyDown(&quot;left&quot;)
+    def move_left():
+        bean.move(-BEAN_SPEED, 0)
+
+    @onKeyDown(&quot;right&quot;)
+    def move_right():
+        bean.move(BEAN_SPEED, 0)
+
+    @onKeyDown(&quot;up&quot;)
+    def move_up():
+        bean.move(0, -BEAN_SPEED)
+
+    @onKeyDown(&quot;down&quot;)
+    def move_down():
+        bean.move(0, BEAN_SPEED)
+
+    # Holding the mouse down -- or a finger, on a phone -- runs Bean
+    # towards it.
+    @onMouseDown
+    def move_to_mouse():
+        bean.moveTo(mousePos(), BEAN_SPEED)
+
+    # Every frame, put Bean back inside the window if it has gone past an
+    # edge. clamp(number, smallest, biggest) keeps a number between two
+    # others. 32 is half of Bean&#x27;s width, and 27 is half its height.
+    @onUpdate
+    def stay_on_screen():
+        bean.pos.x = clamp(bean.pos.x, 32, width() - 32)
+        bean.pos.y = clamp(bean.pos.y, 27, height() - 27)
+
+    # ------------------------------------------------------------ coins
+    #
+    # A for loop puts COINS coins in random places. rand() picks a number
+    # between the two you give it. The top 80 pixels are left for the words.
+
+    for i in range(COINS):
+        x = rand(40, width() - 40)
+        y = rand(100, height() - 40)
+        add([sprite(&quot;coin&quot;), pos(x, y), anchor(&quot;center&quot;), area(), &quot;coin&quot;])
+
+    label = add([text(&quot;Coins left: &quot; + str(COINS), size=28),
+                 pos(width() / 2, 30), anchor(&quot;center&quot;), z(10)])
+
+    # ----------------------------------------------------------- ghosts
+    #
+    # follow(bean, speed=GHOST_SPEED) is the whole ghost: it moves itself
+    # towards Bean, every frame, for ever. No code of ours moves it.
+
+    add([sprite(&quot;ghosty&quot;), pos(60, 60), anchor(&quot;center&quot;), area(),
+         follow(bean, speed=GHOST_SPEED), &quot;ghost&quot;])
+    add([sprite(&quot;ghosty&quot;), pos(width() - 60, 60), anchor(&quot;center&quot;), area(),
+         follow(bean, speed=GHOST_SPEED), &quot;ghost&quot;])
+
+    # ---------------------------------------------------- grabbing a coin
+    #
+    # This runs when Bean touches anything tagged &quot;coin&quot;, and the coin it
+    # touched is handed in as `coin`.
+
+    @bean.onCollide(&quot;coin&quot;)
+    def grab(coin):
+        coin.destroy()
+        play(&quot;beep&quot;)
+
+        # get(&quot;coin&quot;) is a list of every coin still in the game.
+        coins_left = len(get(&quot;coin&quot;))
+        label.text = &quot;Coins left: &quot; + str(coins_left)
+
+        if coins_left == 0:
+            play(&quot;win&quot;)
+            destroyAll(&quot;ghost&quot;)
+            label.text = &quot;You got them all! SPACE or click to play again&quot;
+
+    # -------------------------------------------------------- getting caught
+
+    @bean.onCollide(&quot;ghost&quot;)
+    def caught(ghost):
+        play(&quot;boom&quot;)
+        shake(12)
+        addKaboom(bean.pos)
+        bean.destroy()
+        label.text = &quot;Caught! SPACE or click to play again&quot;
+
+    # ------------------------------------------------------- play again
+    #
+    # go(&quot;game&quot;) throws everything away and runs the scene from the top.
+
+    @onKeyPress(&quot;space&quot;)
+    def play_again():
+        go(&quot;game&quot;)
+
+    # A click starts again too, but only once the game is over: Bean has
+    # been caught (so Bean no longer exists), or there are no coins left.
+    # Otherwise a click to move Bean would start a new game.
+    @onClick
+    def click_to_play_again():
+        if not bean.exists() or len(get(&quot;coin&quot;)) == 0:
+            go(&quot;game&quot;)
+
+
+# ------------------------------------------------------- 4. start the game
+
+go(&quot;game&quot;)</code></pre>
+
+<div class="callout"><p><strong>Two things to break.</strong></p>
+<p>Delete the last line, <code>go("game")</code>. There's no error message,
+and you get an empty window. <code>@scene("game")</code> only
+<em>names</em> the lines under it, ready for later;
+<code>go("game")</code> is what runs them.</p>
+<p>Take the <code>if</code> out of <code>click_to_play_again</code>, so a
+click always runs <code>go("game")</code>. There's no error message, but
+you can't play with the mouse any more: the first click to move Bean throws
+the game away and starts a new one, with the coins somewhere else.</p></div>
+
+<h2 id="make-it-yours">Make it yours</h2>
+
+<p><a href="../../play/?game=ghost_chase">Open the whole game in the playground →</a>
+It goes straight into the editor, ready to change and run.</p>
+
+<ul>
+<li><strong>Change the numbers.</strong> Make <code>GHOST_SPEED</code> 200
+and the ghosts are nearly as fast as Bean. Make <code>COINS</code> 50 and
+there are coins everywhere.</li>
+<li><strong>A third ghost.</strong> Copy one of the ghost lines and give it
+a <code>pos</code> in a bottom corner, like <code>pos(60, height() -
+60)</code>. Don't put it too near the middle, or it catches Bean before you
+have pressed anything.</li>
+<li><strong>A faster ghost.</strong> Give one ghost
+<code>speed=GHOST_SPEED * 2</code> and the other
+<code>speed=GHOST_SPEED / 2</code>, and they come at you at different
+times instead of bunching up into one.</li>
+<li><strong>Different pictures.</strong> Change
+<code>"images/coin.png"</code> to <code>"images/apple.png"</code>, or the
+ghost to <code>"images/bobo.png"</code>. Click <strong>Sprites</strong> in
+the playground to see what there is.</li>
+</ul>
+
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>
