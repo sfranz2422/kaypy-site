@@ -93,8 +93,8 @@ teaches you more than reading does.</p>
 kaypy function it uses is on the <a href="../../api/">API page</a>. There are
 no pictures at all: the paddle and the ball are rectangles.</p>
 
-<p>Build it after <a href="../bomb-dodge/">Bomb Dodge</a> and before
-<a href="../pong/">Pong</a>. It is put together the way Bomb Dodge is — one
+<p>Build it after <a href="../bomb-dodge/">Bomb Dodge</a>, and before
+<a href="../spiral-storm/">Spiral Storm</a> and <a href="../pong/">Pong</a>. It is put together the way Bomb Dodge is — one
 score, one life, <code>global</code>, a scene to play again in — and it adds
 the one idea Pong is built on.</p>
 
@@ -836,7 +836,8 @@ HOW THIS FILE IS PUT TOGETHER
 There are no pictures at all. The paddle and the ball are rectangles, and
 the ball is a game object that carries its own speed: ball.dx is how fast
 it is going across, and ball.dy is how fast it is going down. Bouncing is
-just making one of them negative. After this, try Pong.
+just making one of them negative. After this, try Spiral Storm, and then
+Pong.
 &quot;&quot;&quot;
 
 from kaypy import *
@@ -1075,9 +1076,12 @@ staying white is all it does.</li>
 <code>rect(BALL_SIZE, BALL_SIZE)</code>. That makes the apple about 24
 pixels across, so make <code>BALL_SIZE</code> 24 to match, or the apple
 goes a little way into each wall before it bounces.</li>
-<li><strong>Now play Pong.</strong> <a href="../pong/">Pong</a> is this game
-turned on its side, with a second paddle that the computer moves, and a
-ball that goes off at an angle when it hits the end of a paddle.</li>
+<li><strong>Now play Spiral Storm.</strong>
+<a href="../spiral-storm/">Spiral Storm</a> is a break from paddles: a
+bullet hell, where a hundred bullets fly by themselves and you dodge them
+all. After that, <a href="../pong/">Pong</a> is this game turned on its
+side, with a second paddle that the computer moves, and a ball that goes off
+at an angle when it hits the end of a paddle.</li>
 </ul>
 
       </article>

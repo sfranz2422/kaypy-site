@@ -120,6 +120,19 @@ remembered.</p>
 Dodge is, with one new idea: the ball carries its own speed, and bouncing is
 just making that speed negative.
 <a href="../tutorials/paddle-ball/">How it was built, step by step →</a></p>
+<h2 id="spiral-storm">Spiral Storm</h2>
+<p>Arrow keys to move, or hold the mouse (or your finger) where you want
+Bean to go. Click the picture first so the keys reach it.</p>
+<p><a href="../static/games/spiral_storm/">Play Spiral Storm →</a> · <a href="https://github.com/sfranz2422/kaypy-site/blob/main/site/static/games/spiral_storm/spiral_storm.py">Read the code on GitHub →</a> · <a href="../play/?game=spiral_storm">Remix it in the playground →</a></p>
+<p>A bullet hell. The Gazer swings along the top and fills the sky with
+bullets: shots aimed straight at Bean, then rings, then a spiral that never
+stops turning. Every second you last is a point. One hit and it's over. Your
+best score is remembered.</p>
+<p>It comes between Paddle Ball and Pong, and it is built the way Bomb Dodge
+is. The camera zooms out to make room for a hundred bullets, and each bullet
+flies by itself with <code>move()</code>: a ring is a <code>for</code> loop
+over angles, and a spiral is one angle that keeps turning.
+<a href="../tutorials/spiral-storm/">How it was built, step by step →</a></p>
 <h2 id="pong">Pong</h2>
 <p>Up and down arrows to move your paddle, or hold the mouse (or your finger)
 where you want it. Click the picture first so the keys reach it.</p>
@@ -317,6 +330,7 @@ classroom. Games get played before they go up, so allow a few days.</p>
       <a class="toc-link toc-d2" href="#ghost-chase">Ghost Chase</a>
       <a class="toc-link toc-d2" href="#bomb-dodge">Bomb Dodge</a>
       <a class="toc-link toc-d2" href="#paddle-ball">Paddle Ball</a>
+      <a class="toc-link toc-d2" href="#spiral-storm">Spiral Storm</a>
       <a class="toc-link toc-d2" href="#pong">Pong</a>
       <a class="toc-link toc-d2" href="#flappy-bean">Flappy Bean</a>
       <a class="toc-link toc-d2" href="#coin-rush">Coin Rush</a>

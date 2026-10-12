@@ -1,0 +1,1361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Spiral Storm · KayPy</title>
+<meta name="description" content="How Spiral Storm was built, a step at a time: a camera that zooms out, bullets that fly themselves, rings from a for loop and a spiral from one turning angle — the game between Paddle Ball and Pong.">
+<meta property="og:title" content="Building Spiral Storm · KayPy">
+<meta property="og:description" content="How Spiral Storm was built, a step at a time.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All eight lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li><li><a class="dropdown-item" href="../../learn/functions/">6 — Functions</a></li><li><a class="dropdown-item" href="../../learn/decorators/">7 — Decorators</a></li><li><a class="dropdown-item" href="../../learn/dictionaries/">8 — Dictionaries</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../../tutorials/" aria-current="page">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <article class="prose">
+<h1 id="building-spiral-storm">Building Spiral Storm</h1>
+
+<p><a href="../../static/games/spiral_storm/">Play it first →</a> The Gazer
+swings along the top of the arena and fills the sky with bullets. First it
+throws single shots aimed straight at Bean, then rings of bullets, then a
+spiral that never stops turning. Every second you last is a point. One hit
+and it's over.</p>
+
+<p>This is how it was built, a step at a time. Every numbered step below is a
+whole program: copy it into
+<a href="../../play/">the playground</a>, press Run, and it works. Each step
+is the one before it with something added, so you can build the game the way
+it was built. Then break something on purpose and see what changes. That
+teaches you more than reading does.</p>
+
+<p>There is nothing clever in it. No list comprehensions, no tricks, and every
+kaypy function it uses is on the <a href="../../api/">API page</a>. There are
+only two pictures, Bean and the Gazer. The bullets are circles.</p>
+
+<p>Build it after <a href="../paddle-ball/">Paddle Ball</a> and before
+<a href="../pong/">Pong</a>. It is put together the way
+<a href="../bomb-dodge/">Bomb Dodge</a> is — one score, one life,
+<code>global</code>, a scene to play again in — and it adds two new things:
+a camera that zooms out, and bullets that fly off in any direction.</p>
+
+<h2 id="the-one-big-idea">The one big idea: a bullet knows which way it is going</h2>
+
+<p>In Paddle Ball, the ball moved because every frame your own code added
+<code>ball.dx</code> and <code>ball.dy</code> to its position. That's fine for
+one ball. Spiral Storm has a hundred bullets on the screen at once, and none of
+them ever turns round, so there's an easier way.</p>
+
+<p>Put <code>move(direction, speed)</code> in a bullet's list, and kaypy moves
+it for you, every frame, for ever, in a straight line. You never write an
+<code>onUpdate</code> to move it. All you have to say is <em>which way</em>.</p>
+
+<p>There are two ways to say which way:</p>
+
+<ul>
+<li><strong>Towards something.</strong> <code>bean.pos - gazer.pos</code> is
+the way from the Gazer to Bean. Take where you start away from where you want
+to get to, and what's left is the way there.</li>
+<li><strong>At an angle.</strong> <code>Vec2.fromAngle(angle)</code> turns an
+angle, in degrees, into a direction. <code>0</code> is right,
+<code>90</code> is down, <code>180</code> is left and <code>270</code> is up.
+Down is 90, not up, because on a screen <code>y</code> gets bigger going
+down.</li>
+</ul>
+
+<p>Once you have angles, the patterns are easy. A ring is a
+<code>for</code> loop that fires one bullet every 15 degrees, all the way
+round. A spiral fires a few bullets at an angle that turns a little further
+every time. That's all a bullet hell is.</p>
+
+<h2 id="step-1-zoom-out-and-move">Step 1 — zoom out, and move</h2>
+
+<p>Bean sits near the bottom of a dark arena. The arrow keys move it in four
+directions, and holding the mouse down somewhere moves Bean there. It stops at
+the edges. Everything looks a little smaller than in the other games, because
+the camera has zoomed out.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+ZOOM = 0.7             # 1 is normal; 0.7 shows more of the world
+BEAN_SPEED = 360       # how fast Bean moves, in pixels per second
+
+kaypy(width=800, height=600, background=[24, 18, 40])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+
+# Zoom out. The window now holds a bigger piece of the world: arena_w by
+# arena_h, which is 1143 by 857. Point the camera at the middle of that,
+# and the arena runs from (0, 0) to (arena_w, arena_h).
+arena_w = width() / ZOOM
+arena_h = height() / ZOOM
+setCamScale(ZOOM)
+setCamPos(vec2(arena_w / 2, arena_h / 2))
+
+bean = add([sprite(&quot;bean&quot;), pos(arena_w / 2, arena_h - 100),
+            anchor(&quot;center&quot;)])
+
+
+@onKeyDown(&quot;left&quot;)
+def go_left():
+    bean.move(-BEAN_SPEED, 0)
+    keep_on_screen()
+
+
+@onKeyDown(&quot;right&quot;)
+def go_right():
+    bean.move(BEAN_SPEED, 0)
+    keep_on_screen()
+
+
+@onKeyDown(&quot;up&quot;)
+def go_up():
+    bean.move(0, -BEAN_SPEED)
+    keep_on_screen()
+
+
+@onKeyDown(&quot;down&quot;)
+def go_down():
+    bean.move(0, BEAN_SPEED)
+    keep_on_screen()
+
+
+# Holding the mouse down -- or a finger, on a phone -- moves Bean towards
+# it. mousePos() is where the mouse is in the WINDOW; with the camera
+# zoomed out, toWorld() turns that into where it is in the arena.
+@onMouseDown
+def go_to_mouse():
+    bean.moveTo(toWorld(mousePos()), BEAN_SPEED)
+    keep_on_screen()
+
+
+def keep_on_screen():
+    # 32 and 27 are half of Bean&#x27;s width and height.
+    bean.pos.x = clamp(bean.pos.x, 32, arena_w - 32)
+    bean.pos.y = clamp(bean.pos.y, 27, arena_h - 27)</code></pre>
+
+<p><strong>Zooming out.</strong> <code>setCamScale(ZOOM)</code> tells the
+camera to draw everything at <code>ZOOM</code> times its size. At 0.7, Bean,
+64 pixels wide, is drawn about 45 pixels wide, so the 800-by-600 window
+now has room for a bigger piece of the world: 800 / 0.7 by 600 / 0.7, which is
+about 1143 by 857. That's <code>arena_w</code> and
+<code>arena_h</code>. More room means more bullets on the screen and more
+space to dodge them.</p>
+
+<p>The camera always shows whatever is around the spot it's pointing at.
+<code>setCamPos(vec2(arena_w / 2, arena_h / 2))</code> points it at the
+middle of the arena, so the arena runs from (0, 0) at the top left to
+(<code>arena_w</code>, <code>arena_h</code>) at the bottom right, the way the
+window does in a game with no zoom.</p>
+
+<ul>
+<li>From here on, every position is a position in the <em>arena</em>.
+<code>pos(arena_w / 2, arena_h - 100)</code> is the middle of the arena,
+100 pixels up from the bottom.</li>
+<li>Four <code>@onKeyDown</code> functions, one per arrow, the way Bean ran
+in Bomb Dodge. <code>bean.move(0, -BEAN_SPEED)</code> is up, because up is
+minus.</li>
+<li><code>bean.moveTo(place, BEAN_SPEED)</code> moves Bean towards
+<code>place</code> at that speed, a little each frame, and stops when it gets
+there. It does in one line what Bomb Dodge did with two <code>if</code>s.</li>
+<li><code>mousePos()</code> is where the mouse is in the <em>window</em>.
+<code>toWorld()</code> turns that into where it is in the <em>arena</em>.
+With no zoom they are the same. With the camera zoomed out they are not, and
+Bean needs the arena one.</li>
+<li><code>keep_on_screen()</code> uses <code>clamp</code> twice now, once
+across and once down. 32 and 27 are half Bean's width and height.</li>
+</ul>
+
+<div class="callout"><p><strong>Two things to break.</strong></p>
+<p>Take out the <code>setCamPos(...)</code> line. There's no error message,
+and no Bean either. The camera is still pointing where it started, at
+(400, 300), so it is looking at the wrong part of the arena, and Bean is just
+below the bottom of the window. Hold <strong>up</strong> for a moment and Bean
+climbs into view. Then hold <strong>right</strong>: Bean walks off the
+right-hand side of the window, because the arena's edge is past the
+window's.</p>
+<p>Put the line back, then change <code>toWorld(mousePos())</code> to just
+<code>mousePos()</code>. Hold the mouse near the top-left corner, at
+(100, 100), and Bean stops at (70, 70), a little past the pointer. Hold it
+near the bottom right, at (700, 500), and Bean stops at (490, 350), nowhere
+near it. Bean is going to the right numbers, but in the wrong place: a window
+position used as an arena position.</p></div>
+
+<h2 id="step-2-the-gazer-and-aimed-shots">Step 2 — the Gazer, and shots aimed at Bean</h2>
+
+<p>The Gazer appears at the top and swings from side to side. A second in, it
+starts shooting yellow bullets straight at Bean, one every 0.7 seconds. Move
+and they miss. Stand still and they go straight through you, because nothing
+checks yet whether a bullet has hit.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+ZOOM = 0.7             # 1 is normal; 0.7 shows more of the world
+BEAN_SPEED = 360       # how fast Bean moves, in pixels per second
+BULLET_SIZE = 9        # how big a bullet is (its radius)
+BULLET_SPEED = 130     # how fast bullets fly
+AIM_WAIT = 0.7         # seconds between shots aimed straight at Bean
+
+kaypy(width=800, height=600, background=[24, 18, 40])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;gazer&quot;, &quot;images/gazer.png&quot;)
+
+# Zoom out. The window now holds a bigger piece of the world: arena_w by
+# arena_h, which is 1143 by 857. Point the camera at the middle of that,
+# and the arena runs from (0, 0) to (arena_w, arena_h).
+arena_w = width() / ZOOM
+arena_h = height() / ZOOM
+setCamScale(ZOOM)
+setCamPos(vec2(arena_w / 2, arena_h / 2))
+
+# The Gazer, along the top. anchor(&quot;center&quot;) means pos() is the middle.
+gazer = add([sprite(&quot;gazer&quot;), pos(arena_w / 2, 110), anchor(&quot;center&quot;),
+             z(5)])
+
+bean = add([sprite(&quot;bean&quot;), pos(arena_w / 2, arena_h - 100),
+            anchor(&quot;center&quot;), z(5)])
+
+
+@onKeyDown(&quot;left&quot;)
+def go_left():
+    bean.move(-BEAN_SPEED, 0)
+    keep_on_screen()
+
+
+@onKeyDown(&quot;right&quot;)
+def go_right():
+    bean.move(BEAN_SPEED, 0)
+    keep_on_screen()
+
+
+@onKeyDown(&quot;up&quot;)
+def go_up():
+    bean.move(0, -BEAN_SPEED)
+    keep_on_screen()
+
+
+@onKeyDown(&quot;down&quot;)
+def go_down():
+    bean.move(0, BEAN_SPEED)
+    keep_on_screen()
+
+
+# Holding the mouse down -- or a finger, on a phone -- moves Bean towards
+# it. mousePos() is where the mouse is in the WINDOW; with the camera
+# zoomed out, toWorld() turns that into where it is in the arena.
+@onMouseDown
+def go_to_mouse():
+    bean.moveTo(toWorld(mousePos()), BEAN_SPEED)
+    keep_on_screen()
+
+
+def keep_on_screen():
+    # 32 and 27 are half of Bean&#x27;s width and height.
+    bean.pos.x = clamp(bean.pos.x, 32, arena_w - 32)
+    bean.pos.y = clamp(bean.pos.y, 27, arena_h - 27)
+
+
+# The Gazer swings from side to side. wave() goes smoothly back and forth
+# between the two numbers as time() goes up.
+@onUpdate
+def swing():
+    gazer.pos.x = wave(150, arena_w - 150, time() * 0.6)
+
+
+# One bullet, from the Gazer, flying in `direction`. move() keeps it going
+# by itself; it only needs to be told which way and how fast.
+def shoot(direction, colour):
+    add([circle(BULLET_SIZE), color(colour), pos(gazer.pos),
+         anchor(&quot;center&quot;), move(direction, BULLET_SPEED), &quot;bullet&quot;])
+
+
+# A shot aimed straight at Bean. Bean&#x27;s position take away the Gazer&#x27;s is
+# the way from the Gazer to Bean.
+def aim():
+    shoot(bean.pos - gazer.pos, YELLOW)
+    wait(AIM_WAIT, aim)
+
+
+wait(1, aim)</code></pre>
+
+<ul>
+<li><code>wave(150, arena_w - 150, time() * 0.6)</code> is a number that
+swings smoothly between 150 and <code>arena_w - 150</code> as
+<code>time()</code> goes up. Setting the Gazer's <code>x</code> to it every
+frame swings the Gazer. Make the 0.6 bigger and it swings faster.</li>
+<li><code>shoot(direction, colour)</code> makes one bullet. It starts where
+the Gazer is, <code>pos(gazer.pos)</code>, and
+<code>move(direction, BULLET_SPEED)</code> sends it off. There's nothing
+else to write: the bullet keeps going by itself. The <code>"bullet"</code> at
+the end is a tag, so the next step can find all of them.</li>
+<li><code>color(colour)</code> takes a colour kaypy already has a name for:
+<code>YELLOW</code> here, and <code>MAGENTA</code> and <code>CYAN</code> in
+step 5, so you can tell the kinds of shot apart.</li>
+<li><code>bean.pos - gazer.pos</code> is the way from the Gazer to Bean.
+<code>move()</code> only cares about the way, not the length, so it doesn't
+matter how far apart they are.</li>
+<li><code>aim</code> fires a shot and then asks <code>wait</code> to run
+<code>aim</code> again in <code>AIM_WAIT</code> seconds. That's how bombs
+kept dropping in Bomb Dodge: a function that books its own next turn.</li>
+</ul>
+
+<div class="callout"><p><strong>Break it.</strong> Turn the subtraction round:
+<code>shoot(gazer.pos - bean.pos, YELLOW)</code>. There's no error message.
+Every shot flies up and away from Bean, off the top of the window.
+<code>gazer.pos - bean.pos</code> is the way from Bean to the
+Gazer, so the bullet sets off from the Gazer going the way that points:
+further away from Bean.</p></div>
+
+<h2 id="step-3-getting-hit-and-cleaning-up">Step 3 — getting hit, and cleaning up</h2>
+
+<p>Now a bullet that reaches Bean is a hit: a bang, a shake, and Bean is gone.
+The Gazer stops swinging and stops shooting.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+ZOOM = 0.7             # 1 is normal; 0.7 shows more of the world
+BEAN_SPEED = 360       # how fast Bean moves, in pixels per second
+HIT_DISTANCE = 16      # how close a bullet&#x27;s middle has to get to Bean&#x27;s
+BULLET_SIZE = 9        # how big a bullet is (its radius)
+BULLET_SPEED = 130     # how fast bullets fly
+AIM_WAIT = 0.7         # seconds between shots aimed straight at Bean
+
+kaypy(width=800, height=600, background=[24, 18, 40])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;gazer&quot;, &quot;images/gazer.png&quot;)
+loadSound(&quot;boom&quot;, &quot;sounds/small_boom.wav&quot;)
+
+alive = True
+
+# Zoom out. The window now holds a bigger piece of the world: arena_w by
+# arena_h, which is 1143 by 857. Point the camera at the middle of that,
+# and the arena runs from (0, 0) to (arena_w, arena_h).
+arena_w = width() / ZOOM
+arena_h = height() / ZOOM
+setCamScale(ZOOM)
+setCamPos(vec2(arena_w / 2, arena_h / 2))
+
+# The Gazer, along the top. anchor(&quot;center&quot;) means pos() is the middle.
+gazer = add([sprite(&quot;gazer&quot;), pos(arena_w / 2, 110), anchor(&quot;center&quot;),
+             z(5)])
+
+bean = add([sprite(&quot;bean&quot;), pos(arena_w / 2, arena_h - 100),
+            anchor(&quot;center&quot;), z(5)])
+
+
+@onKeyDown(&quot;left&quot;)
+def go_left():
+    bean.move(-BEAN_SPEED, 0)
+    keep_on_screen()
+
+
+@onKeyDown(&quot;right&quot;)
+def go_right():
+    bean.move(BEAN_SPEED, 0)
+    keep_on_screen()
+
+
+@onKeyDown(&quot;up&quot;)
+def go_up():
+    bean.move(0, -BEAN_SPEED)
+    keep_on_screen()
+
+
+@onKeyDown(&quot;down&quot;)
+def go_down():
+    bean.move(0, BEAN_SPEED)
+    keep_on_screen()
+
+
+# Holding the mouse down -- or a finger, on a phone -- moves Bean towards
+# it. mousePos() is where the mouse is in the WINDOW; with the camera
+# zoomed out, toWorld() turns that into where it is in the arena.
+@onMouseDown
+def go_to_mouse():
+    bean.moveTo(toWorld(mousePos()), BEAN_SPEED)
+    keep_on_screen()
+
+
+def keep_on_screen():
+    # 32 and 27 are half of Bean&#x27;s width and height.
+    bean.pos.x = clamp(bean.pos.x, 32, arena_w - 32)
+    bean.pos.y = clamp(bean.pos.y, 27, arena_h - 27)
+
+
+# The Gazer swings from side to side. wave() goes smoothly back and forth
+# between the two numbers as time() goes up.
+@onUpdate
+def swing():
+    if alive:
+        gazer.pos.x = wave(150, arena_w - 150, time() * 0.6)
+
+
+# One bullet, from the Gazer, flying in `direction`. move() keeps it going
+# by itself; it only needs to be told which way and how fast.
+def shoot(direction, colour):
+    add([circle(BULLET_SIZE), color(colour), pos(gazer.pos),
+         anchor(&quot;center&quot;), move(direction, BULLET_SPEED), &quot;bullet&quot;])
+
+
+# A shot aimed straight at Bean. Bean&#x27;s position take away the Gazer&#x27;s is
+# the way from the Gazer to Bean.
+def aim():
+    if not alive:
+        return
+    shoot(bean.pos - gazer.pos, YELLOW)
+    wait(AIM_WAIT, aim)
+
+
+wait(1, aim)
+
+
+# Every bullet runs this, every frame.
+@onUpdate(&quot;bullet&quot;)
+def check(bullet):
+    if not alive:
+        return
+
+    if bullet.pos.dist(bean.pos) &lt; HIT_DISTANCE:
+        hit()
+        return
+
+    # Gone out of the arena? Then it is finished with.
+    x = bullet.pos.x
+    y = bullet.pos.y
+    if x &lt; -20 or x &gt; arena_w + 20 or y &lt; -20 or y &gt; arena_h + 20:
+        bullet.destroy()
+
+
+def hit():
+    global alive
+
+    alive = False
+    play(&quot;boom&quot;)
+    shake(12)
+    addKaboom(bean.pos)
+
+    # Bean goes, and so does every bullet. move() would keep them flying.
+    bean.destroy()
+    destroyAll(&quot;bullet&quot;)</code></pre>
+
+<ul>
+<li><code>@onUpdate("bullet")</code> runs <code>check</code> every frame for
+every bullet, with that bullet as <code>bullet</code>.</li>
+<li><code>bullet.pos.dist(bean.pos)</code> is how far the bullet's middle is
+from Bean's middle. Under <code>HIT_DISTANCE</code> is a hit.</li>
+<li><strong>The hit is much smaller than Bean.</strong> Bean is 64 pixels
+wide, and a bullet is 18 across. Measured from middle to middle, a bullet
+first touches the picture of Bean at about 40. <code>HIT_DISTANCE</code> is 16, so a bullet has to get right
+into the middle of Bean to count. That's on purpose, and every game like this
+does it: a bullet that only clips your edge misses, and you can squeeze
+through gaps that look too small. It feels fair. A hit the size of the
+picture feels like being hit by something that missed.</li>
+<li><code>alive</code> is how the rest of the game knows it's over.
+<code>hit</code> changes it, so <code>hit</code> says
+<code>global alive</code> first. <code>aim</code>, <code>swing</code> and
+<code>check</code> only read it, so they don't.</li>
+<li>A bullet more than 20 pixels outside the arena is destroyed.</li>
+</ul>
+
+<div class="callout"><p><strong>Two things to break.</strong></p>
+<p>Take out the last two lines of <code>check</code>, the ones that destroy a
+bullet that has left the arena. There's no error message, and the game looks
+just the same. But every bullet the Gazer has ever fired is still out there,
+flying away, and kaypy moves every one of them every frame. Keep Bean
+alive for a minute and there are 82 bullets, with only about 9 of them on the
+screen. The whole game fires a lot more: three minutes in there were 4,683,
+each frame took about 28 milliseconds instead of less than one, and it kept
+getting slower the longer it ran.</p>
+<p>Put them back, and take out <code>destroyAll("bullet")</code> instead. Stand
+still and get hit. The bullets that were already in the air keep flying after
+Bean has gone, straight off the edge of the window.
+<code>move()</code> doesn't know the game is over. Only your own code
+knows that, so your own code has to stop them.</p></div>
+
+<h2 id="step-4-points-and-playing-again">Step 4 — points, and playing again</h2>
+
+<p>A point for every second you last, a best score that's remembered, and
+<strong>space</strong> or a click to play again. This step is Bomb Dodge's
+step 4 all over again, so it is put together the same way: the whole game
+goes inside a scene, and <code>again()</code> starts the scene over.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+ZOOM = 0.7             # 1 is normal; 0.7 shows more of the world
+BEAN_SPEED = 360       # how fast Bean moves, in pixels per second
+HIT_DISTANCE = 16      # how close a bullet&#x27;s middle has to get to Bean&#x27;s
+BULLET_SIZE = 9        # how big a bullet is (its radius)
+BULLET_SPEED = 130     # how fast bullets fly
+AIM_WAIT = 0.7         # seconds between shots aimed straight at Bean
+BEST_KEY = &quot;spiral_storm_best&quot;
+
+kaypy(width=800, height=600, background=[24, 18, 40])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;gazer&quot;, &quot;images/gazer.png&quot;)
+loadSound(&quot;boom&quot;, &quot;sounds/small_boom.wav&quot;)
+
+score = 0
+alive = True
+
+
+@scene(&quot;game&quot;)
+def game():
+    global score, alive
+
+    # A new game, so everything starts again.
+    score = 0
+    alive = True
+    best = getData(BEST_KEY, 0)
+
+    # Zoom out. go() puts the camera back to normal, which is why this is
+    # in the scene now.
+    arena_w = width() / ZOOM
+    arena_h = height() / ZOOM
+    setCamScale(ZOOM)
+    setCamPos(vec2(arena_w / 2, arena_h / 2))
+
+    gazer = add([sprite(&quot;gazer&quot;), pos(arena_w / 2, 110), anchor(&quot;center&quot;),
+                 z(5)])
+
+    bean = add([sprite(&quot;bean&quot;), pos(arena_w / 2, arena_h - 100),
+                anchor(&quot;center&quot;), z(5)])
+
+    # fixed() keeps the writing where it is on the screen, at its normal
+    # size, whatever the camera does. So these positions are in the window,
+    # not the arena.
+    score_label = add([text(&quot;0&quot;, size=48), pos(width() / 2, 40),
+                       anchor(&quot;center&quot;), fixed(), z(10)])
+    best_label = add([text(&quot;best &quot; + str(best), size=18), pos(12, 12),
+                      opacity(0.75), fixed(), z(10)])
+    message = add([text(&quot;Arrow keys to move, or hold the mouse where you &quot;
+                        &quot;want to go. Don&#x27;t get hit!&quot;, size=26, width=560),
+                   pos(width() / 2, height() / 2), anchor(&quot;center&quot;),
+                   fixed(), z(10)])
+
+    @onKeyDown(&quot;left&quot;)
+    def go_left():
+        bean.move(-BEAN_SPEED, 0)
+        keep_on_screen()
+
+    @onKeyDown(&quot;right&quot;)
+    def go_right():
+        bean.move(BEAN_SPEED, 0)
+        keep_on_screen()
+
+    @onKeyDown(&quot;up&quot;)
+    def go_up():
+        bean.move(0, -BEAN_SPEED)
+        keep_on_screen()
+
+    @onKeyDown(&quot;down&quot;)
+    def go_down():
+        bean.move(0, BEAN_SPEED)
+        keep_on_screen()
+
+    @onMouseDown
+    def go_to_mouse():
+        bean.moveTo(toWorld(mousePos()), BEAN_SPEED)
+        keep_on_screen()
+
+    def keep_on_screen():
+        bean.pos.x = clamp(bean.pos.x, 32, arena_w - 32)
+        bean.pos.y = clamp(bean.pos.y, 27, arena_h - 27)
+
+    @onUpdate
+    def swing():
+        if alive:
+            gazer.pos.x = wave(150, arena_w - 150, time() * 0.6)
+
+    def shoot(direction, colour):
+        add([circle(BULLET_SIZE), color(colour), pos(gazer.pos),
+             anchor(&quot;center&quot;), move(direction, BULLET_SPEED), &quot;bullet&quot;])
+
+    def aim():
+        if not alive:
+            return
+        shoot(bean.pos - gazer.pos, YELLOW)
+        wait(AIM_WAIT, aim)
+
+    wait(1, aim)
+
+    @onUpdate(&quot;bullet&quot;)
+    def check(bullet):
+        if not alive:
+            return
+
+        if bullet.pos.dist(bean.pos) &lt; HIT_DISTANCE:
+            hit()
+            return
+
+        x = bullet.pos.x
+        y = bullet.pos.y
+        if x &lt; -20 or x &gt; arena_w + 20 or y &lt; -20 or y &gt; arena_h + 20:
+            bullet.destroy()
+
+    # A point for every second you are still here.
+    def tick():
+        global score
+        if not alive:
+            return
+        score = score + 1
+        score_label.text = str(score)
+        if score == 1:
+            message.text = &quot;&quot;
+        wait(1, tick)
+
+    wait(1, tick)
+
+    def hit():
+        global alive
+
+        alive = False
+        play(&quot;boom&quot;)
+        shake(12)
+        addKaboom(bean.pos)
+        bean.destroy()
+        destroyAll(&quot;bullet&quot;)
+
+        if score &gt; best:
+            setData(BEST_KEY, score)
+            best_label.text = &quot;best &quot; + str(score)
+
+        if score == 1:
+            message.text = &quot;1 point -- press SPACE or click to play again&quot;
+        else:
+            message.text = (str(score)
+                            + &quot; points -- press SPACE or click to play again&quot;)
+
+    # Once the game is over, space or a click starts a new one.
+    def again():
+        if not alive:
+            go(&quot;game&quot;)
+
+    onKeyPress(&quot;space&quot;, again)
+    onClick(again)
+
+
+go(&quot;game&quot;)</code></pre>
+
+<ul>
+<li><code>tick</code> adds a point and books itself again in a second, the
+same trick as <code>aim</code>. It stops booking once
+<code>alive</code> is <code>False</code>, so the points stop too.</li>
+<li><code>score</code>, <code>alive</code> and <code>best</code> work as they
+did in Bomb Dodge. <code>getData</code> and <code>setData</code> keep the
+best score after the page is closed.</li>
+<li><strong>The zoom moved into the scene.</strong>
+<code>go("game")</code> throws away everything from the last game before it
+starts the new one, and that includes the camera: it goes back to no zoom,
+pointing at the middle of the window. Setting it in the scene sets it again
+every game.</li>
+<li><strong><code>fixed()</code></strong> is on the score, the best score and
+the message. It means "this belongs to the window, not the arena": the camera
+leaves it alone, so it stays where it was put, at its own size. Its
+<code>pos()</code> is a window position, which is why the score is at
+<code>width() / 2</code> and not <code>arena_w / 2</code>.</li>
+</ul>
+
+<div class="callout"><p><strong>Two things to break.</strong></p>
+<p>Move the four zoom lines out of the scene and up to the top of the program,
+under <code>alive = True</code>. The first game looks fine. Get hit and press
+<strong>space</strong>: the second game is zoomed back in, and Bean is
+nowhere. It's still at (571, 757) in the arena, and with no zoom the window
+only shows down to 600.</p>
+<p>Put them back, and take <code>fixed()</code> off the score. There's no error
+message. The score shrinks and slides up and to the left, to about (280, 28)
+in the window, because now it's a thing in the arena at (400, 40), and the
+camera zooms it like everything else.</p></div>
+
+<h2 id="step-5-rings-and-a-spiral">Step 5 — rings, and a spiral</h2>
+
+<p>At 8 points the Gazer starts throwing a ring of pink bullets every 2.5
+seconds. At 20 it adds a blue spiral with four arms that turns and turns and
+never stops. With everything going, there are about a hundred bullets on the
+screen.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+ZOOM = 0.7             # 1 is normal; 0.7 shows more of the world
+BEAN_SPEED = 360       # how fast Bean moves, in pixels per second
+HIT_DISTANCE = 16      # how close a bullet&#x27;s middle has to get to Bean&#x27;s
+BULLET_SIZE = 9        # how big a bullet is (its radius)
+BULLET_SPEED = 130     # how fast bullets fly
+AIM_WAIT = 0.7         # seconds between shots aimed straight at Bean
+
+RING_FROM = 8          # the score the rings start at
+RING_GAP = 15          # degrees between the bullets in a ring
+RING_WAIT = 2.5        # seconds between rings
+
+SPIRAL_FROM = 20       # the score the spiral starts at
+SPIRAL_ARMS = 4        # how many arms the spiral has
+SPIRAL_WAIT = 0.25     # seconds between one turn of the spiral and the next
+SPIRAL_TURN = 11       # how many degrees it turns each time
+
+BEST_KEY = &quot;spiral_storm_best&quot;
+
+kaypy(width=800, height=600, background=[24, 18, 40])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;gazer&quot;, &quot;images/gazer.png&quot;)
+loadSound(&quot;shoot&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;boom&quot;, &quot;sounds/small_boom.wav&quot;)
+
+score = 0
+alive = True
+spiral_angle = 0
+
+
+@scene(&quot;game&quot;)
+def game():
+    global score, alive, spiral_angle
+
+    # A new game, so everything starts again.
+    score = 0
+    alive = True
+    spiral_angle = 0
+    best = getData(BEST_KEY, 0)
+
+    # Zoom out. go() puts the camera back to normal, which is why this is
+    # in the scene now.
+    arena_w = width() / ZOOM
+    arena_h = height() / ZOOM
+    setCamScale(ZOOM)
+    setCamPos(vec2(arena_w / 2, arena_h / 2))
+
+    gazer = add([sprite(&quot;gazer&quot;), pos(arena_w / 2, 110), anchor(&quot;center&quot;),
+                 z(5)])
+
+    bean = add([sprite(&quot;bean&quot;), pos(arena_w / 2, arena_h - 100),
+                anchor(&quot;center&quot;), z(5)])
+
+    # fixed() keeps the writing where it is on the screen, at its normal
+    # size, whatever the camera does. So these positions are in the window,
+    # not the arena.
+    score_label = add([text(&quot;0&quot;, size=48), pos(width() / 2, 40),
+                       anchor(&quot;center&quot;), fixed(), z(10)])
+    best_label = add([text(&quot;best &quot; + str(best), size=18), pos(12, 12),
+                      opacity(0.75), fixed(), z(10)])
+    message = add([text(&quot;Arrow keys to move, or hold the mouse where you &quot;
+                        &quot;want to go. Don&#x27;t get hit!&quot;, size=26, width=560),
+                   pos(width() / 2, height() / 2), anchor(&quot;center&quot;),
+                   fixed(), z(10)])
+
+    @onKeyDown(&quot;left&quot;)
+    def go_left():
+        bean.move(-BEAN_SPEED, 0)
+        keep_on_screen()
+
+    @onKeyDown(&quot;right&quot;)
+    def go_right():
+        bean.move(BEAN_SPEED, 0)
+        keep_on_screen()
+
+    @onKeyDown(&quot;up&quot;)
+    def go_up():
+        bean.move(0, -BEAN_SPEED)
+        keep_on_screen()
+
+    @onKeyDown(&quot;down&quot;)
+    def go_down():
+        bean.move(0, BEAN_SPEED)
+        keep_on_screen()
+
+    @onMouseDown
+    def go_to_mouse():
+        bean.moveTo(toWorld(mousePos()), BEAN_SPEED)
+        keep_on_screen()
+
+    def keep_on_screen():
+        bean.pos.x = clamp(bean.pos.x, 32, arena_w - 32)
+        bean.pos.y = clamp(bean.pos.y, 27, arena_h - 27)
+
+    @onUpdate
+    def swing():
+        if alive:
+            gazer.pos.x = wave(150, arena_w - 150, time() * 0.6)
+
+    def shoot(direction, colour):
+        add([circle(BULLET_SIZE), color(colour), pos(gazer.pos),
+             anchor(&quot;center&quot;), move(direction, BULLET_SPEED), &quot;bullet&quot;])
+
+    def aim():
+        if not alive:
+            return
+        shoot(bean.pos - gazer.pos, YELLOW)
+        wait(AIM_WAIT, aim)
+
+    # A ring: one bullet every RING_GAP degrees, all the way round.
+    def ring():
+        if not alive:
+            return
+        if score &gt;= RING_FROM:
+            for angle in range(0, 360, RING_GAP):
+                shoot(Vec2.fromAngle(angle), MAGENTA)
+            play(&quot;shoot&quot;)
+        wait(RING_WAIT, ring)
+
+    # A spiral: a bullet for each arm, spread evenly round, at an angle
+    # that turns a little further every time.
+    def spiral():
+        global spiral_angle
+        if not alive:
+            return
+        if score &gt;= SPIRAL_FROM:
+            for arm in range(0, 360, 360 // SPIRAL_ARMS):
+                shoot(Vec2.fromAngle(spiral_angle + arm), CYAN)
+            spiral_angle = spiral_angle + SPIRAL_TURN
+        wait(SPIRAL_WAIT, spiral)
+
+    wait(1, aim)
+    wait(1, ring)
+    wait(1, spiral)
+
+    @onUpdate(&quot;bullet&quot;)
+    def check(bullet):
+        if not alive:
+            return
+
+        if bullet.pos.dist(bean.pos) &lt; HIT_DISTANCE:
+            hit()
+            return
+
+        x = bullet.pos.x
+        y = bullet.pos.y
+        if x &lt; -20 or x &gt; arena_w + 20 or y &lt; -20 or y &gt; arena_h + 20:
+            bullet.destroy()
+
+    # A point for every second you are still here.
+    def tick():
+        global score
+        if not alive:
+            return
+        score = score + 1
+        score_label.text = str(score)
+        if score == 1:
+            message.text = &quot;&quot;
+        wait(1, tick)
+
+    wait(1, tick)
+
+    def hit():
+        global alive
+
+        alive = False
+        play(&quot;boom&quot;)
+        shake(12)
+        addKaboom(bean.pos)
+        bean.destroy()
+        destroyAll(&quot;bullet&quot;)
+
+        if score &gt; best:
+            setData(BEST_KEY, score)
+            best_label.text = &quot;best &quot; + str(score)
+
+        if score == 1:
+            message.text = &quot;1 point -- press SPACE or click to play again&quot;
+        else:
+            message.text = (str(score)
+                            + &quot; points -- press SPACE or click to play again&quot;)
+
+    # Once the game is over, space or a click starts a new one.
+    def again():
+        if not alive:
+            go(&quot;game&quot;)
+
+    onKeyPress(&quot;space&quot;, again)
+    onClick(again)
+
+
+go(&quot;game&quot;)</code></pre>
+
+<p><strong>The ring.</strong> <code>range(0, 360, RING_GAP)</code> counts
+from 0 up to 360 in steps of 15: 0, 15, 30, and so on up to 345. That's 24
+angles. The loop fires one bullet at each angle, so 24 bullets leave the Gazer
+at once, spread evenly all the way round. (360 itself is left out, which is
+right: it's the same as 0.)</p>
+
+<p><strong>The spiral.</strong> <code>360 // SPIRAL_ARMS</code> is 90, so
+<code>range(0, 360, 90)</code> is 0, 90, 180 and 270: four bullets, a
+quarter of a turn apart, one for each arm. <code>spiral_angle</code> is added
+to every one of them. Then <code>spiral_angle</code> goes up by 11, so a
+quarter of a second later, the next four go out a little further round. Each
+arm curls a bit more every time, and that is the spiral.</p>
+
+<ul>
+<li><code>spiral_angle</code> has to last from one call of
+<code>spiral</code> to the next, so it lives up at the top with
+<code>score</code> and <code>alive</code>. <code>spiral</code> changes it,
+so <code>spiral</code> says <code>global spiral_angle</code>. The scene
+sets it back to 0 for each new game, so the scene says it too.</li>
+<li><code>ring</code> and <code>spiral</code> start running a second in,
+like <code>aim</code>, but they don't shoot until the score is high enough.
+They still book their next turn either way, so they're ready the moment it
+is.</li>
+<li><code>play("shoot")</code> is outside the <code>for</code> loop, so it
+beeps once for each ring, not once for each of its 24 bullets.</li>
+</ul>
+
+<div class="callout"><p><strong>Two things to break.</strong></p>
+<p>Make <code>RING_GAP</code> 0. The game runs fine until 8 points, when the
+first ring is due, and then stops with</p>
+<pre><code class="language-plaintext">    for angle in range(0, 360, RING_GAP):
+ValueError: range() arg 3 must not be zero</code></pre>
+<p>Counting from 0 to 360 in steps of 0 would never get there, so Python
+refuses. "arg 3" is the third thing in the brackets.</p>
+<p>Make <code>SPIRAL_ARMS</code> 7. There's no error, but count the bullets in
+one turn: there are 8, and two of them are almost on top of each other.
+<code>360 // 7</code> is 51, because <code>//</code> throws away what's left
+over. Counting up in 51s gives 0, 51, 102, 153, 204, 255, 306 — and then 357,
+which is still under 360, so it's in. The eighth bullet is 3 degrees from the
+first. Arms that divide 360 exactly — 2, 3, 4, 5, 6, 8 — come out
+even.</p></div>
+
+<h2 id="step-6-the-whole-game">Step 6 — the whole game</h2>
+
+<p>The last thing: it gets harder as you go. The bullets were all
+<code>BULLET_SPEED</code>, and the rings came every <code>RING_WAIT</code>.
+Now each is worked out from the score by a small function, the way Bomb Dodge
+works out how fast its bombs fall. <code>bullet_speed()</code> starts at 130
+and adds 1 for every point, up to 200. <code>ring_wait()</code> starts at 2.5
+seconds and takes off 0.02 for every point, down to 2. Both stop somewhere, so
+the game ends up hard but never impossible.</p>
+
+<p>Here it is, the whole game, exactly as it is on the
+<a href="../../games/#spiral-storm">Games page</a>. It has the settings
+gathered at the top, and comments saying what every part is for.</p>
+
+<pre><code class="language-python">&quot;&quot;&quot;Spiral Storm -- the Gazer fills the sky with bullets. Don&#x27;t get hit.
+
+    arrow keys              move
+    or hold the mouse (or a finger) where you want Bean to go
+
+Every second you last is a point. The longer you last, the more the Gazer
+throws at you: first shots aimed straight at Bean, then rings of bullets,
+then a spiral that never stops turning. One hit and it is game over. Your
+best score is remembered.
+
+HOW THIS FILE IS PUT TOGETHER
+
+    1. the window, the pictures and the sounds
+    2. the settings
+    3. how hard the game is
+    4. the game scene: zooming out, Bean, the Gazer, the bullets
+    5. start the game
+
+Every bullet is a game object with move() on it, which sends it off in a
+straight line by itself. All the Gazer has to do is say which way.
+Vec2.fromAngle(angle) turns an angle into a direction: 0 is right, 90 is
+down, 180 is left, 270 is up. A ring is a for loop over the angles, and a
+spiral is one angle that keeps turning. After this, try Pong.
+&quot;&quot;&quot;
+
+from kaypy import *
+
+# ----------------------------------------------------------------- 1. setup
+
+kaypy(width=800, height=600, background=[24, 18, 40])
+
+loadSprite(&quot;bean&quot;, &quot;images/bean.png&quot;)
+loadSprite(&quot;gazer&quot;, &quot;images/gazer.png&quot;)
+loadSound(&quot;shoot&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;boom&quot;, &quot;sounds/small_boom.wav&quot;)
+
+
+# -------------------------------------------------------------- 2. settings
+#
+# Everything you would want to change is here. Change one at a time and
+# play it.
+
+# How far the camera is zoomed out. 1 is normal; 0.7 shows more of the
+# world, so everything looks smaller and there is more room to dodge.
+ZOOM = 0.7
+
+BEAN_SPEED = 360       # how fast Bean moves, in pixels per second
+
+# How close a bullet&#x27;s middle has to get to Bean&#x27;s middle to hit. Bean is
+# 64 pixels wide, so this is a lot smaller than Bean, on purpose: a bullet
+# that only clips the edge of Bean misses, and you can squeeze through gaps
+# that look too small.
+HIT_DISTANCE = 16
+
+BULLET_SIZE = 9        # how big a bullet is (its radius)
+SPEED_START = 130      # how fast bullets fly, to begin with
+SPEED_FASTEST = 200    # ...the fastest they ever fly
+SPEED_GAIN = 1         # ...and how much faster each point makes them
+
+AIM_WAIT = 0.7         # seconds between shots aimed straight at Bean
+
+RING_FROM = 8          # the score the rings start at
+RING_GAP = 15          # degrees between the bullets in a ring
+RING_WAIT_START = 2.5  # seconds between rings, to begin with
+RING_WAIT_SHORTEST = 2 # ...the shortest wait there ever is
+RING_WAIT_DROP = 0.02  # ...and how much shorter each point makes it
+
+SPIRAL_FROM = 20       # the score the spiral starts at
+SPIRAL_ARMS = 4        # how many arms the spiral has
+SPIRAL_WAIT = 0.25     # seconds between one turn of the spiral and the next
+SPIRAL_TURN = 11       # how many degrees it turns each time
+
+# The name the best score is saved under. Every game on a website shares
+# the same storage, so the game&#x27;s own name goes in it.
+BEST_KEY = &quot;spiral_storm_best&quot;
+
+
+# -------------------------------------------------- 3. how hard the game is
+#
+# Each of these works out a number from the score. They get harder as the
+# score goes up, and they stop somewhere, so the game ends up hard but never
+# impossible.
+
+score = 0
+
+
+def bullet_speed():
+    speed = SPEED_START + score * SPEED_GAIN
+    if speed &gt; SPEED_FASTEST:
+        speed = SPEED_FASTEST
+    return speed
+
+
+def ring_wait():
+    seconds = RING_WAIT_START - score * RING_WAIT_DROP
+    if seconds &lt; RING_WAIT_SHORTEST:
+        seconds = RING_WAIT_SHORTEST
+    return seconds
+
+
+# ------------------------------------------------------- 4. the game scene
+#
+# These change while you play. A function that CHANGES one has to say
+# `global` first, which means &quot;the one up here, not a new one of my own&quot;.
+
+alive = True
+spiral_angle = 0
+
+
+@scene(&quot;game&quot;)
+def game():
+    global score, alive, spiral_angle
+
+    # A new game, so everything starts again.
+    score = 0
+    alive = True
+    spiral_angle = 0
+    best = getData(BEST_KEY, 0)
+
+    # ----------------------------------------------------- zooming out
+    #
+    # The camera shows the world at ZOOM times its size, so the window
+    # now holds a bigger piece of the world: arena_w by arena_h, which is
+    # 1143 by 857 when ZOOM is 0.7. Point the camera at the middle of that
+    # and the arena runs from (0, 0) to (arena_w, arena_h), the way the
+    # window did before. go() puts the camera back to normal, which is why
+    # this is in the scene.
+    arena_w = width() / ZOOM
+    arena_h = height() / ZOOM
+    setCamScale(ZOOM)
+    setCamPos(vec2(arena_w / 2, arena_h / 2))
+
+    # The Gazer, along the top. anchor(&quot;center&quot;) means pos() is the middle.
+    gazer = add([sprite(&quot;gazer&quot;), pos(arena_w / 2, 110), anchor(&quot;center&quot;),
+                 z(5)])
+
+    bean = add([sprite(&quot;bean&quot;), pos(arena_w / 2, arena_h - 100),
+                anchor(&quot;center&quot;), z(5)])
+
+    # fixed() keeps the writing where it is on the screen, at its normal
+    # size, whatever the camera does. So these positions are in the window,
+    # not the arena.
+    score_label = add([text(&quot;0&quot;, size=48), pos(width() / 2, 40),
+                       anchor(&quot;center&quot;), fixed(), z(10)])
+    best_label = add([text(&quot;best &quot; + str(best), size=18), pos(12, 12),
+                      opacity(0.75), fixed(), z(10)])
+
+    # width=560 wraps a long message onto more than one line.
+    message = add([text(&quot;Arrow keys to move, or hold the mouse where you &quot;
+                        &quot;want to go. Don&#x27;t get hit!&quot;, size=26, width=560),
+                   pos(width() / 2, height() / 2), anchor(&quot;center&quot;),
+                   fixed(), z(10)])
+
+    # ------------------------------------------------------------ moving
+
+    @onKeyDown(&quot;left&quot;)
+    def go_left():
+        bean.move(-BEAN_SPEED, 0)
+        keep_on_screen()
+
+    @onKeyDown(&quot;right&quot;)
+    def go_right():
+        bean.move(BEAN_SPEED, 0)
+        keep_on_screen()
+
+    @onKeyDown(&quot;up&quot;)
+    def go_up():
+        bean.move(0, -BEAN_SPEED)
+        keep_on_screen()
+
+    @onKeyDown(&quot;down&quot;)
+    def go_down():
+        bean.move(0, BEAN_SPEED)
+        keep_on_screen()
+
+    # Holding the mouse down -- or a finger, on a phone -- moves Bean
+    # towards it. mousePos() is where the mouse is in the WINDOW; with the
+    # camera zoomed out, toWorld() turns that into where it is in the arena.
+    @onMouseDown
+    def go_to_mouse():
+        bean.moveTo(toWorld(mousePos()), BEAN_SPEED)
+        keep_on_screen()
+
+    def keep_on_screen():
+        # 32 and 27 are half of Bean&#x27;s width and height.
+        bean.pos.x = clamp(bean.pos.x, 32, arena_w - 32)
+        bean.pos.y = clamp(bean.pos.y, 27, arena_h - 27)
+
+    # ------------------------------------------------------------- the Gazer
+    #
+    # It swings from side to side. wave() goes smoothly back and forth
+    # between the two numbers as time() goes up.
+
+    @onUpdate
+    def swing():
+        if alive:
+            gazer.pos.x = wave(150, arena_w - 150, time() * 0.6)
+
+    # ------------------------------------------------------------ bullets
+    #
+    # One bullet, from the Gazer, flying in `direction`. move() keeps it
+    # going by itself; it only needs to be told which way and how fast.
+    # Each kind of shot has its own colour, so you can tell them apart.
+
+    def shoot(direction, colour):
+        add([circle(BULLET_SIZE), color(colour), pos(gazer.pos),
+             anchor(&quot;center&quot;), move(direction, bullet_speed()), &quot;bullet&quot;])
+
+    # A shot aimed straight at Bean. Bean&#x27;s position take away the Gazer&#x27;s
+    # is the way from the Gazer to Bean.
+    def aim():
+        if not alive:
+            return
+        shoot(bean.pos - gazer.pos, YELLOW)
+        wait(AIM_WAIT, aim)
+
+    # A ring: one bullet every RING_GAP degrees, all the way round.
+    def ring():
+        if not alive:
+            return
+        if score &gt;= RING_FROM:
+            for angle in range(0, 360, RING_GAP):
+                shoot(Vec2.fromAngle(angle), MAGENTA)
+            play(&quot;shoot&quot;)
+        wait(ring_wait(), ring)
+
+    # A spiral: a bullet for each arm, spread evenly round, at an angle
+    # that turns a little further every time.
+    def spiral():
+        global spiral_angle
+        if not alive:
+            return
+        if score &gt;= SPIRAL_FROM:
+            for arm in range(0, 360, 360 // SPIRAL_ARMS):
+                shoot(Vec2.fromAngle(spiral_angle + arm), CYAN)
+            spiral_angle = spiral_angle + SPIRAL_TURN
+        wait(SPIRAL_WAIT, spiral)
+
+    wait(1, aim)
+    wait(1, ring)
+    wait(1, spiral)
+
+    # Every bullet runs this, every frame.
+    @onUpdate(&quot;bullet&quot;)
+    def check(bullet):
+        if not alive:
+            return
+
+        if bullet.pos.dist(bean.pos) &lt; HIT_DISTANCE:
+            hit(bullet)
+            return
+
+        # Gone out of the arena? Then it is finished with. Left alone, it
+        # would fly on for ever, and thousands of them would slow the game
+        # down to a crawl.
+        x = bullet.pos.x
+        y = bullet.pos.y
+        if x &lt; -20 or x &gt; arena_w + 20 or y &lt; -20 or y &gt; arena_h + 20:
+            bullet.destroy()
+
+    # ------------------------------------------------------------- points
+    #
+    # A point for every second you are still here.
+
+    def tick():
+        global score
+        if not alive:
+            return
+        score = score + 1
+        score_label.text = str(score)
+        if score == 1:
+            message.text = &quot;&quot;
+        wait(1, tick)
+
+    wait(1, tick)
+
+    # -------------------------------------------------------- getting hit
+
+    def hit(bullet):
+        global alive
+
+        alive = False
+        play(&quot;boom&quot;)
+        shake(12)
+        addKaboom(bean.pos)
+
+        # Bean goes, and so does every bullet. move() would keep them
+        # flying, over the top of the message below.
+        bean.destroy()
+        destroyAll(&quot;bullet&quot;)
+
+        if score &gt; best:
+            setData(BEST_KEY, score)
+            best_label.text = &quot;best &quot; + str(score)
+
+        if score == 1:
+            message.text = &quot;1 point -- press SPACE or click to play again&quot;
+        else:
+            message.text = (str(score)
+                            + &quot; points -- press SPACE or click to play again&quot;)
+
+    # Once the game is over, space or a click starts a new one.
+    def again():
+        if not alive:
+            go(&quot;game&quot;)
+
+    onKeyPress(&quot;space&quot;, again)
+    onClick(again)
+
+
+# ------------------------------------------------------- 5. start the game
+
+go(&quot;game&quot;)</code></pre>
+
+<h2 id="make-it-yours">Make it yours</h2>
+
+<p><a href="../../play/?game=spiral_storm">Open the whole game in the playground →</a></p>
+
+<ul>
+<li><strong>Zoom out further.</strong> Make <code>ZOOM</code> 0.5. The arena
+is now 1600 by 1200, everything is drawn half size, and there's room for a
+lot more bullets. Nothing else needs changing, because everything is worked
+out from <code>arena_w</code> and <code>arena_h</code>.</li>
+<li><strong>A ring with a way out.</strong> In <code>ring</code>, put the
+<code>shoot</code> inside an <code>if</code>:
+<code>if angle &lt; 75 or angle &gt; 105:</code>. The angles 75, 90 and
+105 are skipped, and every ring has a gap pointing straight down, where Bean
+usually is.</li>
+<li><strong>A spiral that turns the other way.</strong> Make
+<code>SPIRAL_TURN</code> <code>-11</code>. Then try 45: each turn lands
+exactly halfway between the arms of the one before, and the spiral turns into
+eight straight lines.</li>
+<li><strong>Now play Pong.</strong> <a href="../pong/">Pong</a> goes back to
+a ball that carries its own speed, the way Paddle Ball's did, and adds a
+second paddle that the computer moves.</li>
+</ul>
+
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>

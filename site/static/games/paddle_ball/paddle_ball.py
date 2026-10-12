@@ -17,7 +17,8 @@ HOW THIS FILE IS PUT TOGETHER
 There are no pictures at all. The paddle and the ball are rectangles, and
 the ball is a game object that carries its own speed: ball.dx is how fast
 it is going across, and ball.dy is how fast it is going down. Bouncing is
-just making one of them negative. After this, try Pong.
+just making one of them negative. After this, try Spiral Storm, and then
+Pong.
 """
 
 from kaypy import *
