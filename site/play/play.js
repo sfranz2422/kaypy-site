@@ -226,6 +226,7 @@
   var GAMES = {
     ghost_chase: { title: "Ghost Chase", file: "ghost_chase/ghost_chase.py" },
     bomb_dodge: { title: "Bomb Dodge", file: "bomb_dodge/bomb_dodge.py" },
+    goblin_whack: { title: "Goblin Whack", file: "goblin_whack/goblin_whack.py" },
     paddle_ball: { title: "Paddle Ball", file: "paddle_ball/paddle_ball.py" },
     spiral_storm: { title: "Spiral Storm", file: "spiral_storm/spiral_storm.py" },
     pong: { title: "Pong", file: "pong/pong.py" },

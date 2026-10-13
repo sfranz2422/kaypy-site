@@ -1,0 +1,1209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Goblin Whack · KayPy</title>
+<meta name="description" content="How Goblin Whack was built, a step at a time: holes, monsters that pop up and duck, what each one is worth, a clock and a tally — the game for after dictionaries, in plain Python a student can copy.">
+<meta property="og:title" content="Building Goblin Whack · KayPy">
+<meta property="og:description" content="How Goblin Whack was built, a step at a time.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All eight lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li><li><a class="dropdown-item" href="../../learn/functions/">6 — Functions</a></li><li><a class="dropdown-item" href="../../learn/decorators/">7 — Decorators</a></li><li><a class="dropdown-item" href="../../learn/dictionaries/">8 — Dictionaries</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../../tutorials/" aria-current="page">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <article class="prose">
+<h1 id="building-goblin-whack">Building Goblin Whack</h1>
+
+<p><a href="../../static/games/goblin_whack/">Play it first →</a> Monsters
+pop up out of nine holes. Click one before it ducks back down. Every kind is
+worth something different, and the quick ones are worth the most. Don't
+click the angel. After thirty seconds you see what you whacked, and your best
+score is remembered.</p>
+
+<p>This is how it was built, a step at a time. Every numbered step below is a
+whole program: copy it into
+<a href="../../play/">the playground</a>, press Run, and it works. Each step
+is the one before it with something added, so you can build the game the way
+it was built. Then break something on purpose and see what changes. That
+teaches you more than reading does.</p>
+
+<p>There is nothing clever in it. No list comprehensions, no tricks, and every
+kaypy function it uses is on the <a href="../../api/">API page</a>. The
+pictures are the dungeon monsters from the playground's
+<strong>Sprites</strong> button.</p>
+
+<p>It is the game for after
+<a href="../../learn/dictionaries/">Lesson 8 — Dictionaries</a>, and it
+comes after <a href="../ghost-chase/">Ghost Chase</a> and
+<a href="../bomb-dodge/">Bomb Dodge</a>. It uses the same pieces as Bomb
+Dodge: functions, <code>global</code>, <code>wait()</code> and a scene. If
+any of those are new, build Bomb Dodge first. After this one, try
+<a href="../paddle-ball/">Paddle Ball</a>.</p>
+
+<h2 id="the-one-big-idea">The one big idea: the name looks everything up</h2>
+
+<p>Every monster has a name: <code>"goblin"</code>, <code>"imp"</code>,
+<code>"angel"</code>. That name is the key to everything about it. It is the
+name its picture is loaded under, so <code>sprite("imp")</code> shows it. It
+is the key in a dictionary of points, so <code>POINTS["imp"]</code> is what an
+imp is worth. It is the key in a dictionary of times, so
+<code>STAY["imp"]</code> is how long an imp stays up. And at the end, it is
+the key in a dictionary that counts how many imps you whacked.</p>
+
+<p>Nothing in the game ever says <em>if it is an imp, then…</em>. It
+looks the name up. That is why adding a monster of your own is one new line
+in each dictionary, and no new code at all.</p>
+
+<h2 id="step-1-a-goblin-to-click">Step 1 — a goblin to click</h2>
+
+<p>Nine holes and one goblin. Click the goblin and it jumps to another
+hole.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[72, 62, 78])
+
+loadSprite(&quot;goblin&quot;, &quot;dungeon/goblin.png&quot;, sliceX=8)
+
+# The nine holes, in three rows of three. A hole is a dark rectangle
+# with round ends: radius=20 rounds its corners.
+for row in range(3):
+    for column in range(3):
+        x = 220 + column * 180
+        y = 230 + row * 150
+        add([rect(120, 40, radius=20), pos(x, y), anchor(&quot;center&quot;),
+             color(20, 14, 24), &quot;hole&quot;])
+
+score = 0
+score_label = add([text(&quot;0&quot;, size=48), pos(width() / 2, 40),
+                   anchor(&quot;center&quot;)])
+
+# anchor(&quot;bot&quot;) puts the goblin&#x27;s feet in a hole. area() is what lets
+# isHovering() ask whether the mouse is over it.
+goblin = add([sprite(&quot;goblin&quot;), pos(400, 388), anchor(&quot;bot&quot;), scale(5),
+              area()])
+
+
+def jump_to_a_hole():
+    hole = choose(get(&quot;hole&quot;))
+    goblin.pos = vec2(hole.pos.x, hole.pos.y + 8)
+
+
+# onClick runs on every click, wherever it is. A tap on a phone counts.
+@onClick
+def click():
+    global score
+
+    if goblin.isHovering():
+        score = score + 1
+        score_label.text = str(score)
+        jump_to_a_hole()</code></pre>
+
+<ul>
+<li><strong>The holes are two loops, one inside the other.</strong> The
+outside loop goes round three times, once for each row. Each time round, the
+inside loop goes round three times, once for each column. That's nine holes.
+<code>220 + column * 180</code> puts the columns at 220, 400 and 580 across;
+<code>230 + row * 150</code> puts the rows at 230, 380 and 530 down. Each hole
+is tagged <code>"hole"</code>, so <code>get("hole")</code> can find them all
+again.</li>
+<li><strong>A hole is a rectangle with round ends.</strong>
+<code>rect(120, 40, radius=20)</code> is 120 pixels wide and 40 tall, and a
+radius of 20 (half its height) rounds the corners all the way into a
+curve.</li>
+<li><strong>The goblin is <code>scale(5)</code>.</strong> The dungeon pictures
+are tiny, 16 pixels across, so the goblin is drawn five times as big.
+<code>sliceX=8</code> where it is loaded says the picture is eight goblins in
+a row (the frames of its animation), and to cut it into eight. The game only
+ever shows the first.</li>
+<li><strong><code>@onClick</code> runs <code>click</code> on every click,
+wherever it is.</strong> A tap on a phone counts as a click.
+<code>goblin.isHovering()</code> asks whether the mouse is over the goblin
+right now. If it is, that's a point, and the goblin jumps.</li>
+<li><strong><code>jump_to_a_hole()</code></strong> picks one of the nine holes
+with <code>choose()</code> and moves the goblin's feet to it. It is picked at
+random, so now and then it is the hole the goblin was already in, and the
+goblin seems not to move at all.</li>
+</ul>
+
+<div class="callout"><p><strong>Break it.</strong> Take <code>area()</code>
+out of the goblin's list. The first click, anywhere at all, stops the game
+with</p>
+<pre><code class="language-plaintext">AttributeError: GameObj has no attribute 'isHovering' — did you forget a component that provides it?</code></pre>
+<p><code>area()</code> is what gives the goblin a shape the mouse can be
+over. Without it there is no <code>isHovering()</code> to ask, and the
+message says so: "has no attribute" in kaypy nearly always means a component
+is missing from the list.</p></div>
+
+<h2 id="step-2-popping-up-and-ducking">Step 2 — popping up and ducking</h2>
+
+<p>Now the goblins come up by themselves. Every 0.7 seconds one comes up in a
+hole, and 1.4 seconds later it ducks back down, so there are often two up
+at once. Click one before it goes.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+STAY = 1.4        # how long a goblin stays up, in seconds
+WAIT = 0.7        # seconds between goblins
+
+kaypy(width=800, height=600, background=[72, 62, 78])
+
+loadSprite(&quot;goblin&quot;, &quot;dungeon/goblin.png&quot;, sliceX=8)
+
+# The nine holes. The dictionary at the end, {&quot;busy&quot;: False}, gives each
+# hole a value of its own: hole.busy is True while a goblin is in it.
+for row in range(3):
+    for column in range(3):
+        x = 220 + column * 180
+        y = 230 + row * 150
+        add([rect(120, 40, radius=20), pos(x, y), anchor(&quot;center&quot;),
+             color(20, 14, 24), {&quot;busy&quot;: False}, &quot;hole&quot;])
+
+score = 0
+score_label = add([text(&quot;0&quot;, size=48), pos(width() / 2, 40),
+                   anchor(&quot;center&quot;)])
+
+
+def pop_up():
+    # A hole at random. If a goblin is already in it, there is no new one
+    # this time -- the wait() below still comes round again.
+    hole = choose(get(&quot;hole&quot;))
+    if not hole.busy:
+        hole.busy = True
+
+        # The dictionary gives the goblin two values of its own: which
+        # hole it is in, and how long it has left before it ducks.
+        add([sprite(&quot;goblin&quot;), pos(hole.pos.x, hole.pos.y + 8),
+             anchor(&quot;bot&quot;), scale(5), area(), z(5),
+             {&quot;hole&quot;: hole, &quot;stay&quot;: STAY}, &quot;monster&quot;])
+
+    wait(WAIT, pop_up)
+
+
+wait(0.5, pop_up)
+
+
+# Every goblin runs this, every frame: its time runs down, and when there
+# is none left it goes back down its hole.
+@onUpdate(&quot;monster&quot;)
+def stay_up(monster):
+    monster.stay = monster.stay - dt()
+    if monster.stay &lt;= 0:
+        monster.hole.busy = False
+        monster.destroy()
+
+
+@onClick
+def click():
+    for monster in get(&quot;monster&quot;):
+        if monster.isHovering():
+            whack(monster)
+            return
+
+
+def whack(monster):
+    global score
+
+    score = score + 1
+    score_label.text = str(score)
+    monster.hole.busy = False
+    monster.destroy()</code></pre>
+
+<p>This is where the dictionaries start, in the shape kaypy uses for an
+object's own values. A dictionary in the list given to <code>add()</code>
+doesn't draw anything. Each of its keys becomes something the object
+remembers, read with a dot.</p>
+
+<ul>
+<li><strong>Each hole has <code>{"busy": False}</code></strong>, so
+<code>hole.busy</code> is <code>False</code> to start with.
+<code>pop_up</code> sets it to <code>True</code> when a goblin comes up in it,
+and only puts a goblin in a hole that isn't busy. Two goblins never stand in
+the same hole.</li>
+<li><strong>Each goblin has <code>{"hole": hole, "stay": STAY}</code>.</strong>
+<code>monster.hole</code> is the hole it came up in, so it can set that hole
+back to not busy when it goes. <code>monster.stay</code> is how long it has
+left.</li>
+<li><strong><code>@onUpdate("monster")</code> runs <code>stay_up</code> once a
+frame for every goblin.</strong> <code>dt()</code> is how long the last frame
+took, in seconds, so taking it away every frame makes <code>stay</code> run
+down like a clock. When it gets to zero the goblin's hole is free again, and
+the goblin is destroyed.</li>
+<li><strong><code>pop_up</code> ends with <code>wait(WAIT, pop_up)</code>.</strong>
+It books its own next turn, the way <code>drop_bomb</code> did in Bomb Dodge.
+The <code>wait()</code> is outside the <code>if</code>, so when the hole it
+picked is busy there is no goblin this time, but there is still a next
+time.</li>
+<li><strong><code>click</code> goes through every goblin</strong> and whacks
+the first one the mouse is over. The <code>return</code> stops there, so one
+click is one goblin.</li>
+</ul>
+
+<p>The goblins are tagged <code>"monster"</code>, not <code>"goblin"</code>,
+because soon they won't all be goblins.</p>
+
+<div class="callout"><p><strong>Break it.</strong> Take
+<code>monster.hole.busy = False</code> out of <code>stay_up</code>, then run
+it and don't click anything. There's no error message. Nine goblins come up,
+one in each hole, and then there are never any more. In five runs the last
+goblin came up somewhere between 13 and 21 seconds in.</p>
+<p>A goblin that gets away now leaves its hole busy for ever, and once all
+nine are busy, <code>pop_up</code> never finds a free one. A goblin you
+<em>whack</em> still frees its hole, because <code>whack</code> has that line
+too, so if you click every one, the game seems fine. It is the ones you miss
+that jam it.</p></div>
+
+<h2 id="step-3-what-each-one-is-worth">Step 3 — what each one is worth</h2>
+
+<p>Five kinds of monster, each worth a different number of points. The angel
+is worth −5, so don't click it. The points come up in yellow where the
+monster was, or in red when you lose them.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+STAY = 1.4        # how long a monster stays up, in seconds
+WAIT = 0.7        # seconds between monsters
+
+kaypy(width=800, height=600, background=[72, 62, 78])
+
+loadSprite(&quot;goblin&quot;, &quot;dungeon/goblin.png&quot;, sliceX=8)
+loadSprite(&quot;skeleton&quot;, &quot;dungeon/skelet.png&quot;, sliceX=8)
+loadSprite(&quot;imp&quot;, &quot;dungeon/imp.png&quot;, sliceX=8)
+loadSprite(&quot;chort&quot;, &quot;dungeon/chort.png&quot;, sliceX=8)
+loadSprite(&quot;angel&quot;, &quot;dungeon/angel.png&quot;, sliceX=8)
+
+# What each monster is worth. The key is the monster&#x27;s name -- the same
+# name its picture was loaded under -- and the value is its points.
+POINTS = {
+    &quot;goblin&quot;: 1,
+    &quot;skeleton&quot;: 2,
+    &quot;imp&quot;: 3,
+    &quot;chort&quot;: 5,
+    &quot;angel&quot;: -5,
+}
+
+# Which monster comes up next is picked from this list. The more times a
+# name is in it, the more often that monster comes up.
+PICK_FROM = [&quot;goblin&quot;, &quot;goblin&quot;, &quot;goblin&quot;, &quot;goblin&quot;,
+             &quot;skeleton&quot;, &quot;skeleton&quot;, &quot;skeleton&quot;,
+             &quot;imp&quot;, &quot;imp&quot;, &quot;chort&quot;, &quot;angel&quot;, &quot;angel&quot;]
+
+for row in range(3):
+    for column in range(3):
+        x = 220 + column * 180
+        y = 230 + row * 150
+        add([rect(120, 40, radius=20), pos(x, y), anchor(&quot;center&quot;),
+             color(20, 14, 24), {&quot;busy&quot;: False}, &quot;hole&quot;])
+
+score = 0
+score_label = add([text(&quot;0&quot;, size=48), pos(width() / 2, 40),
+                   anchor(&quot;center&quot;)])
+
+
+def pop_up():
+    hole = choose(get(&quot;hole&quot;))
+    if not hole.busy:
+        kind = choose(PICK_FROM)
+        hole.busy = True
+
+        # sprite(kind) shows the picture loaded under that name, and
+        # &quot;kind&quot; in the dictionary lets the monster remember what it is.
+        add([sprite(kind), pos(hole.pos.x, hole.pos.y + 8),
+             anchor(&quot;bot&quot;), scale(5), area(), z(5),
+             {&quot;kind&quot;: kind, &quot;hole&quot;: hole, &quot;stay&quot;: STAY}, &quot;monster&quot;])
+
+    wait(WAIT, pop_up)
+
+
+wait(0.5, pop_up)
+
+
+@onUpdate(&quot;monster&quot;)
+def stay_up(monster):
+    monster.stay = monster.stay - dt()
+    if monster.stay &lt;= 0:
+        monster.hole.busy = False
+        monster.destroy()
+
+
+@onClick
+def click():
+    for monster in get(&quot;monster&quot;):
+        if monster.isHovering():
+            whack(monster)
+            return
+
+
+def whack(monster):
+    global score
+
+    # Look the monster&#x27;s points up by its name.
+    points = POINTS[monster.kind]
+    score = score + points
+    score_label.text = str(score)
+
+    # How many points it was, just where the monster was: yellow for
+    # points, red for losing them.
+    if points &gt; 0:
+        words = &quot;+&quot; + str(points)
+        colour = YELLOW
+    else:
+        words = str(points)
+        colour = RED
+    add([text(words, size=32), pos(monster.pos.x, monster.pos.y - 80),
+         anchor(&quot;center&quot;), color(colour), opacity(1),
+         lifespan(0.5, fade=0.3), z(10)])
+
+    monster.hole.busy = False
+    monster.destroy()</code></pre>
+
+<p><strong><code>POINTS</code> is a dictionary.</strong> Curly brackets, and
+every value has a key in front of it with a colon between. The keys are the
+monsters' names, and each value is what that monster is worth.
+<code>POINTS["imp"]</code> is 3. <code>POINTS["angel"]</code> is −5.</p>
+
+<p>Follow one monster through:</p>
+
+<ul>
+<li><code>pop_up</code> picks a name with
+<code>kind = choose(PICK_FROM)</code>. Say it picks <code>"imp"</code>.</li>
+<li><code>sprite(kind)</code> is <code>sprite("imp")</code>, the picture
+loaded under that name. That is why each monster is loaded under the same
+name it has in <code>POINTS</code>: the skeleton's picture is the file
+<code>skelet.png</code>, but it is loaded as <code>"skeleton"</code>.</li>
+<li><code>{"kind": kind, ...}</code> puts the name on the monster, so
+<code>monster.kind</code> is <code>"imp"</code>.</li>
+<li>When it is clicked, <code>POINTS[monster.kind]</code> is
+<code>POINTS["imp"]</code>, which is 3.</li>
+</ul>
+
+<p><code>PICK_FROM</code> is a list, not a dictionary, because the order and
+the repeats are the point of it. <code>"goblin"</code> is in it four times
+out of twelve, so a third of the monsters are goblins. The chort is in it
+once, so one monster in twelve is a chort.</p>
+
+<div class="callout"><p><strong>Break it.</strong> Add a monster to two
+places and forget the third. Load a new one,</p>
+<pre><code class="language-python">loadSprite(&quot;wogol&quot;, &quot;dungeon/wogol.png&quot;, sliceX=8)</code></pre>
+<p>and put <code>"wogol"</code> on the end of <code>PICK_FROM</code>, but
+leave <code>POINTS</code> alone. Wogols come up, and nothing is wrong until
+you click one. Then the game stops with</p>
+<pre><code class="language-plaintext">KeyError: 'wogol'</code></pre>
+<p>A <code>KeyError</code> means a dictionary was asked for a key it doesn't
+have, and it tells you which key. <code>POINTS</code> has no
+<code>"wogol"</code>, so it can't say what a wogol is worth. Add
+<code>"wogol": 10,</code> to <code>POINTS</code> and it works.</p></div>
+
+<h2 id="step-4-how-long-each-one-stays">Step 4 — how long each one stays</h2>
+
+<p>Every monster stayed up for 1.4 seconds. Now each kind has its own time,
+and the ones worth the most are the quickest. A chort, worth 5, is gone in
+0.7 seconds. Clicking the angel shakes the screen as well.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+WAIT = 0.7        # seconds between monsters
+
+kaypy(width=800, height=600, background=[72, 62, 78])
+
+loadSprite(&quot;goblin&quot;, &quot;dungeon/goblin.png&quot;, sliceX=8)
+loadSprite(&quot;skeleton&quot;, &quot;dungeon/skelet.png&quot;, sliceX=8)
+loadSprite(&quot;imp&quot;, &quot;dungeon/imp.png&quot;, sliceX=8)
+loadSprite(&quot;chort&quot;, &quot;dungeon/chort.png&quot;, sliceX=8)
+loadSprite(&quot;angel&quot;, &quot;dungeon/angel.png&quot;, sliceX=8)
+
+# What each monster is worth. The key is the monster&#x27;s name -- the same
+# name its picture was loaded under -- and the value is its points.
+POINTS = {
+    &quot;goblin&quot;: 1,
+    &quot;skeleton&quot;: 2,
+    &quot;imp&quot;: 3,
+    &quot;chort&quot;: 5,
+    &quot;angel&quot;: -5,
+}
+
+# How long each one stays up before it ducks back down, in seconds. The
+# same keys as POINTS, with a different fact about each monster.
+STAY = {
+    &quot;goblin&quot;: 1.4,
+    &quot;skeleton&quot;: 1.2,
+    &quot;imp&quot;: 0.9,
+    &quot;chort&quot;: 0.7,
+    &quot;angel&quot;: 1.4,
+}
+
+# Which monster comes up next is picked from this list. The more times a
+# name is in it, the more often that monster comes up.
+PICK_FROM = [&quot;goblin&quot;, &quot;goblin&quot;, &quot;goblin&quot;, &quot;goblin&quot;,
+             &quot;skeleton&quot;, &quot;skeleton&quot;, &quot;skeleton&quot;,
+             &quot;imp&quot;, &quot;imp&quot;, &quot;chort&quot;, &quot;angel&quot;, &quot;angel&quot;]
+
+for row in range(3):
+    for column in range(3):
+        x = 220 + column * 180
+        y = 230 + row * 150
+        add([rect(120, 40, radius=20), pos(x, y), anchor(&quot;center&quot;),
+             color(20, 14, 24), {&quot;busy&quot;: False}, &quot;hole&quot;])
+
+score = 0
+score_label = add([text(&quot;0&quot;, size=48), pos(width() / 2, 40),
+                   anchor(&quot;center&quot;)])
+
+
+def pop_up():
+    hole = choose(get(&quot;hole&quot;))
+    if not hole.busy:
+        kind = choose(PICK_FROM)
+        hole.busy = True
+
+        # STAY[kind] looks up how long this kind stays up.
+        add([sprite(kind), pos(hole.pos.x, hole.pos.y + 8),
+             anchor(&quot;bot&quot;), scale(5), area(), z(5),
+             {&quot;kind&quot;: kind, &quot;hole&quot;: hole, &quot;stay&quot;: STAY[kind]},
+             &quot;monster&quot;])
+
+    wait(WAIT, pop_up)
+
+
+wait(0.5, pop_up)
+
+
+@onUpdate(&quot;monster&quot;)
+def stay_up(monster):
+    monster.stay = monster.stay - dt()
+    if monster.stay &lt;= 0:
+        monster.hole.busy = False
+        monster.destroy()
+
+
+@onClick
+def click():
+    for monster in get(&quot;monster&quot;):
+        if monster.isHovering():
+            whack(monster)
+            return
+
+
+def whack(monster):
+    global score
+
+    # Look the monster&#x27;s points up by its name.
+    points = POINTS[monster.kind]
+    score = score + points
+    score_label.text = str(score)
+
+    # How many points it was, just where the monster was: yellow for
+    # points, red for losing them.
+    if points &gt; 0:
+        words = &quot;+&quot; + str(points)
+        colour = YELLOW
+    else:
+        shake(10)
+        words = str(points)
+        colour = RED
+    add([text(words, size=32), pos(monster.pos.x, monster.pos.y - 80),
+         anchor(&quot;center&quot;), color(colour), opacity(1),
+         lifespan(0.5, fade=0.3), z(10)])
+
+    monster.hole.busy = False
+    monster.destroy()</code></pre>
+
+<p><strong><code>STAY</code> is a second dictionary with the same keys as
+<code>POINTS</code>.</strong> Same names, a different fact about each one.
+The number <code>STAY</code> was in step 3 has become
+<code>STAY[kind]</code> where the monster is made, and that is the only line
+that changed to use it. Everything else that reads
+<code>monster.stay</code> carries on as before.</p>
+
+<p>You could put both facts in one dictionary, with a dictionary for each
+monster inside it. That works, and bigger games do it. Two flat dictionaries
+are easier to read, and easier to change: to make imps quicker, you go
+to <code>STAY</code> and change one number.</p>
+
+<div class="callout"><p><strong>Break it.</strong> Put quotes round
+<code>kind</code> where the monster is made, so it says
+<code>STAY["kind"]</code>. Half a second in, as the first monster comes up,
+the game stops with</p>
+<pre><code class="language-plaintext">KeyError: 'kind'</code></pre>
+<p>With quotes, <code>"kind"</code> is the word <em>kind</em>, four letters,
+and there is no monster called that. Without them, <code>kind</code> is the
+variable, which holds a name like <code>"imp"</code>. It is one of the easiest
+mistakes to make with a dictionary, and the message shows you the exact key
+it looked for.</p></div>
+
+<h2 id="step-5-the-clock-and-the-tally">Step 5 — the clock, and the tally</h2>
+
+<p>A game now lasts thirty seconds. The time counts down in the corner. When
+it gets to zero, the monsters and the holes go, and you see each kind you
+whacked: its picture, how many, and how many points they came to. Click or
+press <strong>space</strong> to play again.</p>
+
+<p>Playing again means building everything fresh, which is what a scene is
+for. Everything from the holes down moves inside
+<code>@scene("game")</code>, the way it did in Bomb Dodge.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+WAIT = 0.7        # seconds between monsters
+ROUND = 30        # how long a game lasts, in seconds
+
+kaypy(width=800, height=600, background=[72, 62, 78])
+
+loadSprite(&quot;goblin&quot;, &quot;dungeon/goblin.png&quot;, sliceX=8)
+loadSprite(&quot;skeleton&quot;, &quot;dungeon/skelet.png&quot;, sliceX=8)
+loadSprite(&quot;imp&quot;, &quot;dungeon/imp.png&quot;, sliceX=8)
+loadSprite(&quot;chort&quot;, &quot;dungeon/chort.png&quot;, sliceX=8)
+loadSprite(&quot;angel&quot;, &quot;dungeon/angel.png&quot;, sliceX=8)
+
+POINTS = {
+    &quot;goblin&quot;: 1,
+    &quot;skeleton&quot;: 2,
+    &quot;imp&quot;: 3,
+    &quot;chort&quot;: 5,
+    &quot;angel&quot;: -5,
+}
+
+STAY = {
+    &quot;goblin&quot;: 1.4,
+    &quot;skeleton&quot;: 1.2,
+    &quot;imp&quot;: 0.9,
+    &quot;chort&quot;: 0.7,
+    &quot;angel&quot;: 1.4,
+}
+
+PICK_FROM = [&quot;goblin&quot;, &quot;goblin&quot;, &quot;goblin&quot;, &quot;goblin&quot;,
+             &quot;skeleton&quot;, &quot;skeleton&quot;, &quot;skeleton&quot;,
+             &quot;imp&quot;, &quot;imp&quot;, &quot;chort&quot;, &quot;angel&quot;, &quot;angel&quot;]
+
+score = 0
+time_left = ROUND
+playing = True
+
+# How many of each monster you whacked. It starts empty, and a monster&#x27;s
+# name goes in the first time you whack one.
+whacked = {}
+
+
+@scene(&quot;game&quot;)
+def game():
+    global score, time_left, playing, whacked
+
+    # A new game, so everything starts again.
+    score = 0
+    time_left = ROUND
+    playing = True
+    whacked = {}
+
+    for row in range(3):
+        for column in range(3):
+            x = 220 + column * 180
+            y = 230 + row * 150
+            add([rect(120, 40, radius=20), pos(x, y), anchor(&quot;center&quot;),
+                 color(20, 14, 24), {&quot;busy&quot;: False}, &quot;hole&quot;])
+
+    score_label = add([text(&quot;0&quot;, size=48), pos(width() / 2, 40),
+                       anchor(&quot;center&quot;), z(10)])
+    time_label = add([text(str(ROUND), size=28), pos(width() - 12, 12),
+                      anchor(&quot;topright&quot;), z(10)])
+    message = add([text(&quot;&quot;, size=26), pos(width() / 2, 100),
+                   anchor(&quot;center&quot;), z(10)])
+
+    def pop_up():
+        # Time is up: no monster, and no wait() for the next one either.
+        if not playing:
+            return
+
+        hole = choose(get(&quot;hole&quot;))
+        if not hole.busy:
+            kind = choose(PICK_FROM)
+            hole.busy = True
+            add([sprite(kind), pos(hole.pos.x, hole.pos.y + 8),
+                 anchor(&quot;bot&quot;), scale(5), area(), z(5),
+                 {&quot;kind&quot;: kind, &quot;hole&quot;: hole, &quot;stay&quot;: STAY[kind]},
+                 &quot;monster&quot;])
+
+        wait(WAIT, pop_up)
+
+    wait(0.5, pop_up)
+
+    @onUpdate(&quot;monster&quot;)
+    def stay_up(monster):
+        monster.stay = monster.stay - dt()
+        if monster.stay &lt;= 0:
+            monster.hole.busy = False
+            monster.destroy()
+
+    @onClick
+    def click():
+        if not playing:
+            return
+        for monster in get(&quot;monster&quot;):
+            if monster.isHovering():
+                whack(monster)
+                return
+
+    def whack(monster):
+        global score
+
+        kind = monster.kind
+        points = POINTS[kind]
+        score = score + points
+        score_label.text = str(score)
+
+        # One more of this kind. whacked.get(kind, 0) is how many there
+        # were, or 0 if this is the first.
+        whacked[kind] = whacked.get(kind, 0) + 1
+
+        if points &gt; 0:
+            words = &quot;+&quot; + str(points)
+            colour = YELLOW
+        else:
+            shake(10)
+            words = str(points)
+            colour = RED
+        add([text(words, size=32), pos(monster.pos.x, monster.pos.y - 80),
+             anchor(&quot;center&quot;), color(colour), opacity(1),
+             lifespan(0.5, fade=0.3), z(10)])
+
+        monster.hole.busy = False
+        monster.destroy()
+
+    # Once a second, one second less.
+    def tick():
+        global time_left
+
+        if not playing:
+            return
+        time_left = time_left - 1
+        time_label.text = str(time_left)
+        if time_left == 0:
+            time_up()
+
+    loop(1, tick)
+
+    def time_up():
+        global playing
+
+        playing = False
+        destroyAll(&quot;monster&quot;)
+        destroyAll(&quot;hole&quot;)
+        message.text = &quot;Time! &quot; + str(score) + &quot; points -- click to play again&quot;
+
+        # One line for each kind you whacked: its picture, how many, and
+        # what they came to. .items() hands over each key with its value.
+        y = 180
+        for kind, count in whacked.items():
+            add([sprite(kind), pos(300, y), anchor(&quot;center&quot;), scale(3)])
+            add([text(&quot;x &quot; + str(count) + &quot; = &quot; + str(count * POINTS[kind]),
+                      size=28), pos(350, y), anchor(&quot;left&quot;)])
+            y = y + 60
+
+    def again():
+        if not playing:
+            go(&quot;game&quot;)
+
+    onKeyPress(&quot;space&quot;, again)
+    onClick(again)
+
+
+go(&quot;game&quot;)</code></pre>
+
+<p><strong><code>whacked</code> is a dictionary that starts empty</strong>,
+<code>{}</code>, and fills up as you play. Each time you whack a monster,</p>
+
+<pre><code class="language-python">whacked[kind] = whacked.get(kind, 0) + 1</code></pre>
+
+<p>adds one to that kind's count. <code>whacked.get(kind, 0)</code> means
+<em>how many of this kind there are so far, or 0 if there are none yet</em>.
+The first goblin you whack, <code>"goblin"</code> isn't in
+<code>whacked</code> yet, so <code>.get</code> gives 0, and
+<code>whacked["goblin"]</code> is set to 1. Assigning to a key that isn't
+there adds it. The second goblin, <code>.get</code> gives 1, and it becomes
+2.</p>
+
+<p><strong><code>whack</code> changes <code>whacked</code> without saying
+<code>global</code>.</strong> It changes what is <em>inside</em> the
+dictionary, which needs nothing special. The scene does say
+<code>global whacked</code>, because <code>whacked = {}</code> doesn't
+change the dictionary: it replaces it with a new, empty one.</p>
+
+<p><strong>The tally is a <code>for</code> loop over
+<code>whacked.items()</code></strong>, which hands over each key with its
+value: <code>kind</code> is the monster's name and <code>count</code> is how
+many. The name shows the picture, <code>sprite(kind)</code>, and
+<code>count * POINTS[kind]</code> is the points they came to. Each line goes
+60 pixels below the last. A dictionary remembers the order its keys went in,
+so the tally starts with the kind you whacked first. A kind you never whacked
+isn't in <code>whacked</code> at all, so it has no line.</p>
+
+<p><strong>The clock is <code>loop(1, tick)</code></strong>, which runs
+<code>tick</code> once a second. When <code>time_left</code> reaches 0,
+<code>tick</code> calls <code>time_up</code>, which sets
+<code>playing</code> to <code>False</code>. That stops everything else:
+<code>pop_up</code> makes no more monsters, <code>click</code> whacks
+nothing, and <code>tick</code> stops counting.</p>
+
+<div class="callout"><p><strong>Two things to break.</strong></p>
+<p>Use square brackets instead of <code>.get</code>:
+<code>whacked[kind] = whacked[kind] + 1</code>. The first monster you whack
+stops the game with</p>
+<pre><code class="language-plaintext">KeyError: 'goblin'</code></pre>
+<p>or whichever kind it was. To add one, Python first has to read
+<code>whacked["goblin"]</code>, and the first time, there isn't one. That is
+what the <code>0</code> in <code>.get(kind, 0)</code> is for.</p>
+<p>Take <code>whacked = {}</code> out of the scene. There's no error message,
+and the first game looks right. Play a second one, and the tally at the end
+has both games in it. In one run the second game scored 84, and the tally
+under it said 24 goblins, 16 skeletons, 22 imps and 9 chorts, which comes to
+167. The score starts again, because <code>score = 0</code> is still there,
+but the dictionary carries on from the last game.</p></div>
+
+<h2 id="step-6-the-whole-game">Step 6 — the whole game</h2>
+
+<p>This is the game exactly as it is on the <a href="../../games/">games
+page</a>. It adds four things to step 5:</p>
+
+<ul>
+<li><strong>Faster as you go.</strong> The time between monsters was always
+0.7 seconds. Now <code>pop_wait()</code> works it out from how long the game
+has gone on: 0.7 seconds at the start, 0.015 less each second, and never less
+than 0.3, which it reaches about 27 seconds in. By then there are three or
+four monsters up at once.</li>
+<li><strong>A best score that is remembered.</strong>
+<code>getData(BEST_KEY, 0)</code> reads it, and <code>setData</code> saves a
+new one when you beat it, as in Bomb Dodge.</li>
+<li><strong>Sounds</strong>, a thump for a whack and a bang for the angel,
+and a message at the start saying what to do.</li>
+<li><strong>A second before you can play again.</strong> In step 5, a click
+a moment too late, meant for the last monster, starts a new game straight
+away, and the tally is gone before you have seen it. Now
+<code>time_up</code> ends with <code>wait(1, ready_again)</code>, and only
+after that second does <code>over</code> become <code>True</code>, and a
+click start a new game.</li>
+</ul>
+
+<p>It also has all the numbers worth changing in one settings block near the
+top, and comments that explain why each part is there.</p>
+
+<pre><code class="language-python">&quot;&quot;&quot;Goblin Whack -- monsters pop out of holes. Whack them before they duck.
+
+    click a monster (or tap it) to whack it
+
+Nine holes, thirty seconds. Every kind of monster is worth something
+different, and the quick ones are worth the most. Don&#x27;t whack the angel.
+When the time is up you see what you whacked, and your best score is
+remembered.
+
+HOW THIS FILE IS PUT TOGETHER
+
+    1. the window, the pictures and the sounds
+    2. the monsters: what each one is worth, and how long it stays up
+    3. the settings
+    4. how hard the game is
+    5. the game scene: the holes, popping up, whacking, time up
+    6. start the game
+
+This is the game for after dictionaries. Every monster has a name, and the
+name is the key that looks up everything else about it: its picture, its
+points, how long it stays up, and how many of it you whacked. Add a monster
+of your own and you will see -- it is one new line in each dictionary.
+&quot;&quot;&quot;
+
+from kaypy import *
+
+# ----------------------------------------------------------------- 1. setup
+
+kaypy(width=800, height=600, background=[72, 62, 78])
+
+# Each monster&#x27;s picture is eight little pictures in a row. sliceX=8 cuts it
+# into eight, and the game only ever shows the first one.
+loadSprite(&quot;goblin&quot;, &quot;dungeon/goblin.png&quot;, sliceX=8)
+loadSprite(&quot;skeleton&quot;, &quot;dungeon/skelet.png&quot;, sliceX=8)
+loadSprite(&quot;imp&quot;, &quot;dungeon/imp.png&quot;, sliceX=8)
+loadSprite(&quot;chort&quot;, &quot;dungeon/chort.png&quot;, sliceX=8)
+loadSprite(&quot;angel&quot;, &quot;dungeon/angel.png&quot;, sliceX=8)
+
+loadSound(&quot;whack&quot;, &quot;sounds/thump.wav&quot;)
+loadSound(&quot;ouch&quot;, &quot;sounds/small_boom.wav&quot;)
+
+
+# ------------------------------------------------------------ 2. the monsters
+#
+# Two dictionaries, with the same keys. A key is a monster&#x27;s name -- the
+# same name its picture was loaded under above -- and the value is one fact
+# about it. POINTS[&quot;imp&quot;] is how many points an imp is worth; STAY[&quot;imp&quot;] is
+# how long an imp stays up.
+
+POINTS = {
+    &quot;goblin&quot;: 1,
+    &quot;skeleton&quot;: 2,
+    &quot;imp&quot;: 3,
+    &quot;chort&quot;: 5,
+    &quot;angel&quot;: -5,
+}
+
+STAY = {
+    &quot;goblin&quot;: 1.4,
+    &quot;skeleton&quot;: 1.2,
+    &quot;imp&quot;: 0.9,
+    &quot;chort&quot;: 0.7,
+    &quot;angel&quot;: 1.4,
+}
+
+# Which monster comes up next is picked from this list. The more times a
+# name is in it, the more often that monster comes up.
+PICK_FROM = [&quot;goblin&quot;, &quot;goblin&quot;, &quot;goblin&quot;, &quot;goblin&quot;,
+             &quot;skeleton&quot;, &quot;skeleton&quot;, &quot;skeleton&quot;,
+             &quot;imp&quot;, &quot;imp&quot;, &quot;chort&quot;, &quot;angel&quot;, &quot;angel&quot;]
+
+
+# -------------------------------------------------------------- 3. settings
+#
+# Everything else you would want to change is here. Change one at a time
+# and play it.
+
+ROUND = 30             # how long a game lasts, in seconds
+
+MONSTER_SIZE = 5       # how big a monster is: the pictures are 16 pixels
+
+WAIT_START = 0.7       # seconds between monsters, to begin with
+WAIT_SHORTEST = 0.3    # ...the shortest wait there ever is
+WAIT_DROP = 0.015      # ...and how much shorter each second makes it
+
+# The name the best score is saved under. Every game on a website shares
+# the same storage, so the game&#x27;s own name goes in it.
+BEST_KEY = &quot;goblin_whack_best&quot;
+
+
+# -------------------------------------------------- 4. how hard the game is
+#
+# The longer the game has gone on, the less time between monsters. It
+# stops somewhere, so the game ends up hard but never impossible.
+
+time_left = ROUND
+
+
+def pop_wait():
+    seconds = WAIT_START - (ROUND - time_left) * WAIT_DROP
+    if seconds &lt; WAIT_SHORTEST:
+        seconds = WAIT_SHORTEST
+    return seconds
+
+
+# ------------------------------------------------------- 5. the game scene
+#
+# These change while you play. A function that CHANGES one has to say
+# `global` first, which means &quot;the one up here, not a new one of my own&quot;.
+
+score = 0
+playing = True
+over = False
+
+# How many of each monster you whacked. It starts empty, and a monster&#x27;s
+# name goes in the first time you whack one.
+whacked = {}
+
+
+@scene(&quot;game&quot;)
+def game():
+    global score, time_left, playing, over, whacked
+
+    # A new game, so everything starts again.
+    score = 0
+    time_left = ROUND
+    playing = True
+    over = False
+    whacked = {}
+    best = getData(BEST_KEY, 0)
+
+    # The nine holes, in three rows of three. A hole is a dark rectangle
+    # with round ends: radius=20 rounds its corners.
+    #
+    # The dictionary at the end, {&quot;busy&quot;: False}, gives each hole a value
+    # of its own: hole.busy is True while a monster is in it, so two never
+    # come up in the same hole.
+    for row in range(3):
+        for column in range(3):
+            x = 220 + column * 180
+            y = 230 + row * 150
+            add([rect(120, 40, radius=20), pos(x, y), anchor(&quot;center&quot;),
+                 color(20, 14, 24), {&quot;busy&quot;: False}, &quot;hole&quot;])
+
+    score_label = add([text(&quot;0&quot;, size=48), pos(width() / 2, 40),
+                       anchor(&quot;center&quot;), z(10)])
+    best_label = add([text(&quot;best &quot; + str(best), size=18), pos(12, 12),
+                      opacity(0.75), z(10)])
+    time_label = add([text(str(ROUND), size=28), pos(width() - 12, 12),
+                      anchor(&quot;topright&quot;), z(10)])
+
+    message = add([text(&quot;Click the monsters! Not the angel.&quot;, size=26),
+                   pos(width() / 2, 100), anchor(&quot;center&quot;), z(10)])
+
+    # --------------------------------------------------------- popping up
+
+    def pop_up():
+        # Time is up: no monster, and no wait() for the next one either.
+        if not playing:
+            return
+
+        # A hole at random. If a monster is already in it, there is no new
+        # one this time -- the wait() below still comes round again.
+        hole = choose(get(&quot;hole&quot;))
+        if not hole.busy:
+            kind = choose(PICK_FROM)
+            hole.busy = True
+
+            # anchor(&quot;bot&quot;) puts the monster&#x27;s feet in the hole. The
+            # dictionary gives it three values of its own: what kind it is,
+            # which hole it is in, and how long it has left before it ducks.
+            add([sprite(kind), pos(hole.pos.x, hole.pos.y + 8),
+                 anchor(&quot;bot&quot;), scale(MONSTER_SIZE), area(), z(5),
+                 {&quot;kind&quot;: kind, &quot;hole&quot;: hole, &quot;stay&quot;: STAY[kind]},
+                 &quot;monster&quot;])
+
+        wait(pop_wait(), pop_up)
+
+    # The first monster, half a second after the game starts.
+    wait(0.5, pop_up)
+
+    # Every monster runs this, every frame: its time runs down, and when
+    # there is none left it goes back down its hole.
+    @onUpdate(&quot;monster&quot;)
+    def stay_up(monster):
+        monster.stay = monster.stay - dt()
+        if monster.stay &lt;= 0:
+            monster.hole.busy = False
+            monster.destroy()
+
+    # ----------------------------------------------------------- whacking
+    #
+    # onClick runs on every click, wherever it is, and a tap on a phone
+    # counts as a click. isHovering() asks whether the mouse is over a
+    # monster, which needs area() on it.
+
+    @onClick
+    def click():
+        if not playing:
+            return
+        for monster in get(&quot;monster&quot;):
+            if monster.isHovering():
+                whack(monster)
+                return
+
+    def whack(monster):
+        global score
+
+        kind = monster.kind
+        points = POINTS[kind]
+        score = score + points
+        score_label.text = str(score)
+        message.text = &quot;&quot;
+
+        # One more of this kind. whacked.get(kind, 0) is how many there
+        # were, or 0 if this is the first.
+        whacked[kind] = whacked.get(kind, 0) + 1
+
+        # How many points it was, just where the monster was.
+        if points &gt; 0:
+            play(&quot;whack&quot;)
+            words = &quot;+&quot; + str(points)
+            colour = YELLOW
+        else:
+            play(&quot;ouch&quot;)
+            shake(10)
+            words = str(points)
+            colour = RED
+        add([text(words, size=32), pos(monster.pos.x, monster.pos.y - 80),
+             anchor(&quot;center&quot;), color(colour), opacity(1),
+             lifespan(0.5, fade=0.3), z(10)])
+
+        monster.hole.busy = False
+        monster.destroy()
+
+    # ------------------------------------------------------------- the clock
+
+    def tick():
+        global time_left
+
+        if not playing:
+            return
+        time_left = time_left - 1
+        time_label.text = str(time_left)
+        if time_left == 0:
+            time_up()
+
+    loop(1, tick)
+
+    # -------------------------------------------------------------- time up
+
+    def time_up():
+        global playing
+
+        playing = False
+        destroyAll(&quot;monster&quot;)
+        destroyAll(&quot;hole&quot;)
+
+        if score &gt; best:
+            setData(BEST_KEY, score)
+            best_label.text = &quot;best &quot; + str(score)
+
+        message.text = &quot;Time! &quot; + str(score) + &quot; points&quot;
+
+        # One line for each kind you whacked: its picture, how many, and
+        # what they came to. .items() hands over each key with its value.
+        y = 180
+        for kind, count in whacked.items():
+            add([sprite(kind), pos(300, y), anchor(&quot;center&quot;), scale(3)])
+            add([text(&quot;x &quot; + str(count) + &quot; = &quot; + str(count * POINTS[kind]),
+                      size=28), pos(350, y), anchor(&quot;left&quot;)])
+            y = y + 60
+
+        # A second before you can start again, so a click meant for the
+        # last monster does not skip past your score.
+        wait(1, ready_again)
+
+    def ready_again():
+        global over
+
+        over = True
+        add([text(&quot;press SPACE or click to play again&quot;, size=24),
+             pos(width() / 2, height() - 40), anchor(&quot;center&quot;)])
+
+    def again():
+        if over:
+            go(&quot;game&quot;)
+
+    onKeyPress(&quot;space&quot;, again)
+    onClick(again)
+
+
+# ------------------------------------------------------- 6. start the game
+
+go(&quot;game&quot;)</code></pre>
+
+<h2 id="make-it-yours">Make it yours</h2>
+
+<p><a href="../../play/?game=goblin_whack">Open the whole game in the playground →</a>
+It goes straight into the editor, ready to change and run.</p>
+
+<ul>
+<li><strong>Add a monster of your own.</strong> Four lines, and no new code:
+load its picture, give it points in <code>POINTS</code>, a time in
+<code>STAY</code>, and put its name in <code>PICK_FROM</code>. For a wogol
+worth 10 that is gone in half a second:
+<pre><code class="language-python">loadSprite(&quot;wogol&quot;, &quot;dungeon/wogol.png&quot;, sliceX=8)
+
+    &quot;wogol&quot;: 10,      # in POINTS
+    &quot;wogol&quot;: 0.5,     # in STAY</code></pre>
+and <code>"wogol"</code> on the end of <code>PICK_FROM</code>. It shows up in
+the tally by itself. Click <strong>Sprites</strong> in the playground to see
+the other monsters.</li>
+<li><strong>Change what they are worth.</strong> Make the angel −20 and you
+will be a lot more careful. Make goblins worth 0 and they are only in the
+way.</li>
+<li><strong>A longer game.</strong> <code>ROUND = 60</code>. Then
+<code>pop_wait()</code> stops getting shorter at about 27 seconds, so the
+second half is all at full speed.</li>
+<li><strong>A sound for each kind.</strong> Make a third dictionary,
+<code>SOUNDS = {"goblin": "whack", "angel": "ouch", ...}</code>, load the
+sounds, and <code>play(SOUNDS[kind])</code> in <code>whack</code>. Leave a
+monster out of it and you know what you'll see.</li>
+</ul>
+
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>
