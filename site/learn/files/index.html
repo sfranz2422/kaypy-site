@@ -93,40 +93,42 @@ your program runs in, and you can open it in any text editor. In
 <a href="../../play/">the playground</a> it is just as real, but it lives inside
 the page. It lasts from one Run to the next, and it is gone when you reload.</p>
 <h2 id="writing-a-file">Writing a file</h2>
-<p>Three moves: open it, use it, close it.</p>
-<pre><code class="language-python">names_file = open(&quot;names.txt&quot;, &quot;w&quot;)
-names_file.write(&quot;Ada\n&quot;)
-names_file.write(&quot;Max\n&quot;)
-names_file.write(&quot;Zoe\n&quot;)
-names_file.close()
+<pre><code class="language-python">with open(&quot;names.txt&quot;, &quot;w&quot;) as names_file:
+    names_file.write(&quot;Ada\n&quot;)
+    names_file.write(&quot;Max\n&quot;)
+    names_file.write(&quot;Zoe\n&quot;)
 
-names_file = open(&quot;names.txt&quot;, &quot;r&quot;)
-print(names_file.read())
-names_file.close()
+with open(&quot;names.txt&quot;, &quot;r&quot;) as names_file:
+    print(names_file.read())
 </code></pre>
 <pre><code>Ada
 Max
 Zoe
 </code></pre>
-<p><code>open("names.txt", "w")</code> makes the file and hands back something to
-get at it with, which goes in <code>names_file</code>. The <code>"w"</code> means
-<strong>write</strong>. <code>write()</code> puts text in, and <code>close()</code> says you
-have finished.</p>
-<p>Then it is opened again with <code>"r"</code>, for <strong>read</strong>, and
-<code>read()</code> hands back everything in it as one string.</p>
+<p>Read the first line out loud: <em>with</em> the file <code>names.txt</code>, open
+to write, <em>as</em> <code>names_file</code>. The indented lines underneath can use
+it by that name. When the indenting ends, Python <strong>closes</strong> the file for
+you — you have finished with it, and everything you wrote is safely in it.</p>
+<p>The second thing in <code>open()</code> says what you are going to do:</p>
+<ul>
+<li><code>"w"</code> — <strong>write</strong>. Makes the file, or empties it if it is
+  already there.</li>
+<li><code>"r"</code> — <strong>read</strong>. The file has to be there already.</li>
+<li><code>"a"</code> — <strong>add</strong> to the end. You'll meet it further down.</li>
+</ul>
+<p><code>write()</code> puts text in. <code>read()</code> hands back everything in the file
+as one string.</p>
 <p>Look at what went in: <code>"Ada\n"</code>, not <code>"Ada"</code>. <code>\n</code> is
 how you write the end of a line in a string — it's one character, a
 <em>newline</em>. <code>print()</code> adds one for you; <code>write()</code> does
 not, and puts in exactly what you give it and nothing more:</p>
-<pre><code class="language-python">names_file = open(&quot;names.txt&quot;, &quot;w&quot;)
-names_file.write(&quot;Ada&quot;)
-names_file.write(&quot;Max&quot;)
-names_file.write(&quot;Zoe&quot;)
-names_file.close()
+<pre><code class="language-python">with open(&quot;names.txt&quot;, &quot;w&quot;) as names_file:
+    names_file.write(&quot;Ada&quot;)
+    names_file.write(&quot;Max&quot;)
+    names_file.write(&quot;Zoe&quot;)
 
-names_file = open(&quot;names.txt&quot;, &quot;r&quot;)
-print(names_file.read())
-names_file.close()
+with open(&quot;names.txt&quot;, &quot;r&quot;) as names_file:
+    print(names_file.read())
 </code></pre>
 <pre><code>AdaMaxZoe
 </code></pre>
@@ -134,30 +136,39 @@ names_file.close()
 <h2 id="w-starts-again">"w" starts again</h2>
 <p>Opening a file with <code>"w"</code> empties it first, if it was already
 there:</p>
-<pre><code class="language-python">notes_file = open(&quot;notes.txt&quot;, &quot;w&quot;)
-notes_file.write(&quot;the first note\n&quot;)
-notes_file.close()
+<pre><code class="language-python">with open(&quot;notes.txt&quot;, &quot;w&quot;) as notes_file:
+    notes_file.write(&quot;the first note\n&quot;)
 
-notes_file = open(&quot;notes.txt&quot;, &quot;w&quot;)
-notes_file.write(&quot;the second note\n&quot;)
-notes_file.close()
+with open(&quot;notes.txt&quot;, &quot;w&quot;) as notes_file:
+    notes_file.write(&quot;the second note\n&quot;)
 
-notes_file = open(&quot;notes.txt&quot;, &quot;r&quot;)
-print(notes_file.read())
-notes_file.close()
+with open(&quot;notes.txt&quot;, &quot;r&quot;) as notes_file:
+    print(notes_file.read())
 </code></pre>
 <pre><code>the second note
 </code></pre>
 <p>The first note is gone. That is what you want for a file that holds one
 thing — the latest save — and exactly what you don't want for a list you are
 adding to. For that there is <code>"a"</code>, further down.</p>
+<h2 id="inside-the-with">Everything inside the with</h2>
+<p>Once the indenting ends, the file is closed. The name is still there, but
+the file behind it is shut:</p>
+<pre><code class="language-text">with open(&quot;names.txt&quot;, &quot;w&quot;) as names_file:
+    names_file.write(&quot;Ada\n&quot;)
+
+names_file.write(&quot;Max\n&quot;)
+</code></pre>
+<pre><code class="language-text">ValueError: I/O operation on closed file.
+</code></pre>
+<p>"I/O" is input and output — reading and writing. Anything you do with a file
+goes in the indented lines under its <code>with</code>. If you need it again
+later, open it again with another <code>with</code>.</p>
 <h2 id="only-text-goes-in">Only text goes in</h2>
 <p>A file holds text and nothing else. Give <code>write()</code> a number:</p>
 <pre><code class="language-text">score = 42
 
-score_file = open(&quot;score.txt&quot;, &quot;w&quot;)
-score_file.write(score)
-score_file.close()
+with open(&quot;score.txt&quot;, &quot;w&quot;) as score_file:
+    score_file.write(score)
 </code></pre>
 <pre><code class="language-text">TypeError: write() argument must be str, not int
 </code></pre>
@@ -166,13 +177,11 @@ got a whole number. <code>str(score)</code> turns the number into text first.</p
 <p>Coming back out, it is still text, even if it looks like a number:</p>
 <pre><code class="language-text">score = 42
 
-score_file = open(&quot;score.txt&quot;, &quot;w&quot;)
-score_file.write(str(score) + &quot;\n&quot;)
-score_file.close()
+with open(&quot;score.txt&quot;, &quot;w&quot;) as score_file:
+    score_file.write(str(score) + &quot;\n&quot;)
 
-score_file = open(&quot;score.txt&quot;, &quot;r&quot;)
-saved = score_file.read()
-score_file.close()
+with open(&quot;score.txt&quot;, &quot;r&quot;) as score_file:
+    saved = score_file.read()
 
 print(saved + 8)
 </code></pre>
@@ -181,32 +190,31 @@ print(saved + 8)
 <p><code>saved</code> is <code>"42\n"</code>, and you can't add 8 to some text.
 <code>int()</code> turns it back into a number — and it doesn't mind the
 <code>\n</code> on the end:</p>
-<pre><code class="language-python">score_file = open(&quot;score.txt&quot;, &quot;w&quot;)
-score_file.write(&quot;42\n&quot;)
-score_file.close()
+<pre><code class="language-python">with open(&quot;score.txt&quot;, &quot;w&quot;) as score_file:
+    score_file.write(&quot;42\n&quot;)
 
-score_file = open(&quot;score.txt&quot;, &quot;r&quot;)
-saved = int(score_file.read())
-score_file.close()
+with open(&quot;score.txt&quot;, &quot;r&quot;) as score_file:
+    saved = int(score_file.read())
 
 print(saved + 8)
 </code></pre>
 <pre><code>50
 </code></pre>
 <p>So: <strong><code>str()</code> on the way in, <code>int()</code> on the way out.</strong></p>
+<p>Notice that <code>saved</code> was made inside the <code>with</code> and used after it.
+That's fine: the <em>file</em> closes when the indenting ends, but a variable you
+filled from it keeps its value.</p>
 <h2 id="reading-line-by-line">Reading line by line</h2>
 <p>A <code>for</code> loop over a file goes round once for every line in it, top
 to bottom:</p>
-<pre><code class="language-python">names_file = open(&quot;names.txt&quot;, &quot;w&quot;)
-names_file.write(&quot;Ada\n&quot;)
-names_file.write(&quot;Max\n&quot;)
-names_file.write(&quot;Zoe\n&quot;)
-names_file.close()
+<pre><code class="language-python">with open(&quot;names.txt&quot;, &quot;w&quot;) as names_file:
+    names_file.write(&quot;Ada\n&quot;)
+    names_file.write(&quot;Max\n&quot;)
+    names_file.write(&quot;Zoe\n&quot;)
 
-names_file = open(&quot;names.txt&quot;, &quot;r&quot;)
-for line in names_file:
-    print(line)
-names_file.close()
+with open(&quot;names.txt&quot;, &quot;r&quot;) as names_file:
+    for line in names_file:
+        print(line)
 </code></pre>
 <pre><code>Ada
 
@@ -218,17 +226,15 @@ Zoe
 on the end, and <code>print()</code> adds another, so every line ends twice.</p>
 <p><code>strip()</code> takes the <code>\n</code> off, and any spaces at either end.
 Here the names go into a list:</p>
-<pre><code class="language-python">names_file = open(&quot;names.txt&quot;, &quot;w&quot;)
-names_file.write(&quot;Ada\n&quot;)
-names_file.write(&quot;Max\n&quot;)
-names_file.write(&quot;Zoe\n&quot;)
-names_file.close()
+<pre><code class="language-python">with open(&quot;names.txt&quot;, &quot;w&quot;) as names_file:
+    names_file.write(&quot;Ada\n&quot;)
+    names_file.write(&quot;Max\n&quot;)
+    names_file.write(&quot;Zoe\n&quot;)
 
 names = []
-names_file = open(&quot;names.txt&quot;, &quot;r&quot;)
-for line in names_file:
-    names.append(line.strip())
-names_file.close()
+with open(&quot;names.txt&quot;, &quot;r&quot;) as names_file:
+    for line in names_file:
+        names.append(line.strip())
 
 print(names)
 print(&quot;Max&quot; in names)
@@ -237,17 +243,15 @@ print(&quot;Max&quot; in names)
 True
 </code></pre>
 <p>Forget the <code>strip()</code>, and the list looks almost the same:</p>
-<pre><code class="language-python">names_file = open(&quot;names.txt&quot;, &quot;w&quot;)
-names_file.write(&quot;Ada\n&quot;)
-names_file.write(&quot;Max\n&quot;)
-names_file.write(&quot;Zoe\n&quot;)
-names_file.close()
+<pre><code class="language-python">with open(&quot;names.txt&quot;, &quot;w&quot;) as names_file:
+    names_file.write(&quot;Ada\n&quot;)
+    names_file.write(&quot;Max\n&quot;)
+    names_file.write(&quot;Zoe\n&quot;)
 
 names = []
-names_file = open(&quot;names.txt&quot;, &quot;r&quot;)
-for line in names_file:
-    names.append(line)
-names_file.close()
+with open(&quot;names.txt&quot;, &quot;r&quot;) as names_file:
+    for line in names_file:
+        names.append(line)
 
 print(names)
 print(&quot;Max&quot; in names)
@@ -261,20 +265,18 @@ you would never spot it, because a <code>\n</code> can't be seen. This is the mo
 common mistake there is with files, and there is never an error message to
 tell you.</p>
 <h2 id="one-line-when-you-ask">One line when you ask</h2>
-<p><code>readline()</code> reads one line, and only one. The file stays open and
-remembers how far it has got, so the next <code>readline()</code> hands back the line
-after it. <code>repr()</code> shows a string the way you would type it, quotes and
+<p><code>readline()</code> reads one line, and only one. The file remembers how far
+it has got, so the next <code>readline()</code> hands back the line after it.
+<code>repr()</code> shows a string the way you would type it, quotes and
 <code>\n</code> included, so you can see what is really in it:</p>
-<pre><code class="language-python">log_file = open(&quot;log.txt&quot;, &quot;w&quot;)
-log_file.write(&quot;first\n&quot;)
-log_file.write(&quot;second\n&quot;)
-log_file.close()
+<pre><code class="language-python">with open(&quot;log.txt&quot;, &quot;w&quot;) as log_file:
+    log_file.write(&quot;first\n&quot;)
+    log_file.write(&quot;second\n&quot;)
 
-log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
-print(repr(log_file.readline()))
-print(repr(log_file.readline()))
-print(repr(log_file.readline()))
-log_file.close()
+with open(&quot;log.txt&quot;, &quot;r&quot;) as log_file:
+    print(repr(log_file.readline()))
+    print(repr(log_file.readline()))
+    print(repr(log_file.readline()))
 </code></pre>
 <pre><code>&#x27;first\n&#x27;
 &#x27;second\n&#x27;
@@ -284,18 +286,17 @@ log_file.close()
 <code>''</code>, an empty string. A blank line in the middle of a file is
 <code>'\n'</code>, never <code>''</code>, so <code>''</code> always means the end.</p>
 <p>A <code>while</code> loop that reads until then:</p>
-<pre><code class="language-python">log_file = open(&quot;log.txt&quot;, &quot;w&quot;)
-log_file.write(&quot;01:07,zoe,ok\n&quot;)
-log_file.write(&quot;01:12,ada,failed\n&quot;)
-log_file.write(&quot;01:20,max,ok\n&quot;)
-log_file.close()
+<pre><code class="language-python">with open(&quot;log.txt&quot;, &quot;w&quot;) as log_file:
+    log_file.write(&quot;01:07,zoe,ok\n&quot;)
+    log_file.write(&quot;01:12,ada,failed\n&quot;)
+    log_file.write(&quot;01:20,max,ok\n&quot;)
 
-log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
-line = log_file.readline()
-while line != &quot;&quot;:
-    print(&quot;read:&quot;, line.strip())
+with open(&quot;log.txt&quot;, &quot;r&quot;) as log_file:
     line = log_file.readline()
-log_file.close()
+    while line != &quot;&quot;:
+        print(&quot;read:&quot;, line.strip())
+        line = log_file.readline()
+
 print(&quot;the end of the file&quot;)
 </code></pre>
 <pre><code>read: 01:07,zoe,ok
@@ -303,11 +304,10 @@ read: 01:12,ada,failed
 read: 01:20,max,ok
 the end of the file
 </code></pre>
-<p>The <code>for</code> loop is shorter, so why ever do this? Because a
-<code>for</code> loop goes through every line before the program moves on. With
-<code>readline()</code> you can read one line now, do something else, and read the
-next one later — a log that scrolls past one line at a time, say, or the next
-line of dialogue when the player presses a key.</p>
+<p>The <code>for</code> loop is shorter, so why ever do this? Because with
+<code>readline()</code> you decide when the next line comes: one line now,
+something else, and the next line later — the next line of dialogue when the
+player presses a key, say.</p>
 <h2 id="cutting-a-line-up">Cutting a line up</h2>
 <p>A line usually holds more than one thing. Put a comma between them, and
 <code>split(",")</code> cuts the line at every comma and hands back a list:</p>
@@ -323,21 +323,19 @@ ada logged in at 01:12
 </code></pre>
 <p>Strip first, then split — otherwise the last part is <code>"failed\n"</code>.
 With a number in it, <code>int()</code> the part that is a number:</p>
-<pre><code class="language-python">scores_file = open(&quot;scores.txt&quot;, &quot;w&quot;)
-scores_file.write(&quot;Ada,12\n&quot;)
-scores_file.write(&quot;Max,30\n&quot;)
-scores_file.write(&quot;Zoe,21\n&quot;)
-scores_file.close()
+<pre><code class="language-python">with open(&quot;scores.txt&quot;, &quot;w&quot;) as scores_file:
+    scores_file.write(&quot;Ada,12\n&quot;)
+    scores_file.write(&quot;Max,30\n&quot;)
+    scores_file.write(&quot;Zoe,21\n&quot;)
 
 total = 0
-scores_file = open(&quot;scores.txt&quot;, &quot;r&quot;)
-for line in scores_file:
-    parts = line.strip().split(&quot;,&quot;)
-    name = parts[0]
-    score = int(parts[1])
-    print(name, &quot;scored&quot;, score)
-    total = total + score
-scores_file.close()
+with open(&quot;scores.txt&quot;, &quot;r&quot;) as scores_file:
+    for line in scores_file:
+        parts = line.strip().split(&quot;,&quot;)
+        name = parts[0]
+        score = int(parts[1])
+        print(name, &quot;scored&quot;, score)
+        total = total + score
 
 print(&quot;total:&quot;, total)
 </code></pre>
@@ -347,23 +345,19 @@ Zoe scored 21
 total: 63
 </code></pre>
 <h2 id="adding-to-the-end">Adding to the end</h2>
-<p><code>"a"</code> is for <strong>append</strong>. It opens the file and adds to the end of
-what is there, instead of emptying it first:</p>
-<pre><code class="language-python">scores_file = open(&quot;scores.txt&quot;, &quot;w&quot;)
-scores_file.write(&quot;Ada,12\n&quot;)
-scores_file.close()
+<p><code>"a"</code> is for <strong>add</strong> (Python calls it <em>append</em>). It opens the
+file and adds to the end of what is there, instead of emptying it first:</p>
+<pre><code class="language-python">with open(&quot;scores.txt&quot;, &quot;w&quot;) as scores_file:
+    scores_file.write(&quot;Ada,12\n&quot;)
 
-scores_file = open(&quot;scores.txt&quot;, &quot;a&quot;)
-scores_file.write(&quot;Max,30\n&quot;)
-scores_file.close()
+with open(&quot;scores.txt&quot;, &quot;a&quot;) as scores_file:
+    scores_file.write(&quot;Max,30\n&quot;)
 
-scores_file = open(&quot;scores.txt&quot;, &quot;a&quot;)
-scores_file.write(&quot;Zoe,21\n&quot;)
-scores_file.close()
+with open(&quot;scores.txt&quot;, &quot;a&quot;) as scores_file:
+    scores_file.write(&quot;Zoe,21\n&quot;)
 
-scores_file = open(&quot;scores.txt&quot;, &quot;r&quot;)
-print(scores_file.read())
-scores_file.close()
+with open(&quot;scores.txt&quot;, &quot;r&quot;) as scores_file:
+    print(scores_file.read())
 </code></pre>
 <pre><code>Ada,12
 Max,30
@@ -372,36 +366,49 @@ Zoe,21
 <p>If the file isn't there yet, <code>"a"</code> makes it, just like <code>"w"</code>.</p>
 <h2 id="when-the-file-is-not-there">When the file is not there</h2>
 <p><code>"w"</code> and <code>"a"</code> make a file that isn't there. <code>"r"</code> can't:</p>
-<pre><code class="language-text">save_file = open(&quot;save.txt&quot;, &quot;r&quot;)
+<pre><code class="language-text">with open(&quot;save.txt&quot;, &quot;r&quot;) as save_file:
+    print(save_file.read())
 </code></pre>
 <pre><code class="language-text">FileNotFoundError: [Errno 44] No such file or directory: 'save.txt'
 </code></pre>
 <p>That is the message in the playground. On your own computer the number is
 2 instead of 44, and the rest is the same. Check the name for a typo first:
 <code>"Save.txt"</code> and <code>"save.txt"</code> are two different files.</p>
-<h2 id="with">with</h2>
-<p>You will see files opened another way, too, in other people's code:</p>
+<h2 id="the-long-way">The long way: open() and close()</h2>
+<p>You will see files opened without <code>with</code> in other people's code,
+and in a lot of books:</p>
 <pre><code class="language-python">names_file = open(&quot;names.txt&quot;, &quot;w&quot;)
 names_file.write(&quot;Ada\n&quot;)
 names_file.write(&quot;Max\n&quot;)
 names_file.close()
 
-with open(&quot;names.txt&quot;, &quot;r&quot;) as names_file:
-    for line in names_file:
-        print(line.strip())
-
-print(names_file.closed)
+names_file = open(&quot;names.txt&quot;, &quot;r&quot;)
+print(names_file.read())
+names_file.close()
 </code></pre>
 <pre><code>Ada
 Max
-True
 </code></pre>
-<p>Everything indented under <code>with</code> can use the file, and when the
-indenting ends, the file is closed for you — <code>names_file.closed</code> says so.
-It is the same open-use-close, with the close written for you, so you can't
-forget it. These lessons write <code>close()</code> out, so you can see it happen.
-<a href="../../tutorials/log-hacker/">Log Hacker</a> opens every one of its files
-with <code>with</code>.</p>
+<p>It is the same open, use, close — with the close written out by hand. It
+works, as long as you never forget the <code>close()</code>. Forget it, and what you
+wrote may not be in the file yet: Python saves writing up and does it all at
+once, when the file is closed. Here the file is read before that has happened:</p>
+<pre><code class="language-python">names_file = open(&quot;names.txt&quot;, &quot;w&quot;)
+names_file.write(&quot;Ada\n&quot;)
+names_file.write(&quot;Max\n&quot;)
+
+reader = open(&quot;names.txt&quot;, &quot;r&quot;)
+print(repr(reader.read()))
+reader.close()
+
+names_file.close()
+</code></pre>
+<pre><code>&#x27;&#x27;
+</code></pre>
+<p>Empty, though two names were written. That can't happen with <code>with</code>,
+because the file is always closed when the indenting ends. That is why this
+lesson, and every game on this site that uses files, opens them with
+<code>with</code>.</p>
 <h2 id="a-level-from-a-file">A level from a file</h2>
 <p>The level in <a href="../dictionaries/#a-table-of-what-to-build">lesson 8</a> was a
 list of strings, one for each row. A file is lines of text — the same thing,
@@ -412,19 +419,17 @@ kaypy(width=800, height=600, background=[20, 24, 36])
 
 # The level, written into a file. A real game would ship it beside the
 # program; the playground has no files of its own, so this one makes it.
-level_file = open(&quot;level.txt&quot;, &quot;w&quot;)
-level_file.write(&quot;########\n&quot;)
-level_file.write(&quot;#o....o#\n&quot;)
-level_file.write(&quot;#..oo..#\n&quot;)
-level_file.write(&quot;########\n&quot;)
-level_file.close()
+with open(&quot;level.txt&quot;, &quot;w&quot;) as level_file:
+    level_file.write(&quot;########\n&quot;)
+    level_file.write(&quot;#o....o#\n&quot;)
+    level_file.write(&quot;#..oo..#\n&quot;)
+    level_file.write(&quot;########\n&quot;)
 
 # Read it back into a list of strings, one for each row.
 layout = []
-level_file = open(&quot;level.txt&quot;, &quot;r&quot;)
-for line in level_file:
-    layout.append(line.strip())
-level_file.close()
+with open(&quot;level.txt&quot;, &quot;r&quot;) as level_file:
+    for line in level_file:
+        layout.append(line.strip())
 
 TILES = {
     &quot;#&quot;: lambda: [rect(48, 48), color(90, 90, 110), area(), &quot;wall&quot;],
@@ -449,6 +454,8 @@ little files, and one program that reads whichever one comes next.</p>
 keep it in the browser even after the page is closed. A file in the playground
 lasts until you reload.</p>
 <h2 id="watch-for">Watch for</h2>
+<p><strong>Everything you do with a file goes inside its <code>with</code>.</strong> When
+the indenting ends, the file is closed.</p>
 <p><strong><code>write()</code> doesn't end the line.</strong> Put <code>"\n"</code> on the end yourself.</p>
 <p><strong>Every line you read still has its <code>\n</code>.</strong> <code>strip()</code> it, every
 time, before you compare it with anything.</p>
@@ -456,8 +463,6 @@ time, before you compare it with anything.</p>
 <code>"r"</code> needs it to be there already.</p>
 <p><strong>Only text goes in and comes out.</strong> <code>str()</code> on the way in,
 <code>int()</code> on the way out.</p>
-<p><strong>Close it when you have finished</strong>, before anything reads it. Until
-then, what you wrote may not be in the file at all.</p>
 <p><strong><code>readline()</code> gives <code>""</code> at the end</strong>, and only at the end.</p>
 <p>Most of those are in <a href="../../tutorials/log-hacker/">Log Hacker</a>,
 a game built step by step around three files it writes and then reads — and
@@ -466,16 +471,14 @@ its "break it" boxes are a forgotten <code>\n</code>, a forgotten
 writing to a file after its <code>with</code> has closed it.</p>
 <h2 id="classwork-1-the-high-score-table">Classwork 1 — The High Score Table</h2>
 <p>Start here and press Run:</p>
-<pre><code class="language-python">scores_file = open(&quot;scores.txt&quot;, &quot;w&quot;)
-scores_file.write(&quot;Ada,12\n&quot;)
-scores_file.write(&quot;Max,30\n&quot;)
-scores_file.write(&quot;Zoe,21\n&quot;)
-scores_file.close()
+<pre><code class="language-python">with open(&quot;scores.txt&quot;, &quot;w&quot;) as scores_file:
+    scores_file.write(&quot;Ada,12\n&quot;)
+    scores_file.write(&quot;Max,30\n&quot;)
+    scores_file.write(&quot;Zoe,21\n&quot;)
 
-scores_file = open(&quot;scores.txt&quot;, &quot;r&quot;)
-for line in scores_file:
-    print(line.strip())
-scores_file.close()
+with open(&quot;scores.txt&quot;, &quot;r&quot;) as scores_file:
+    for line in scores_file:
+        print(line.strip())
 </code></pre>
 <pre><code>Ada,12
 Max,30
@@ -493,9 +496,9 @@ Zoe,21
 <li>Ask for a new name and score with <code>input()</code> from
    <a href="../input/">lesson 2</a>, and add them to the end of the file with
    <code>"a"</code>, before it is read.</li>
-<li>Now take out the part that writes the file with <code>"w"</code>. The file is
-   still there from the last Run, so every Run adds one more player to it.
-   Run it three times.</li>
+<li>Now take out the <code>with</code> that writes the file with <code>"w"</code>. The
+   file is still there from the last Run, so every Run adds one more player to
+   it. Run it three times.</li>
 </ol>
 <p><strong>Stretch:</strong> write the top score into a second file, <code>best.txt</code>,
 and print <code>New record!</code> when a new score beats the one saved in it.
@@ -520,16 +523,14 @@ and when every coin is collected, <code>go()</code> to the next one. A new level
 now a new file, and no new code.</p>
 <h2 id="check-yourself">Check yourself</h2>
 <p>What does this print?</p>
-<pre><code class="language-python">count_file = open(&quot;count.txt&quot;, &quot;w&quot;)
-count_file.write(&quot;1\n2\n3\n&quot;)
-count_file.close()
+<pre><code class="language-python">with open(&quot;count.txt&quot;, &quot;w&quot;) as count_file:
+    count_file.write(&quot;1\n2\n3\n&quot;)
 
-count_file = open(&quot;count.txt&quot;, &quot;r&quot;)
-for line in count_file:
-    print(line.strip())
-for line in count_file:
-    print(&quot;again&quot;, line.strip())
-count_file.close()
+with open(&quot;count.txt&quot;, &quot;r&quot;) as count_file:
+    for line in count_file:
+        print(line.strip())
+    for line in count_file:
+        print(&quot;again&quot;, line.strip())
 </code></pre>
 <pre><code>1
 2
@@ -537,13 +538,13 @@ count_file.close()
 </code></pre>
 <details>
 <summary>Why doesn't the second loop print anything?</summary>
-<p>A file that is open remembers how far it has been read, just like
-<code>readline()</code> does. The first <code>for</code> loop read every line,
-so the file is at the end. The second one asks for the next line, and there
-isn't one — the same <code>""</code> that <code>readline()</code> gives at the
-end — so it goes round no times at all. No error, nothing printed.</p>
-<p>To read it again, <code>close()</code> it and <code>open()</code> it again. A
-file always opens at the top. That is why
+<p>An open file remembers how far it has been read, just like it does for
+<code>readline()</code>. The first <code>for</code> loop read every line, so the file
+is at the end. The second one asks for the next line, and there isn't one —
+the same <code>""</code> that <code>readline()</code> gives at the end — so it goes
+round no times at all. No error, nothing printed.</p>
+<p>To read it again, open it again, with a second <code>with</code>. A file always
+opens at the top. That is why
 <a href="../../tutorials/log-hacker/">Log Hacker</a> opens its log again every
 time it shows it: after each guess it reads the whole of <code>log.txt</code>
 from the top.</p>
@@ -560,13 +561,14 @@ from the top.</p>
       <a class="toc-link toc-d2" href="#a-variable-forgets">A variable forgets</a>
       <a class="toc-link toc-d2" href="#writing-a-file">Writing a file</a>
       <a class="toc-link toc-d2" href="#w-starts-again">"w" starts again</a>
+      <a class="toc-link toc-d2" href="#inside-the-with">Everything inside the with</a>
       <a class="toc-link toc-d2" href="#only-text-goes-in">Only text goes in</a>
       <a class="toc-link toc-d2" href="#reading-line-by-line">Reading line by line</a>
       <a class="toc-link toc-d2" href="#one-line-when-you-ask">One line when you ask</a>
       <a class="toc-link toc-d2" href="#cutting-a-line-up">Cutting a line up</a>
       <a class="toc-link toc-d2" href="#adding-to-the-end">Adding to the end</a>
       <a class="toc-link toc-d2" href="#when-the-file-is-not-there">When the file is not there</a>
-      <a class="toc-link toc-d2" href="#with">with</a>
+      <a class="toc-link toc-d2" href="#the-long-way">The long way: open() and close()</a>
       <a class="toc-link toc-d2" href="#a-level-from-a-file">A level from a file</a>
       <a class="toc-link toc-d2" href="#watch-for">Watch for</a>
       <a class="toc-link toc-d2" href="#classwork-1-the-high-score-table">Classwork 1 — The High Score Table</a>
