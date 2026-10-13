@@ -399,8 +399,9 @@ True
 <p>Everything indented under <code>with</code> can use the file, and when the
 indenting ends, the file is closed for you — <code>names_file.closed</code> says so.
 It is the same open-use-close, with the close written for you, so you can't
-forget it. These lessons and the games write <code>close()</code> out, so you can
-see it happen.</p>
+forget it. These lessons write <code>close()</code> out, so you can see it happen.
+<a href="../../tutorials/log-hacker/">Log Hacker</a> opens every one of its files
+with <code>with</code>.</p>
 <h2 id="a-level-from-a-file">A level from a file</h2>
 <p>The level in <a href="../dictionaries/#a-table-of-what-to-build">lesson 8</a> was a
 list of strings, one for each row. A file is lines of text — the same thing,
@@ -458,11 +459,11 @@ time, before you compare it with anything.</p>
 <p><strong>Close it when you have finished</strong>, before anything reads it. Until
 then, what you wrote may not be in the file at all.</p>
 <p><strong><code>readline()</code> gives <code>""</code> at the end</strong>, and only at the end.</p>
-<p>Every one of those is in <a href="../../tutorials/log-hacker/">Log Hacker</a>,
-a game built step by step around two files it writes and then reads — and
+<p>Most of those are in <a href="../../tutorials/log-hacker/">Log Hacker</a>,
+a game built step by step around three files it writes and then reads — and
 its "break it" boxes are a forgotten <code>\n</code>, a forgotten
-<code>close()</code>, a forgotten <code>strip()</code> and a missing check for
-<code>""</code>.</p>
+<code>strip()</code>, <code>"w"</code> where <code>"a"</code> should be, and
+writing to a file after its <code>with</code> has closed it.</p>
 <h2 id="classwork-1-the-high-score-table">Classwork 1 — The High Score Table</h2>
 <p>Start here and press Run:</p>
 <pre><code class="language-python">scores_file = open(&quot;scores.txt&quot;, &quot;w&quot;)
@@ -542,10 +543,10 @@ so the file is at the end. The second one asks for the next line, and there
 isn't one — the same <code>""</code> that <code>readline()</code> gives at the
 end — so it goes round no times at all. No error, nothing printed.</p>
 <p>To read it again, <code>close()</code> it and <code>open()</code> it again. A
-file always opens at the top. That is how
-<a href="../../tutorials/log-hacker/">Log Hacker</a> reads its log over and
-over: when <code>readline()</code> gives <code>""</code>, it closes the file and
-opens it again.</p>
+file always opens at the top. That is why
+<a href="../../tutorials/log-hacker/">Log Hacker</a> opens its log again every
+time it shows it: after each guess it reads the whole of <code>log.txt</code>
+from the top.</p>
 </details>
 <hr />
 <p><a href="../dictionaries/">← Lesson 8 — Dictionaries</a> · <a href="../">All nine lessons</a></p>

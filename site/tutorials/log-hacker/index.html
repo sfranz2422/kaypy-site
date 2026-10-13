@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Building Log Hacker · KayPy</title>
-<meta name="description" content="How Log Hacker was built, a step at a time: writing a file, reading it back, a log that goes past one line at a time, a password to find and a trace to beat — the game for files, in plain Python a student can copy.">
+<meta name="description" content="How Log Hacker was built, a step at a time: writing a file with with open(), reading it back, a password in a file of its own, a log of every guess, and four tries — the game for files, in plain Python a student can copy.">
 <meta property="og:title" content="Building Log Hacker · KayPy">
 <meta property="og:description" content="How Log Hacker was built, a step at a time.">
 <meta property="og:image" content="../../static/social.png">
@@ -78,12 +78,11 @@
 <h1 id="building-log-hacker">Building Log Hacker</h1>
 
 <p><a href="../../static/games/log_hacker/">Play it first →</a> You have
-broken into a server and you are reading its log: one line for every time
-somebody tried to log in. Somewhere in it, somebody typed their
-<em>password</em> into the box where their <em>name</em> should go, and the
-server wrote it down. The real users are listed on the right. Click the
-FAILED line whose name isn't on the list before the trace reaches 100%. Every
-server is faster than the last.</p>
+broken into a server. One of the words on the screen is its password, and
+you have four tries. Click a word to guess it. Every guess goes in the log,
+with how many of its letters are the right letter in the right place, and the
+password has to match every line of the log. Get it, and the next server's
+password is longer. There is no clock.</p>
 
 <p>This is how it was built, a step at a time. Every numbered step below is a
 whole program: copy it into
@@ -103,27 +102,38 @@ functions, <code>global</code>, <code>wait()</code>, <code>onClick</code> with
 <code>isHovering()</code>, and a scene. If any of those are new, build Goblin
 Hit first. After this one, try <a href="../paddle-ball/">Paddle Ball</a>.</p>
 
-<h2 id="the-one-big-idea">The one big idea: write it, close it, read it back</h2>
-
-<p>A file is text with a name, kept somewhere other than your program. You get
-at it in three moves: <code>open()</code> it, use it, <code>close()</code>
-it. Open it with <code>"w"</code> and you can write in it; open it with
-<code>"r"</code> and you can read it.</p>
+<h2 id="the-one-big-idea">The one big idea: three files</h2>
 
 <p>A real hacker would find the files already on the server. This game has no
-server, so it makes its own: it writes <code>users.txt</code> and
-<code>log.txt</code> first, then reads them back exactly as it would read any
-file. It writes new ones for every server, so the log is never the same
-twice.</p>
+server, so it makes its own, and then reads them back exactly as it would
+read any file:</p>
 
-<p>Run it on your own computer and the two files appear in the folder your
+<ul>
+<li><code>words.txt</code> — the words the password could be, one on each
+line.</li>
+<li><code>password.txt</code> — the one it is.</li>
+<li><code>log.txt</code> — every guess so far, and how close it was.</li>
+</ul>
+
+<p>Every file is opened the same way:</p>
+
+<pre><code class="language-python">with open(&quot;words.txt&quot;, &quot;w&quot;) as words_file:
+    words_file.write(&quot;crash\n&quot;)</code></pre>
+
+<p><code>open()</code> opens the file, and <code>as words_file</code> gives it a
+name for the indented lines underneath. When the indenting ends, the file is
+closed by itself. The second thing in <code>open()</code> says what you're
+going to do with it: <code>"w"</code> to write, <code>"r"</code> to read,
+<code>"a"</code> to add to the end.</p>
+
+<p>Run it on your own computer and the three files appear in the folder your
 program runs in, where you can open them and look. In the playground they are
-just as real, but they live inside the page, and they are gone when you
-reload it.</p>
+just as real, but they live inside the page. They last from one Run to the
+next, and they are gone when you reload.</p>
 
-<h2 id="step-1-a-file-of-users">Step 1 — a file of users</h2>
+<h2 id="step-1-a-file-of-words">Step 1 — a file of words</h2>
 
-<p>Write four names into a file, read them back, and put them on the
+<p>Write eight words into a file, read them back, and put them on the
 screen.</p>
 
 <pre><code class="language-python">from kaypy import *
@@ -133,203 +143,69 @@ kaypy(width=800, height=600, background=[8, 14, 10])
 GREEN = rgb(90, 230, 120)
 DIM = rgb(50, 110, 65)
 
-# Write the file. &quot;w&quot; means write: it makes users.txt, or empties it if
-# it is already there. &quot;\n&quot; is the end of a line -- write() does not add
-# one for you.
-users_file = open(&quot;users.txt&quot;, &quot;w&quot;)
-users_file.write(&quot;ada\n&quot;)
-users_file.write(&quot;zoe\n&quot;)
-users_file.write(&quot;max\n&quot;)
-users_file.write(&quot;sam\n&quot;)
-users_file.close()
+WORDS = [&quot;crash&quot;, &quot;crack&quot;, &quot;track&quot;, &quot;trace&quot;, &quot;trick&quot;, &quot;brick&quot;, &quot;block&quot;,
+         &quot;clock&quot;]
 
-# Read it back. &quot;r&quot; means read. Each time round the for loop, line is the
-# next line of the file, &quot;\n&quot; and all, and strip() takes the &quot;\n&quot; off.
-users = []
-users_file = open(&quot;users.txt&quot;, &quot;r&quot;)
-for line in users_file:
-    users.append(line.strip())
-users_file.close()
+# Write the file. with ... as words_file: opens it, and calls it
+# words_file for the indented lines underneath. When they end, the file
+# is closed by itself. &quot;w&quot; means write: it makes words.txt, or empties it
+# if it is already there.
+with open(&quot;words.txt&quot;, &quot;w&quot;) as words_file:
+    for word in WORDS:
+        words_file.write(word + &quot;\n&quot;)
 
-# The users, down the right-hand side.
-add([text(&quot;users.txt&quot;, size=20), pos(600, 100), color(DIM)])
+# Read it back. &quot;r&quot; means read. A for loop over a file goes round once for
+# each line, and line is the line, &quot;\n&quot; and all. strip() takes it off.
+words = []
+with open(&quot;words.txt&quot;, &quot;r&quot;) as words_file:
+    for line in words_file:
+        words.append(line.strip())
+
+# The words, down the left-hand side.
+add([text(&quot;words.txt&quot;, size=20), pos(40, 100), color(DIM)])
 y = 130
-for name in users:
-    add([text(name, size=26), pos(610, y), color(GREEN)])
+for word in words:
+    add([text(word, size=26), pos(50, y), color(GREEN)])
     y = y + 32</code></pre>
 
 <ul>
-<li><strong><code>open("users.txt", "w")</code></strong> makes the file and
-hands it back, ready to write in. <code>"w"</code> means write. If there is
-already a <code>users.txt</code>, it is emptied first. The variable
-<code>users_file</code> is how the rest of the program gets at it.</li>
+<li><strong><code>"w"</code> means write.</strong> It makes
+<code>words.txt</code>, or empties it first if it's already there.</li>
 <li><strong><code>write()</code> puts exactly what you give it into the file,
 and nothing else.</strong> It doesn't start a new line for you.
-<code>"\n"</code> is the end of a line, so <code>"ada\n"</code> is "ada" and
-then a new line.</li>
-<li><strong><code>close()</code></strong> says you have finished with it.
-Until then, what you wrote may not be in the file yet. The second
-<em>Break it</em> below shows that.</li>
-<li><strong><code>open("users.txt", "r")</code></strong> opens it again to
-read. <code>for line in users_file</code> goes round once for each line in the
-file, top to bottom, and each time <code>line</code> is the next one.</li>
+<code>"\n"</code> is the end of a line, so <code>word + "\n"</code> is the
+word and then a new line.</li>
+<li><strong><code>"r"</code> means read.</strong> <code>for line in
+words_file</code> goes round once for each line in the file, top to bottom,
+and each time <code>line</code> is the next one.</li>
 <li><strong><code>line</code> still has its <code>"\n"</code> on the
-end.</strong> The first time round it is <code>"ada\n"</code>, not
-<code>"ada"</code>. <code>strip()</code> takes it off, along with any spaces
-at either end. Step 4 shows what goes wrong if you forget.</li>
+end.</strong> The first time round it is <code>"crash\n"</code>, not
+<code>"crash"</code>. <code>strip()</code> takes it off, along with any spaces
+at either end.</li>
 </ul>
 
 <div class="callout"><p><strong>Break it.</strong> Take the
-<code>\n</code> out of all four <code>write()</code> lines. There is no error,
-but there is only one user now, and it is called
-<code>adazoemaxsam</code>.</p>
-<p>The four names went into the file one after another with nothing between
-them, so the file is one line long. Reading it back, the loop finds one
+<code>+ "\n"</code> out of the <code>write()</code> line. There is no error,
+but there is only one word now:
+<code>crashcracktracktracetrickbrickblockclock</code>.</p>
+<p>The words went into the file one after another with nothing between them,
+so the file is one line long, and reading it back, the loop finds one
 line.</p></div>
 
-<div class="callout"><p><strong>Break it.</strong> Put the <code>\n</code>s
-back, and take out the first <code>users_file.close()</code>, the one after
-the writing. There is no error this time either, but no users at all. The
-list under <code>users.txt</code> is empty.</p>
-<p>Python doesn't write to the file the moment you call <code>write()</code>.
-It saves it up and writes it all at once, and <code>close()</code> is what
-makes it do that. Here the file is read before it was ever closed, so it is
-still empty. Close a file as soon as you have finished with it.</p></div>
+<div class="callout"><p><strong>Break it.</strong> Put the <code>"\n"</code>
+back, and add one more line after the first <code>with</code>, right at the
+left edge, not indented:</p>
+<pre><code class="language-python">words_file.write(&quot;slash\n&quot;)</code></pre>
+<p>It stops straight away with</p>
+<pre><code class="language-plaintext">ValueError: I/O operation on closed file.</code></pre>
+<p>The file was closed when the indenting ended. <code>words_file</code> still
+names it, but you can't write to a closed file. Everything you do with a file
+goes inside its <code>with</code>.</p></div>
 
-<h2 id="step-2-a-log-to-read">Step 2 — a log to read</h2>
+<h2 id="step-2-the-password">Step 2 — the password, and guessing</h2>
 
-<p>Now the program makes up a server. It picks four users at random and writes
-them, then writes a log of sixteen logins and reads it back onto the
-screen.</p>
-
-<pre><code class="language-python">from kaypy import *
-
-kaypy(width=800, height=600, background=[8, 14, 10])
-
-GREEN = rgb(90, 230, 120)
-DIM = rgb(50, 110, 65)
-
-NAMES = [&quot;ada&quot;, &quot;max&quot;, &quot;zoe&quot;, &quot;leo&quot;, &quot;mia&quot;, &quot;raj&quot;,
-         &quot;olivia&quot;, &quot;lucas&quot;, &quot;amara&quot;, &quot;kenji&quot;, &quot;sofia&quot;, &quot;mateo&quot;]
-
-
-def two_digits(number):
-    if number &lt; 10:
-        return &quot;0&quot; + str(number)
-    return str(number)
-
-
-def clock(minutes):
-    # 75 minutes after midnight is 01:15. // is how many whole hours, and
-    # % is the minutes left over.
-    hours = minutes // 60 % 24
-    return two_digits(hours) + &quot;:&quot; + two_digits(minutes % 60)
-
-
-def write_files(how_many_users, how_many_lines):
-    # Pick the users. A name that is already picked is skipped, so the
-    # loop goes round until there are enough different ones.
-    users = []
-    while len(users) &lt; how_many_users:
-        name = choose(NAMES)
-        if name not in users:
-            users.append(name)
-
-    users_file = open(&quot;users.txt&quot;, &quot;w&quot;)
-    for name in users:
-        users_file.write(name + &quot;\n&quot;)
-    users_file.close()
-
-    # The log: one login on each line, when, who, and whether it worked,
-    # with commas between them -- 01:07,zoe,ok
-    log_file = open(&quot;log.txt&quot;, &quot;w&quot;)
-    minutes = randi(0, 300)
-    for number in range(how_many_lines):
-        minutes = minutes + randi(1, 9)
-        name = choose(users)
-        if chance(0.3):
-            result = &quot;failed&quot;
-        else:
-            result = &quot;ok&quot;
-        log_file.write(clock(minutes) + &quot;,&quot; + name + &quot;,&quot; + result + &quot;\n&quot;)
-    log_file.close()
-
-
-def read_users():
-    users = []
-    users_file = open(&quot;users.txt&quot;, &quot;r&quot;)
-    for line in users_file:
-        users.append(line.strip())
-    users_file.close()
-    return users
-
-
-write_files(4, 16)
-users = read_users()
-
-add([text(&quot;users.txt&quot;, size=20), pos(600, 100), color(DIM)])
-y = 130
-for name in users:
-    add([text(name, size=26), pos(610, y), color(GREEN)])
-    y = y + 32
-
-# Read the log, and put each line on the screen. split(&quot;,&quot;) cuts a line
-# up at every comma: &quot;01:07,zoe,ok&quot; becomes [&quot;01:07&quot;, &quot;zoe&quot;, &quot;ok&quot;].
-add([text(&quot;log.txt&quot;, size=20), pos(20, 72), color(DIM)])
-y = 100
-log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
-for line in log_file:
-    parts = line.strip().split(&quot;,&quot;)
-    add([text(parts[0], size=22), pos(20, y), color(DIM)])
-    add([text(parts[1], size=22), pos(110, y), color(GREEN)])
-    if parts[2] == &quot;failed&quot;:
-        add([text(&quot;FAILED&quot;, size=22), pos(310, y), color(RED)])
-    else:
-        add([text(&quot;ok&quot;, size=22), pos(310, y), color(GREEN)])
-    y = y + 28
-log_file.close()</code></pre>
-
-<ul>
-<li><strong>Every line of the log is one login</strong>, with three parts and
-a comma between each: when it was, who it was, and whether it worked.
-<code>01:07,zoe,ok</code>. That is how the program writes it, so that is how it
-can read it back.</li>
-<li><strong><code>write_files</code> picks the users with a
-<code>while</code> loop.</strong> <code>choose(NAMES)</code> picks a name, and
-it only goes on the list if it isn't on it already. A <code>for</code> loop
-would go round exactly four times and could pick the same name twice. The
-<code>while</code> loop goes round until there are four
-<em>different</em> ones.</li>
-<li><strong>The times go up</strong> a few minutes at a time:
-<code>randi(1, 9)</code> is a whole number from 1 to 9. <code>clock()</code>
-turns minutes into a time. <code>minutes // 60</code> is how many whole hours
-there are, and <code>minutes % 60</code> is the minutes left over, so 75
-minutes is <code>01:15</code>. <code>two_digits()</code> puts a 0 in front of
-a number less than ten, so it says <code>01</code> rather than
-<code>1</code>.</li>
-<li><strong><code>chance(0.3)</code></strong> is <code>True</code> three times
-in ten, so about a third of the logins fail.</li>
-<li><strong><code>split(",")</code> cuts a line up at every comma</strong> and
-gives back a list. <code>"01:07,zoe,ok"</code> becomes
-<code>["01:07", "zoe", "ok"]</code>, so <code>parts[0]</code> is the time,
-<code>parts[1]</code> the name and <code>parts[2]</code> whether it
-worked.</li>
-</ul>
-
-<div class="callout"><p><strong>Break it.</strong> Change
-<code>split(",")</code> to <code>split()</code>, with nothing in the
-brackets. It stops straight away with</p>
-<pre><code class="language-plaintext">IndexError: list index out of range</code></pre>
-<p>on the line that uses <code>parts[1]</code>. With nothing in the brackets,
-<code>split()</code> cuts at spaces, and there are no spaces in
-<code>01:07,zoe,ok</code>. So it comes back in one piece,
-<code>["01:07,zoe,ok"]</code>, and there is no <code>parts[1]</code>. "Out of
-range" means you asked a list for a position it doesn't have.</p></div>
-
-<h2 id="step-3-the-log-goes-past">Step 3 — the log goes past</h2>
-
-<p>A real log doesn't sit still. Now the lines come in at the bottom one at a
-time and move up, and when the log runs out it starts again from the top.</p>
+<p>One of the words is the password, and it goes in a file of its own. Click
+a word to guess it.</p>
 
 <pre><code class="language-python">from kaypy import *
 
@@ -338,704 +214,460 @@ kaypy(width=800, height=600, background=[8, 14, 10])
 GREEN = rgb(90, 230, 120)
 DIM = rgb(50, 110, 65)
 
-SCROLL = 40       # how fast the log goes past, in pixels a second
-ROW = 28          # how tall one line of the log is, in pixels
-LOG_TOP = 90      # a line that goes above this has gone
-LOG_BOTTOM = 560  # ...and a new one comes in here
+WORDS = [&quot;crash&quot;, &quot;crack&quot;, &quot;track&quot;, &quot;trace&quot;, &quot;trick&quot;, &quot;brick&quot;, &quot;block&quot;,
+         &quot;clock&quot;]
 
-NAMES = [&quot;ada&quot;, &quot;max&quot;, &quot;zoe&quot;, &quot;leo&quot;, &quot;mia&quot;, &quot;raj&quot;,
-         &quot;olivia&quot;, &quot;lucas&quot;, &quot;amara&quot;, &quot;kenji&quot;, &quot;sofia&quot;, &quot;mateo&quot;]
+# Write the file. with ... as words_file: opens it, and calls it
+# words_file for the indented lines underneath. When they end, the file
+# is closed by itself. &quot;w&quot; means write: it makes words.txt, or empties it
+# if it is already there.
+with open(&quot;words.txt&quot;, &quot;w&quot;) as words_file:
+    for word in WORDS:
+        words_file.write(word + &quot;\n&quot;)
 
+# Read it back. &quot;r&quot; means read. A for loop over a file goes round once for
+# each line, and line is the line, &quot;\n&quot; and all. strip() takes it off.
+words = []
+with open(&quot;words.txt&quot;, &quot;r&quot;) as words_file:
+    for line in words_file:
+        words.append(line.strip())
 
-def two_digits(number):
-    if number &lt; 10:
-        return &quot;0&quot; + str(number)
-    return str(number)
-
-
-def clock(minutes):
-    # 75 minutes after midnight is 01:15. // is how many whole hours, and
-    # % is the minutes left over.
-    hours = minutes // 60 % 24
-    return two_digits(hours) + &quot;:&quot; + two_digits(minutes % 60)
-
-
-def write_files(how_many_users, how_many_lines):
-    # Pick the users. A name that is already picked is skipped, so the
-    # loop goes round until there are enough different ones.
-    users = []
-    while len(users) &lt; how_many_users:
-        name = choose(NAMES)
-        if name not in users:
-            users.append(name)
-
-    users_file = open(&quot;users.txt&quot;, &quot;w&quot;)
-    for name in users:
-        users_file.write(name + &quot;\n&quot;)
-    users_file.close()
-
-    # The log: one login on each line, when, who, and whether it worked,
-    # with commas between them -- 01:07,zoe,ok
-    log_file = open(&quot;log.txt&quot;, &quot;w&quot;)
-    minutes = randi(0, 300)
-    for number in range(how_many_lines):
-        minutes = minutes + randi(1, 9)
-        name = choose(users)
-        if chance(0.3):
-            result = &quot;failed&quot;
-        else:
-            result = &quot;ok&quot;
-        log_file.write(clock(minutes) + &quot;,&quot; + name + &quot;,&quot; + result + &quot;\n&quot;)
-    log_file.close()
+# One of them is the password, and it goes in a file of its own.
+with open(&quot;password.txt&quot;, &quot;w&quot;) as password_file:
+    password_file.write(choose(words) + &quot;\n&quot;)
 
 
-def read_users():
-    users = []
-    users_file = open(&quot;users.txt&quot;, &quot;r&quot;)
-    for line in users_file:
-        users.append(line.strip())
-    users_file.close()
-    return users
+def read_password():
+    # read() is the whole file, as one string.
+    with open(&quot;password.txt&quot;, &quot;r&quot;) as password_file:
+        password = password_file.read().strip()
+    return password
 
 
-write_files(4, 16)
-users = read_users()
-
-add([text(&quot;users.txt&quot;, size=20), pos(600, 100), color(DIM)])
+# The words, down the left-hand side. Each one is something to click:
+# area() lets it know when the mouse is over it, and the dictionary gives
+# it a value of its own, the word.
+add([text(&quot;words.txt&quot;, size=20), pos(40, 100), color(DIM)])
 y = 130
-for name in users:
-    add([text(name, size=26), pos(610, y), color(GREEN)])
+for word in words:
+    add([text(word, size=26), pos(50, y), color(GREEN), area(),
+         {&quot;word&quot;: word}, &quot;word&quot;])
     y = y + 32
 
-add([text(&quot;log.txt&quot;, size=20), pos(20, 72), color(DIM), z(10)])
+message = add([text(&quot;&quot;, size=36), pos(560, 450), anchor(&quot;center&quot;),
+               color(GREEN)])
 
-# Two dark bands over the top and bottom of the log, so lines slide in
-# and out of sight behind them.
-add([rect(800, LOG_TOP), pos(0, 0), color(8, 14, 10), z(5)])
-add([rect(560, 600 - LOG_BOTTOM - ROW), pos(0, LOG_BOTTOM + ROW),
-     color(8, 14, 10), z(5)])
 
-
-def show(when, name, result):
-    # One line of the log: a dark strip at the bottom, which moves up.
-    # The words are its children, so they move with it.
-    row = add([rect(540, ROW - 2), pos(10, LOG_BOTTOM), color(8, 14, 10),
-               &quot;row&quot;])
-    row.add([text(when, size=22), pos(10, 4), color(DIM)])
-    row.add([text(name, size=22), pos(100, 4), color(GREEN)])
-    if result == &quot;failed&quot;:
-        row.add([text(&quot;FAILED&quot;, size=22), pos(300, 4), color(RED)])
-    else:
-        row.add([text(&quot;ok&quot;, size=22), pos(300, 4), color(GREEN)])
-
-
-# The log is read one line at a time, with readline(). The file stays
-# open in between, and remembers where it got to, so each readline()
-# hands over the line after the last one.
-log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
-
-
-def next_line():
-    global log_file
-
-    line = log_file.readline()
-
-    # At the end of the file there is nothing left, and readline() gives
-    # back &quot;&quot;. Close it, open it again, and start from the top.
-    if line == &quot;&quot;:
-        log_file.close()
-        log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
-        row = add([rect(540, ROW - 2), pos(10, LOG_BOTTOM),
-                   color(8, 14, 10), &quot;row&quot;])
-        row.add([text(&quot;----- end of log.txt, reading it again&quot;, size=22),
-                 pos(10, 4), color(DIM)])
-        wait(ROW / SCROLL, next_line)
-        return
-
-    parts = line.strip().split(&quot;,&quot;)
-    show(parts[0], parts[1], parts[2])
-
-    # The next line once this one has moved up out of its way.
-    wait(ROW / SCROLL, next_line)
-
-
-next_line()
-
-
-# Every row moves up, and one that has gone past the top is gone.
-@onUpdate(&quot;row&quot;)
-def move_up(row):
-    row.pos.y = row.pos.y - SCROLL * dt()
-    if row.pos.y &lt; LOG_TOP - ROW:
-        row.destroy()</code></pre>
-
-<ul>
-<li><strong><code>readline()</code> reads one line, and only one.</strong> The
-file stays open, and remembers how far it has got, so the next
-<code>readline()</code> gives back the line after that. That is how the
-game can show one line now and the next a moment later.</li>
-<li><strong>At the end of the file, <code>readline()</code> gives back
-<code>""</code></strong>, an empty string, because there is nothing left.
-That's how you know the file has run out. Even a blank line in the middle of
-a file is <code>"\n"</code>, so <code>""</code> only ever means the end.</li>
-<li><strong>To start again from the top</strong>, the program closes the file
-and opens it again. A newly opened file always starts at its first line. A row
-saying so goes past first.</li>
-<li><strong>Each line is a dark strip</strong>, a <code>rect()</code>, and the
-words are its <em>children</em>, added with <code>row.add()</code>. A child's
-<code>pos()</code> is measured from its parent, and it moves when the parent
-moves, so moving the strip moves all three words.</li>
-<li><strong><code>wait(ROW / SCROLL, next_line)</code></strong> asks for the
-next line once this one has moved up out of its way. A line is 28 pixels tall
-and the log moves 40 pixels a second, so that is every 0.7 seconds.</li>
-<li><strong>The two dark bands</strong> at <code>z(5)</code> are drawn over the
-lines at the top and bottom, so the lines slide out from behind one and away
-behind the other.</li>
-</ul>
-
-<div class="callout"><p><strong>Break it.</strong> Take out the whole
-<code>if line == "":</code> part, down to its <code>return</code>. The log
-goes past as before, until about eleven seconds in, when all sixteen lines have
-been read. Then it stops with</p>
-<pre><code class="language-plaintext">IndexError: list index out of range</code></pre>
-<p>on <code>show(parts[0], parts[1], parts[2])</code>. At the end of the file
-<code>line</code> is <code>""</code>, and splitting nothing gives a list with
-one empty thing in it, <code>[""]</code>. There is no <code>parts[1]</code>.
-Reading a file one line at a time, you always have to check for the end.</p></div>
-
-<h2 id="step-4-the-password">Step 4 — the password, and clicking</h2>
-
-<p>Now somebody slips up. Somewhere in the log is a password where a name
-should be. Find it and click it.</p>
-
-<pre><code class="language-python">from kaypy import *
-
-kaypy(width=800, height=600, background=[8, 14, 10])
-
-GREEN = rgb(90, 230, 120)
-DIM = rgb(50, 110, 65)
-
-SCROLL = 40       # how fast the log goes past, in pixels a second
-ROW = 28          # how tall one line of the log is, in pixels
-LOG_TOP = 90      # a line that goes above this has gone
-LOG_BOTTOM = 560  # ...and a new one comes in here
-
-NAMES = [&quot;ada&quot;, &quot;max&quot;, &quot;zoe&quot;, &quot;leo&quot;, &quot;mia&quot;, &quot;raj&quot;,
-         &quot;olivia&quot;, &quot;lucas&quot;, &quot;amara&quot;, &quot;kenji&quot;, &quot;sofia&quot;, &quot;mateo&quot;]
-
-# Real passwords that real people use. A lot of them are names.
-PASSWORDS = [&quot;dragon&quot;, &quot;qwerty&quot;, &quot;letmein&quot;, &quot;monkey&quot;, &quot;sunshine&quot;,
-             &quot;football&quot;, &quot;shadow&quot;, &quot;jordan&quot;, &quot;michael&quot;, &quot;jessica&quot;,
-             &quot;charlie&quot;, &quot;ashley&quot;, &quot;daniel&quot;, &quot;thomas&quot;, &quot;maggie&quot;, &quot;taylor&quot;]
-
-
-def two_digits(number):
-    if number &lt; 10:
-        return &quot;0&quot; + str(number)
-    return str(number)
-
-
-def clock(minutes):
-    # 75 minutes after midnight is 01:15. // is how many whole hours, and
-    # % is the minutes left over.
-    hours = minutes // 60 % 24
-    return two_digits(hours) + &quot;:&quot; + two_digits(minutes % 60)
-
-
-def write_files(how_many_users, how_many_lines):
-    # Pick the users. A name that is already picked is skipped, so the
-    # loop goes round until there are enough different ones.
-    users = []
-    while len(users) &lt; how_many_users:
-        name = choose(NAMES)
-        if name not in users:
-            users.append(name)
-
-    users_file = open(&quot;users.txt&quot;, &quot;w&quot;)
-    for name in users:
-        users_file.write(name + &quot;\n&quot;)
-    users_file.close()
-
-    # The line where somebody slips up. Not one of the first few, so you
-    # have read a little of the log before it comes.
-    slip = randi(4, how_many_lines - 1)
-
-    # The log: one login on each line, when, who, and whether it worked,
-    # with commas between them -- 01:07,zoe,ok
-    log_file = open(&quot;log.txt&quot;, &quot;w&quot;)
-    minutes = randi(0, 300)
-    for number in range(how_many_lines):
-        minutes = minutes + randi(1, 9)
-        when = clock(minutes)
-
-        if number == slip:
-            # A password where the name should be, which fails -- and then
-            # the same person, a moment later, getting it right.
-            victim = choose(users)
-            log_file.write(when + &quot;,&quot; + choose(PASSWORDS) + &quot;,failed\n&quot;)
-            log_file.write(when + &quot;,&quot; + victim + &quot;,ok\n&quot;)
-        else:
-            name = choose(users)
-            if chance(0.3):
-                result = &quot;failed&quot;
-            else:
-                result = &quot;ok&quot;
-            log_file.write(when + &quot;,&quot; + name + &quot;,&quot; + result + &quot;\n&quot;)
-
-    log_file.close()
-
-
-def read_users():
-    users = []
-    users_file = open(&quot;users.txt&quot;, &quot;r&quot;)
-    for line in users_file:
-        users.append(line.strip())
-    users_file.close()
-    return users
-
-
-write_files(4, 16)
-users = read_users()
-
-add([text(&quot;users.txt&quot;, size=20), pos(600, 100), color(DIM)])
-y = 130
-for name in users:
-    add([text(name, size=26), pos(610, y), color(GREEN)])
-    y = y + 32
-
-add([text(&quot;log.txt&quot;, size=20), pos(20, 72), color(DIM), z(10)])
-
-# Two dark bands over the top and bottom of the log, so lines slide in
-# and out of sight behind them.
-add([rect(800, LOG_TOP), pos(0, 0), color(8, 14, 10), z(5)])
-add([rect(560, 600 - LOG_BOTTOM - ROW), pos(0, LOG_BOTTOM + ROW),
-     color(8, 14, 10), z(5)])
-
-
-message = add([text(&quot;&quot;, size=40), pos(280, 300), anchor(&quot;center&quot;),
-               color(GREEN), z(20)])
-
-playing = True
-
-
-def show(when, name, result):
-    # One line of the log: a dark strip at the bottom, which moves up.
-    # area() lets it know when the mouse is over it, and the dictionary
-    # keeps the name it is showing, to check against the users when it is
-    # clicked. The words are its children, so they move with it.
-    row = add([rect(540, ROW - 2), pos(10, LOG_BOTTOM), color(8, 14, 10),
-               area(), {&quot;name&quot;: name}, &quot;row&quot;, &quot;line&quot;])
-    row.add([text(when, size=22), pos(10, 4), color(DIM)])
-    row.add([text(name, size=22), pos(100, 4), color(GREEN)])
-    if result == &quot;failed&quot;:
-        row.add([text(&quot;FAILED&quot;, size=22), pos(300, 4), color(RED)])
-    else:
-        row.add([text(&quot;ok&quot;, size=22), pos(300, 4), color(GREEN)])
-
-
-# The log is read one line at a time, with readline(). The file stays
-# open in between, and remembers where it got to, so each readline()
-# hands over the line after the last one.
-log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
-
-
-def next_line():
-    global log_file
-
-    if not playing:
-        return
-
-    line = log_file.readline()
-
-    # At the end of the file there is nothing left, and readline() gives
-    # back &quot;&quot;. Close it, open it again, and start from the top.
-    if line == &quot;&quot;:
-        log_file.close()
-        log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
-        row = add([rect(540, ROW - 2), pos(10, LOG_BOTTOM),
-                   color(8, 14, 10), &quot;row&quot;])
-        row.add([text(&quot;----- end of log.txt, reading it again&quot;, size=22),
-                 pos(10, 4), color(DIM)])
-        wait(ROW / SCROLL, next_line)
-        return
-
-    parts = line.strip().split(&quot;,&quot;)
-    show(parts[0], parts[1], parts[2])
-
-    # The next line once this one has moved up out of its way.
-    wait(ROW / SCROLL, next_line)
-
-
-next_line()
-
-
-# Every row moves up, and one that has gone past the top is gone.
-@onUpdate(&quot;row&quot;)
-def move_up(row):
-    if not playing:
-        return
-    row.pos.y = row.pos.y - SCROLL * dt()
-    if row.pos.y &lt; LOG_TOP - ROW:
-        row.destroy()
-
-
-# A line you can click lights up while the mouse is over it.
-@onUpdate(&quot;line&quot;)
-def light_up(row):
-    if row.isHovering():
-        row.color = rgb(25, 50, 32)
-    else:
-        row.color = rgb(8, 14, 10)
-
-
+# onClick runs on every click, wherever it is, and a tap on a phone counts
+# as a click. isHovering() asks whether the mouse is over a word.
 @onClick
 def click():
-    if not playing:
-        return
-    for row in get(&quot;line&quot;):
+    for row in get(&quot;word&quot;):
         if row.isHovering():
-            check(row)
+            guess(row)
             return
 
 
-def check(row):
-    global playing
-
-    # A name on the list is only a name. A name that is NOT on the list
-    # is somebody&#x27;s password.
-    if row.name in users:
-        shake(6)
-    else:
-        playing = False
-        log_file.close()
-        destroyAll(&quot;row&quot;)
+def guess(row):
+    if row.word == read_password():
         message.text = &quot;ACCESS GRANTED&quot;
-        add([text(&quot;the password was &quot; + row.name, size=26),
-             pos(280, 350), anchor(&quot;center&quot;), color(GREEN), z(20)])</code></pre>
+    else:
+        message.text = &quot;WRONG&quot;
+        row.color = DIM</code></pre>
 
 <ul>
-<li><strong>The slip</strong> is a line picked at random, but not one of the
-first four, so you have read some of the log before it comes. There the log
-gets two lines instead of one: a password from <code>PASSWORDS</code> that
-FAILED, then the person who typed it logging in properly a moment later.</li>
-<li><strong>Look at <code>PASSWORDS</code>.</strong> They are real passwords
-that thousands of real people use, which is why they are the first ones a
-hacker tries. A lot of them are names, so <code>jordan</code> in the log looks
-just like a user. The only way to tell is to check the list.</li>
-<li><strong>Each row has <code>area()</code></strong>, so it knows when the
-mouse is over it, and <code>{"name": name}</code>, so it remembers the name it
-is showing as <code>row.name</code>. It has two tags. <code>"row"</code>
-is every row, so they all move up. <code>"line"</code> is only the rows you
-can click, so the <em>end of log.txt</em> row moves with them but can't be
-clicked.</li>
-<li><strong><code>check()</code> is the whole game in one
-<code>if</code>.</strong> <code>row.name in users</code> asks whether the name
-is on the list read from <code>users.txt</code>. If it is, it is only a
-name. If it isn't, it is somebody's password.</li>
-<li><strong><code>playing</code></strong> stops everything once you are in:
-no new lines, nothing moves, and no more clicks count.</li>
+<li><strong><code>choose(words)</code></strong> picks one of the words at
+random, and it is written into <code>password.txt</code>.</li>
+<li><strong><code>read()</code></strong> hands back the whole file as one
+string, so <code>read_password()</code> gives <code>"brick\n"</code>, and
+<code>strip()</code> makes it <code>"brick"</code>. The program never keeps
+the password in a variable for long: it reads it from the file every time
+you guess.</li>
+<li><strong>Each word has <code>area()</code></strong>, so it knows when the
+mouse is over it, and <code>{"word": word}</code>, so it remembers its word as
+<code>row.word</code>.</li>
+<li><strong><code>@onClick</code> runs <code>click</code> on every
+click</strong>, wherever it is, and a tap on a phone counts. It goes through
+the words and guesses the one the mouse is over. A wrong one goes dim.</li>
 </ul>
 
 <div class="callout"><p><strong>Break it.</strong> In
-<code>read_users</code>, change <code>users.append(line.strip())</code> to
-<code>users.append(line)</code>. The users down the right look exactly the
-same. Now click any line at all: ACCESS GRANTED, every time, and the
-password was <code>olivia</code>, or whoever you clicked.</p>
-<p>Without <code>strip()</code> the list is <code>["olivia\n", "max\n", ...]</code>.
-A <code>"\n"</code> doesn't show on the screen, so the names look right, but
-<code>"olivia"</code> is not the same string as <code>"olivia\n"</code>. No
-name in the log is on the list any more, so every name is a password. This is
-the most common mistake there is with files, and it never makes an error
-message.</p></div>
+<code>read_password</code>, take <code>.strip()</code> off. Now click every
+word, one after another. Every one is WRONG, including the password.</p>
+<p>Without <code>strip()</code> the password is <code>"brick\n"</code>, and
+<code>"brick"</code> is not the same string. A <code>"\n"</code> doesn't show
+on the screen, so nothing looks wrong. This is the most common mistake there
+is with files, and it never makes an error message.</p></div>
 
-<h2 id="step-5-the-trace">Step 5 — the trace</h2>
+<h2 id="step-3-how-close">Step 3 — how close, and the log</h2>
 
-<p>Now there is a clock you can see. The trace rises all the time, a wrong
-click makes it jump, and at 100% you are caught. The whole thing goes into a
-scene, so getting in, or getting caught, can start a new server.</p>
+<p>Guessing at random isn't hacking. Now every guess goes in the log, with how
+many of its letters are the right letter in the right place.</p>
 
 <pre><code class="language-python">from kaypy import *
 
 kaypy(width=800, height=600, background=[8, 14, 10])
 
-NAMES = [&quot;ada&quot;, &quot;max&quot;, &quot;zoe&quot;, &quot;leo&quot;, &quot;mia&quot;, &quot;raj&quot;,
-         &quot;olivia&quot;, &quot;lucas&quot;, &quot;amara&quot;, &quot;kenji&quot;, &quot;sofia&quot;, &quot;mateo&quot;]
-
-PASSWORDS = [&quot;dragon&quot;, &quot;qwerty&quot;, &quot;letmein&quot;, &quot;monkey&quot;, &quot;sunshine&quot;,
-             &quot;football&quot;, &quot;shadow&quot;, &quot;jordan&quot;, &quot;michael&quot;, &quot;jessica&quot;,
-             &quot;charlie&quot;, &quot;ashley&quot;, &quot;daniel&quot;, &quot;thomas&quot;, &quot;maggie&quot;, &quot;taylor&quot;]
-
-SCROLL = 40        # how fast the log goes past, in pixels a second
-TRACE_SPEED = 3    # how fast the trace rises, in % a second
-WRONG_CLICK = 15   # how much the trace jumps when you click a wrong line
-
-ROW = 28           # how tall one line of the log is, in pixels
-LOG_TOP = 90       # a line that goes above this has gone
-LOG_BOTTOM = 560   # ...and a new one comes in here
-
 GREEN = rgb(90, 230, 120)
 DIM = rgb(50, 110, 65)
 
+WORDS = [&quot;crash&quot;, &quot;crack&quot;, &quot;track&quot;, &quot;trace&quot;, &quot;trick&quot;, &quot;brick&quot;, &quot;block&quot;,
+         &quot;clock&quot;]
 
-def two_digits(number):
-    if number &lt; 10:
-        return &quot;0&quot; + str(number)
-    return str(number)
+# Write the file. with ... as words_file: opens it, and calls it
+# words_file for the indented lines underneath. When they end, the file
+# is closed by itself. &quot;w&quot; means write: it makes words.txt, or empties it
+# if it is already there.
+with open(&quot;words.txt&quot;, &quot;w&quot;) as words_file:
+    for word in WORDS:
+        words_file.write(word + &quot;\n&quot;)
 
+# Read it back. &quot;r&quot; means read. A for loop over a file goes round once for
+# each line, and line is the line, &quot;\n&quot; and all. strip() takes it off.
+words = []
+with open(&quot;words.txt&quot;, &quot;r&quot;) as words_file:
+    for line in words_file:
+        words.append(line.strip())
 
-def clock(minutes):
-    # 75 minutes after midnight is 01:15. // is how many whole hours, and
-    # % is the minutes left over.
-    hours = minutes // 60 % 24
-    return two_digits(hours) + &quot;:&quot; + two_digits(minutes % 60)
-
-
-def write_files(how_many_users, how_many_lines):
-    # Pick the users. A name that is already picked is skipped, so the
-    # loop goes round until there are enough different ones.
-    users = []
-    while len(users) &lt; how_many_users:
-        name = choose(NAMES)
-        if name not in users:
-            users.append(name)
-
-    users_file = open(&quot;users.txt&quot;, &quot;w&quot;)
-    for name in users:
-        users_file.write(name + &quot;\n&quot;)
-    users_file.close()
-
-    # The line where somebody slips up. Not one of the first few, so you
-    # have read a little of the log before it comes.
-    slip = randi(4, how_many_lines - 1)
-
-    log_file = open(&quot;log.txt&quot;, &quot;w&quot;)
-    minutes = randi(0, 300)
-    for number in range(how_many_lines):
-        minutes = minutes + randi(1, 9)
-        when = clock(minutes)
-
-        if number == slip:
-            # A password where the name should be, which fails -- and then
-            # the same person, a moment later, getting it right.
-            victim = choose(users)
-            log_file.write(when + &quot;,&quot; + choose(PASSWORDS) + &quot;,failed\n&quot;)
-            log_file.write(when + &quot;,&quot; + victim + &quot;,ok\n&quot;)
-        else:
-            name = choose(users)
-            if chance(0.3):
-                result = &quot;failed&quot;
-            else:
-                result = &quot;ok&quot;
-            log_file.write(when + &quot;,&quot; + name + &quot;,&quot; + result + &quot;\n&quot;)
-
-    log_file.close()
+# One of them is the password, and it goes in a file of its own. And a
+# log, with nothing in it yet.
+with open(&quot;password.txt&quot;, &quot;w&quot;) as password_file:
+    password_file.write(choose(words) + &quot;\n&quot;)
+with open(&quot;log.txt&quot;, &quot;w&quot;) as log_file:
+    log_file.write(&quot;&quot;)
 
 
-def read_users():
-    users = []
-    users_file = open(&quot;users.txt&quot;, &quot;r&quot;)
-    for line in users_file:
-        users.append(line.strip())
-    users_file.close()
-    return users
+def read_password():
+    # read() is the whole file, as one string.
+    with open(&quot;password.txt&quot;, &quot;r&quot;) as password_file:
+        password = password_file.read().strip()
+    return password
 
 
-log_file = None
+def read_log():
+    # Each line of the log is a guess and how many letters it got right,
+    # with a comma between: crash,2
+    guesses = []
+    with open(&quot;log.txt&quot;, &quot;r&quot;) as log_file:
+        for line in log_file:
+            guesses.append(line.strip())
+    return guesses
 
 
-users = []
-trace = 0
+# How many letters of the guess are the right letter in the right place.
+# crash and crack share c, r, a in the same places, so that is 3.
+def letters_right(guess, password):
+    right = 0
+    for i in range(len(password)):
+        if guess[i] == password[i]:
+            right = right + 1
+    return right
+
+
+# The words, down the left-hand side. Each one is something to click:
+# area() lets it know when the mouse is over it, and the dictionary gives
+# it a value of its own, the word.
+add([text(&quot;words.txt&quot;, size=20), pos(40, 100), color(DIM)])
+add([text(&quot;log.txt&quot;, size=20), pos(330, 100), color(DIM)])
+y = 130
+for word in words:
+    add([text(word, size=26), pos(50, y), color(GREEN), area(),
+         {&quot;word&quot;: word}, &quot;word&quot;])
+    y = y + 32
+
+message = add([text(&quot;&quot;, size=36), pos(560, 450), anchor(&quot;center&quot;),
+               color(GREEN)])
+
+
+# onClick runs on every click, wherever it is, and a tap on a phone counts
+# as a click. isHovering() asks whether the mouse is over a word.
+@onClick
+def click():
+    for row in get(&quot;word&quot;):
+        if row.isHovering():
+            guess(row)
+            return
+
+
+# Read log.txt and put every line of it on the screen. The old lines are
+# taken away first, so each guess is shown once.
+def show_log():
+    destroyAll(&quot;entry&quot;)
+    y = 130
+    for guess in read_log():
+        # &quot;crash,2&quot; becomes [&quot;crash&quot;, &quot;2&quot;]: split(&quot;,&quot;) cuts it up at the
+        # comma.
+        parts = guess.split(&quot;,&quot;)
+        add([text(&quot;&gt; &quot; + parts[0], size=24), pos(340, y), color(GREEN),
+             &quot;entry&quot;])
+        add([text(parts[1] + &quot;/5 right&quot;, size=24), pos(500, y), color(DIM),
+             &quot;entry&quot;])
+        y = y + 32
+
+
+def guess(row):
+    password = read_password()
+    right = letters_right(row.word, password)
+
+    # The guess goes on the end of the log. &quot;a&quot; means add: it keeps what
+    # is there and writes after it, where &quot;w&quot; would empty it.
+    with open(&quot;log.txt&quot;, &quot;a&quot;) as log_file:
+        log_file.write(row.word + &quot;,&quot; + str(right) + &quot;\n&quot;)
+    show_log()
+
+    if row.word == password:
+        message.text = &quot;ACCESS GRANTED&quot;
+    else:
+        row.color = DIM</code></pre>
+
+<ul>
+<li><strong><code>letters_right</code></strong> goes along the password one
+letter at a time. <code>range(len(password))</code> is 0, 1, 2, 3, 4 for a
+five-letter password, and <code>guess[i]</code> is the letter at that place.
+If the guess has the same letter in the same place, that's one more right.
+<code>crash</code> and <code>crack</code> share c, r and a in the same places,
+so that's 3.</li>
+<li><strong><code>"a"</code> means add.</strong> It keeps what is in the file
+and writes after it. Every guess goes on the end of <code>log.txt</code> as a
+line like <code>crash,3</code>.</li>
+<li><strong><code>show_log()</code> reads the whole log back</strong> and puts
+it on the screen. <code>split(",")</code> cuts <code>"crash,3"</code> at the
+comma into <code>["crash", "3"]</code>. It takes the old lines away first,
+with <code>destroyAll("entry")</code>, so each guess is shown once.</li>
+<li><strong>At the start, the log is opened with <code>"w"</code></strong> and
+nothing written, which empties it, so it doesn't still hold the guesses from
+last time you pressed Run.</li>
+</ul>
+
+<p>Now you can work it out. Say you guess <code>clock</code> and get
+<code>2/5</code>. The password has exactly two letters where
+<code>clock</code> has them. <code>track</code> shares only the
+<code>ck</code> at the end with <code>clock</code>, so it could be the
+password. <code>crash</code> shares only the <code>c</code> at the start, so
+it can't. Every line of the log rules words out.</p>
+
+<div class="callout"><p><strong>Break it.</strong> In <code>guess</code>,
+change <code>open("log.txt", "a")</code> to <code>open("log.txt", "w")</code>.
+There is no error, but the log only ever shows one line: the last guess.
+<code>"w"</code> empties the file every time, so every guess wipes out the one
+before.</p></div>
+
+<h2 id="step-4-four-tries">Step 4 — four tries</h2>
+
+<p>Now it's a game. You get four tries, and then you're locked out. Writing the
+files goes into a function, and the whole game goes into a scene, so it can
+start again with new files.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[8, 14, 10])
+
+WORDS = [&quot;admin&quot;, &quot;login&quot;, &quot;guest&quot;, &quot;pixel&quot;, &quot;cyber&quot;, &quot;virus&quot;, &quot;token&quot;,
+         &quot;cache&quot;, &quot;patch&quot;, &quot;debug&quot;, &quot;shell&quot;, &quot;stack&quot;, &quot;crash&quot;, &quot;crack&quot;,
+         &quot;track&quot;, &quot;trace&quot;, &quot;trick&quot;, &quot;brick&quot;, &quot;block&quot;, &quot;clock&quot;, &quot;click&quot;,
+         &quot;flash&quot;, &quot;stash&quot;, &quot;slash&quot;]
+
+
+TRIES = 4              # how many guesses you get
+
+GREEN = rgb(90, 230, 120)
+DIM = rgb(50, 110, 65)
+BRIGHT = rgb(200, 255, 210)
+
+def write_files(how_many):
+    # Pick different words until there are enough: a word that is already
+    # picked is skipped.
+    words = []
+    while len(words) &lt; how_many:
+        word = choose(WORDS)
+        if word not in words:
+            words.append(word)
+
+    with open(&quot;words.txt&quot;, &quot;w&quot;) as words_file:
+        for word in words:
+            words_file.write(word + &quot;\n&quot;)
+
+    # One of them is the password.
+    with open(&quot;password.txt&quot;, &quot;w&quot;) as password_file:
+        password_file.write(choose(words) + &quot;\n&quot;)
+
+    # A new log, with nothing in it yet. &quot;w&quot; empties it.
+    with open(&quot;log.txt&quot;, &quot;w&quot;) as log_file:
+        log_file.write(&quot;&quot;)
+
+
+def read_words():
+    words = []
+    with open(&quot;words.txt&quot;, &quot;r&quot;) as words_file:
+        for line in words_file:
+            words.append(line.strip())
+    return words
+
+
+def read_password():
+    # read() is the whole file, as one string.
+    with open(&quot;password.txt&quot;, &quot;r&quot;) as password_file:
+        password = password_file.read().strip()
+    return password
+
+
+def read_log():
+    # Each line of the log is a guess and how many letters it got right,
+    # with a comma between: crash,2
+    guesses = []
+    with open(&quot;log.txt&quot;, &quot;r&quot;) as log_file:
+        for line in log_file:
+            guesses.append(line.strip())
+    return guesses
+
+
+# How many letters of the guess are the right letter in the right place.
+# crash and crack share c, r, a in the same places, so that is 3.
+
+def letters_right(guess, password):
+    right = 0
+    for i in range(len(password)):
+        if guess[i] == password[i]:
+            right = right + 1
+    return right
+
+
+tries_left = TRIES
 playing = True
 over = False
 
 
-# A scene, so that the whole game can start again with go(&quot;server&quot;): a
-# new server, with new files.
 @scene(&quot;server&quot;)
 def server():
-    global users, log_file, trace, playing, over
+    global tries_left, playing, over
 
-    write_files(4, 20)
-    users = read_users()
-    log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
+    # A new game: new files, written and then read.
+    write_files(8)
+    words = read_words()
 
-    trace = 0
+    tries_left = TRIES
     playing = True
     over = False
 
     # ------------------------------------------------------- the screen
 
-    add([text(&quot;TRACE&quot;, size=20), pos(470, 28), color(GREEN), z(10)])
-    add([rect(200, 18), pos(540, 28), color(20, 40, 26), z(10)])
-    trace_bar = add([rect(1, 18), pos(540, 28), color(GREEN), z(11)])
-    trace_label = add([text(&quot;0%&quot;, size=20), pos(750, 28), color(GREEN),
-                       z(10)])
+    add([text(&quot;SERVER&quot;, size=28), pos(20, 20), color(GREEN)])
+    tries_label = add([text(&quot;TRIES LEFT &quot; + str(TRIES), size=24),
+                       pos(780, 24), anchor(&quot;topright&quot;), color(GREEN)])
 
-    # The users, read from users.txt, down the right-hand side.
-    add([text(&quot;users.txt&quot;, size=20), pos(600, 100), color(DIM), z(10)])
+    add([text(&quot;words.txt&quot;, size=20), pos(40, 100), color(DIM)])
+    add([text(&quot;log.txt&quot;, size=20), pos(330, 100), color(DIM)])
+
+    # The words, read from words.txt. Each one is something to click:
+    # area() lets it know when the mouse is over it, and the dictionary
+    # gives it two values of its own -- the word, and whether it has been
+    # tried yet.
     y = 130
-    for name in users:
-        add([text(name, size=26), pos(610, y), color(GREEN), z(10)])
+    for word in words:
+        add([text(word, size=26), pos(50, y), color(GREEN), area(),
+             {&quot;word&quot;: word, &quot;tried&quot;: False}, &quot;word&quot;])
         y = y + 32
 
-    add([text(&quot;log.txt&quot;, size=20), pos(20, 72), color(DIM), z(10)])
+    message = add([text(&quot;&quot;, size=36), pos(560, 450), anchor(&quot;center&quot;),
+                   color(GREEN), z(10)])
+    under = add([text(&quot;&quot;, size=22), pos(560, 495), anchor(&quot;center&quot;),
+                 color(GREEN), z(10)])
 
-    # Two dark bands over the top and bottom of the log, so lines slide
-    # in and out of sight behind them rather than over the words above.
-    add([rect(800, LOG_TOP), pos(0, 0), color(8, 14, 10), z(5)])
-    add([rect(560, 600 - LOG_BOTTOM - ROW), pos(0, LOG_BOTTOM + ROW),
-         color(8, 14, 10), z(5)])
-
-    message = add([text(&quot;&quot;, size=40), pos(280, 300), anchor(&quot;center&quot;),
-                   color(GREEN), z(20)])
-
-    # ----------------------------------------------- the log going past
-
-    def show(when, name, result):
-        # One line of the log: a dark strip at the bottom, which moves up.
-        # area() lets it know when the mouse is over it, and the dictionary
-        # keeps the name it is showing, to check against the users when it
-        # is clicked. The words are its children, so they move with it.
-        row = add([rect(540, ROW - 2), pos(10, LOG_BOTTOM), color(8, 14, 10),
-                   area(), {&quot;name&quot;: name}, &quot;row&quot;, &quot;line&quot;])
-        row.add([text(when, size=22), pos(10, 4), color(DIM)])
-        row.add([text(name, size=22), pos(100, 4), color(GREEN)])
-        if result == &quot;failed&quot;:
-            row.add([text(&quot;FAILED&quot;, size=22), pos(300, 4), color(RED)])
-        else:
-            row.add([text(&quot;ok&quot;, size=22), pos(300, 4), color(GREEN)])
-
-    def next_line():
-        global log_file
-
-        if not playing:
-            return
-
-        line = log_file.readline()
-
-        # &quot;&quot; means the end of the file. Close it, open it again, and start
-        # from the top: the password comes round again -- but the trace
-        # has not stopped.
-        if line == &quot;&quot;:
-            log_file.close()
-            log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
-
-            # A row of its own to say so. It has no &quot;line&quot; tag, so it
-            # moves up with the rest but clicking it does nothing.
-            row = add([rect(540, ROW - 2), pos(10, LOG_BOTTOM),
-                       color(8, 14, 10), &quot;row&quot;])
-            row.add([text(&quot;----- end of log.txt, reading it again&quot;,
-                          size=22), pos(10, 4), color(DIM)])
-            wait(ROW / SCROLL, next_line)
-            return
-
-        # &quot;01:07,zoe,ok\n&quot; becomes [&quot;01:07&quot;, &quot;zoe&quot;, &quot;ok&quot;]: strip() takes
-        # the &quot;\n&quot; off the end, and split(&quot;,&quot;) cuts what is left at
-        # every comma.
-        parts = line.strip().split(&quot;,&quot;)
-        show(parts[0], parts[1], parts[2])
-
-        # The next line once this one has moved up out of its way.
-        wait(ROW / SCROLL, next_line)
-
-    # Every row moves up, and one that has gone past the top is gone.
-    @onUpdate(&quot;row&quot;)
-    def move_up(row):
-        if not playing:
-            return
-        row.pos.y = row.pos.y - SCROLL * dt()
-        if row.pos.y &lt; LOG_TOP - ROW:
-            row.destroy()
-
-    # A line you can click lights up while the mouse is over it.
-    @onUpdate(&quot;line&quot;)
-    def light_up(row):
-        if row.isHovering():
-            row.color = rgb(25, 50, 32)
-        else:
-            row.color = rgb(8, 14, 10)
-
-    # ------------------------------------------------------------ clicking
+    # ------------------------------------------------------------ the log
     #
-    # onClick runs on every click, wherever it is, and a tap on a phone
-    # counts as a click. isHovering() asks whether the mouse is over a
-    # line, which needs area() on it.
+    # Read log.txt and put every line of it on the screen. The old lines
+    # are taken away first, so each guess is shown once.
 
+    def show_log():
+        destroyAll(&quot;entry&quot;)
+        y = 130
+        for guess in read_log():
+            # &quot;crash,2&quot; becomes [&quot;crash&quot;, &quot;2&quot;]: split(&quot;,&quot;) cuts it up at
+            # the comma.
+            parts = guess.split(&quot;,&quot;)
+            add([text(&quot;&gt; &quot; + parts[0], size=24), pos(340, y), color(GREEN),
+                 &quot;entry&quot;])
+            add([text(parts[1] + &quot;/&quot; + &quot;5 right&quot;, size=24),
+                 pos(500, y), color(DIM), &quot;entry&quot;])
+            y = y + 32
+
+    # ------------------------------------------------------------ guessing
+
+    # A word lights up while the mouse is over it, unless it has been tried.
+    @onUpdate(&quot;word&quot;)
+    def light_up(row):
+        if row.tried:
+            row.color = DIM
+        elif row.isHovering() and playing:
+            row.color = BRIGHT
+        else:
+            row.color = GREEN
+
+    # onClick runs on every click, wherever it is, and a tap on a phone
+    # counts as a click. isHovering() asks whether the mouse is over a word,
+    # which needs area() on it.
     @onClick
     def click():
         if not playing:
             return
-        for row in get(&quot;line&quot;):
-            if row.isHovering():
-                check(row)
+        for row in get(&quot;word&quot;):
+            if row.isHovering() and not row.tried:
+                guess(row)
                 return
 
-    def check(row):
-        global trace
+    def guess(row):
+        global tries_left
 
-        # A name on the list is only a name. A name that is NOT on the
-        # list is somebody&#x27;s password.
-        if row.name in users:
-            trace = trace + WRONG_CLICK
-            shake(6)
-            add([text(&quot;+&quot; + str(WRONG_CLICK) + &quot;% trace&quot;, size=26),
-                 pos(mousePos().x, mousePos().y - 30), anchor(&quot;center&quot;),
-                 color(RED), opacity(1), lifespan(0.6, fade=0.3), z(20)])
-        else:
-            granted(row.name)
+        row.tried = True
+        password = read_password()
+        right = letters_right(row.word, password)
 
-    # --------------------------------------------------------- the trace
+        # The guess goes on the end of the log. &quot;a&quot; means add: it keeps
+        # what is there and writes after it, where &quot;w&quot; would empty it.
+        with open(&quot;log.txt&quot;, &quot;a&quot;) as log_file:
+            log_file.write(row.word + &quot;,&quot; + str(right) + &quot;\n&quot;)
+        show_log()
 
-    @onUpdate
-    def tracing():
-        global trace
-
-        if not playing:
+        if row.word == password:
+            granted(password)
             return
-        trace = trace + TRACE_SPEED * dt()
-        if trace &gt;= 100:
-            trace = 100
-            caught()
-        trace_bar.width = trace * 2
-        trace_label.text = str(int(trace)) + &quot;%&quot;
 
-    # --------------------------------------------------- in, or caught
+        tries_left = tries_left - 1
+        tries_label.text = &quot;TRIES LEFT &quot; + str(tries_left)
+        shake(4)
+        if tries_left == 0:
+            locked_out(password)
+
+    # --------------------------------------------------- in, or locked out
 
     def granted(password):
         global playing
 
         playing = False
-        log_file.close()
-        destroyAll(&quot;row&quot;)
         message.text = &quot;ACCESS GRANTED&quot;
-        add([text(&quot;the password was &quot; + password, size=26),
-             pos(280, 350), anchor(&quot;center&quot;), color(GREEN), z(20)])
-        wait(2, next_server)
+        under.text = &quot;the password was &quot; + password
+        wait(1, ready_again)
 
-    def next_server():
-        go(&quot;server&quot;)
-
-    def caught():
+    def locked_out(password):
         global playing
 
         playing = False
-        log_file.close()
         shake(12)
-        destroyAll(&quot;row&quot;)
 
-        message.text = &quot;TRACED&quot;
+        message.text = &quot;LOCKED OUT&quot;
         message.color = RED
+        under.text = &quot;it was &quot; + password
 
-        # A second before you can start again, so a click meant for the
-        # log does not skip past what happened.
+        # A second before you can start again, so a click meant for a word
+        # does not skip past what happened.
         wait(1, ready_again)
 
     def ready_again():
         global over
 
         over = True
-        add([text(&quot;press SPACE or click to start again&quot;, size=24),
-             pos(280, 420), anchor(&quot;center&quot;), color(GREEN), z(20)])
+        add([text(&quot;press SPACE or click to start again&quot;, size=22),
+             pos(560, 540), anchor(&quot;center&quot;), color(GREEN)])
 
     def again():
         if over:
@@ -1044,97 +676,378 @@ def server():
     onKeyPress(&quot;space&quot;, again)
     onClick(again)
 
-    # The log starts.
-    next_line()
-
 
 go(&quot;server&quot;)</code></pre>
 
 <ul>
+<li><strong><code>write_files(8)</code></strong> writes all three files.
+Its <code>while</code> loop picks words until there are eight
+<em>different</em> ones: a word already picked is skipped. A
+<code>for</code> loop would go round exactly eight times and could pick the
+same word twice.</li>
 <li><strong>Everything is inside <code>@scene("server")</code></strong>, so
-<code>go("server")</code> starts it again from the top: new files, an empty
-log, the trace back at zero. After ACCESS GRANTED, <code>wait(2,
-next_server)</code> does that two seconds later.</li>
-<li><strong>The trace goes up in <code>tracing</code></strong>, every frame, by
-<code>TRACE_SPEED * dt()</code>. That's 3% a second however fast the computer
-is. The bar is 200 pixels wide when it is full, so its width is
-<code>trace * 2</code>. <code>int()</code> cuts the decimals off for the
-label.</li>
-<li><strong>A wrong click</strong> adds <code>WRONG_CLICK</code> to the trace,
-shakes the screen and shows how much it cost, just where you clicked.</li>
-<li><strong><code>caught()</code></strong> takes the log away, shows TRACED,
-and waits a second before you can start again. That way a click meant for the
-log doesn't start a new game before you have seen what happened.</li>
-<li><strong><code>global</code></strong>: <code>trace</code>,
-<code>playing</code> and the others are made at the top of the program and
-changed inside functions, so every function that changes one says
+<code>go("server")</code> starts it again from the top: new words, a new
+password, an empty log, and four tries.</li>
+<li><strong>Each word has two values of its own</strong> now,
+<code>{"word": word, "tried": False}</code>. Once you've guessed a word it is
+<code>tried</code>, so it goes dim and clicking it again does nothing. A word
+you haven't tried lights up when the mouse is over it.</li>
+<li><strong><code>tries_left</code></strong> goes down by one for every wrong
+guess. At 0 it's <code>locked_out</code>: the game says what the password was,
+and waits a second before you can start again, so a click meant for a word
+doesn't start a new game before you've seen it.</li>
+<li><strong><code>global</code></strong>: <code>tries_left</code>,
+<code>playing</code> and <code>over</code> are made at the top of the program
+and changed inside functions, so every function that changes one says
 <code>global</code> first.</li>
 </ul>
 
-<div class="callout"><p><strong>Break it.</strong> Take out the line
-<code>trace = 0</code> inside the scene. There is no error. The first server
-is the same, but the second one starts with the trace where the first left
-off. In one run it got in at 34%, so server two started at 34%, and server
-three at 67%, and the trace caught it there.</p>
-<p><code>trace</code> lives outside the scene, so going to the scene again
-doesn't reset it. Anything that has to start again with every server has to
-be set again at the top of the scene.</p></div>
+<div class="callout"><p><strong>Break it.</strong> In
+<code>write_files</code>, take out the last two lines, the
+<code>with</code> that empties the log. Play a game to the end and start
+again. The new game's log already has the last game's guesses in it, and how
+close they were was worked out against the last game's password, so they
+tell you nothing about this one.</p>
+<p>A file stays until something changes it. That's what files are for, and
+it's why the log has to be emptied on purpose.</p></div>
+
+<h2 id="step-5-servers">Step 5 — harder servers</h2>
+
+<p>Get in, and there is another server, with more words and a longer
+password.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[8, 14, 10])
+
+WORDS = [&quot;admin&quot;, &quot;login&quot;, &quot;guest&quot;, &quot;pixel&quot;, &quot;cyber&quot;, &quot;virus&quot;, &quot;token&quot;,
+         &quot;cache&quot;, &quot;patch&quot;, &quot;debug&quot;, &quot;shell&quot;, &quot;stack&quot;, &quot;crash&quot;, &quot;crack&quot;,
+         &quot;track&quot;, &quot;trace&quot;, &quot;trick&quot;, &quot;brick&quot;, &quot;block&quot;, &quot;clock&quot;, &quot;click&quot;,
+         &quot;flash&quot;, &quot;stash&quot;, &quot;slash&quot;,
+         &quot;server&quot;, &quot;binary&quot;, &quot;cookie&quot;, &quot;kernel&quot;, &quot;packet&quot;, &quot;router&quot;,
+         &quot;script&quot;, &quot;secret&quot;, &quot;socket&quot;, &quot;pocket&quot;, &quot;rocket&quot;, &quot;locket&quot;,
+         &quot;system&quot;, &quot;matrix&quot;, &quot;shadow&quot;, &quot;access&quot;, &quot;backup&quot;, &quot;buffer&quot;,
+         &quot;hacker&quot;, &quot;logger&quot;, &quot;loader&quot;, &quot;locker&quot;, &quot;master&quot;, &quot;poster&quot;,
+         &quot;account&quot;, &quot;browser&quot;, &quot;network&quot;, &quot;malware&quot;, &quot;monitor&quot;, &quot;program&quot;,
+         &quot;console&quot;, &quot;hacking&quot;, &quot;decrypt&quot;, &quot;encrypt&quot;, &quot;virtual&quot;, &quot;digital&quot;,
+         &quot;gateway&quot;, &quot;storage&quot;, &quot;process&quot;, &quot;compile&quot;, &quot;install&quot;, &quot;payload&quot;,
+         &quot;cracker&quot;, &quot;tracker&quot;, &quot;packets&quot;, &quot;sockets&quot;, &quot;rockets&quot;, &quot;pockets&quot;]
+
+
+TRIES = 4              # how many guesses you get on each server
+
+WORDS_START = 8        # how many words the first server has
+WORDS_MORE = 1         # ...one more on each server after it
+WORDS_MOST = 14        # ...and never more than this, or they run off the screen
+
+LENGTH_START = 5       # how long the first server&#x27;s password is
+LENGTH_MOST = 7        # every two servers it is one longer, up to this
+
+GREEN = rgb(90, 230, 120)
+DIM = rgb(50, 110, 65)
+BRIGHT = rgb(200, 255, 210)
+
+def write_files(length, how_many):
+    # Every word in WORDS that is the right length.
+    fits = []
+    for word in WORDS:
+        if len(word) == length:
+            fits.append(word)
+
+    # The while loop below picks different words until it has enough. Ask
+    # it for more than there are and it could never finish: it would go
+    # round for ever, and the game would freeze. So never ask for more.
+    if how_many &gt; len(fits):
+        how_many = len(fits)
+
+    words = []
+    while len(words) &lt; how_many:
+        word = choose(fits)
+        if word not in words:
+            words.append(word)
+
+    with open(&quot;words.txt&quot;, &quot;w&quot;) as words_file:
+        for word in words:
+            words_file.write(word + &quot;\n&quot;)
+
+    # One of them is the password.
+    with open(&quot;password.txt&quot;, &quot;w&quot;) as password_file:
+        password_file.write(choose(words) + &quot;\n&quot;)
+
+    # A new log, with nothing in it yet. &quot;w&quot; empties it.
+    with open(&quot;log.txt&quot;, &quot;w&quot;) as log_file:
+        log_file.write(&quot;&quot;)
+
+
+def read_words():
+    words = []
+    with open(&quot;words.txt&quot;, &quot;r&quot;) as words_file:
+        for line in words_file:
+            words.append(line.strip())
+    return words
+
+
+def read_password():
+    # read() is the whole file, as one string.
+    with open(&quot;password.txt&quot;, &quot;r&quot;) as password_file:
+        password = password_file.read().strip()
+    return password
+
+
+def read_log():
+    # Each line of the log is a guess and how many letters it got right,
+    # with a comma between: crash,2
+    guesses = []
+    with open(&quot;log.txt&quot;, &quot;r&quot;) as log_file:
+        for line in log_file:
+            guesses.append(line.strip())
+    return guesses
+
+
+# How many letters of the guess are the right letter in the right place.
+# crash and crack share c, r, a in the same places, so that is 3.
+
+def letters_right(guess, password):
+    right = 0
+    for i in range(len(password)):
+        if guess[i] == password[i]:
+            right = right + 1
+    return right
+
+
+tries_left = TRIES
+playing = True
+over = False
+
+
+@scene(&quot;server&quot;)
+def server(number):
+    global tries_left, playing, over
+
+    # A new server: its own files, written and then read. The password is
+    # one letter longer every two servers.
+    length = LENGTH_START + (number - 1) // 2
+    if length &gt; LENGTH_MOST:
+        length = LENGTH_MOST
+    how_many = WORDS_START + (number - 1) * WORDS_MORE
+    if how_many &gt; WORDS_MOST:
+        how_many = WORDS_MOST
+    write_files(length, how_many)
+    words = read_words()
+
+    tries_left = TRIES
+    playing = True
+    over = False
+
+    # ------------------------------------------------------- the screen
+
+    add([text(&quot;SERVER &quot; + str(number), size=28), pos(20, 20), color(GREEN)])
+    tries_label = add([text(&quot;TRIES LEFT &quot; + str(TRIES), size=24),
+                       pos(780, 24), anchor(&quot;topright&quot;), color(GREEN)])
+
+    add([text(&quot;words.txt&quot;, size=20), pos(40, 100), color(DIM)])
+    add([text(&quot;log.txt&quot;, size=20), pos(330, 100), color(DIM)])
+
+    # The words, read from words.txt. Each one is something to click:
+    # area() lets it know when the mouse is over it, and the dictionary
+    # gives it two values of its own -- the word, and whether it has been
+    # tried yet.
+    y = 130
+    for word in words:
+        add([text(word, size=26), pos(50, y), color(GREEN), area(),
+             {&quot;word&quot;: word, &quot;tried&quot;: False}, &quot;word&quot;])
+        y = y + 32
+
+    message = add([text(&quot;&quot;, size=36), pos(560, 450), anchor(&quot;center&quot;),
+                   color(GREEN), z(10)])
+    under = add([text(&quot;&quot;, size=22), pos(560, 495), anchor(&quot;center&quot;),
+                 color(GREEN), z(10)])
+
+    # ------------------------------------------------------------ the log
+    #
+    # Read log.txt and put every line of it on the screen. The old lines
+    # are taken away first, so each guess is shown once.
+
+    def show_log():
+        destroyAll(&quot;entry&quot;)
+        y = 130
+        for guess in read_log():
+            # &quot;crash,2&quot; becomes [&quot;crash&quot;, &quot;2&quot;]: split(&quot;,&quot;) cuts it up at
+            # the comma.
+            parts = guess.split(&quot;,&quot;)
+            add([text(&quot;&gt; &quot; + parts[0], size=24), pos(340, y), color(GREEN),
+                 &quot;entry&quot;])
+            add([text(parts[1] + &quot;/&quot; + str(length) + &quot; right&quot;, size=24),
+                 pos(500, y), color(DIM), &quot;entry&quot;])
+            y = y + 32
+
+    # ------------------------------------------------------------ guessing
+
+    # A word lights up while the mouse is over it, unless it has been tried.
+    @onUpdate(&quot;word&quot;)
+    def light_up(row):
+        if row.tried:
+            row.color = DIM
+        elif row.isHovering() and playing:
+            row.color = BRIGHT
+        else:
+            row.color = GREEN
+
+    # onClick runs on every click, wherever it is, and a tap on a phone
+    # counts as a click. isHovering() asks whether the mouse is over a word,
+    # which needs area() on it.
+    @onClick
+    def click():
+        if not playing:
+            return
+        for row in get(&quot;word&quot;):
+            if row.isHovering() and not row.tried:
+                guess(row)
+                return
+
+    def guess(row):
+        global tries_left
+
+        row.tried = True
+        password = read_password()
+        right = letters_right(row.word, password)
+
+        # The guess goes on the end of the log. &quot;a&quot; means add: it keeps
+        # what is there and writes after it, where &quot;w&quot; would empty it.
+        with open(&quot;log.txt&quot;, &quot;a&quot;) as log_file:
+            log_file.write(row.word + &quot;,&quot; + str(right) + &quot;\n&quot;)
+        show_log()
+
+        if row.word == password:
+            granted(password)
+            return
+
+        tries_left = tries_left - 1
+        tries_label.text = &quot;TRIES LEFT &quot; + str(tries_left)
+        shake(4)
+        if tries_left == 0:
+            locked_out(password)
+
+    # --------------------------------------------------- in, or locked out
+
+    def granted(password):
+        global playing
+
+        playing = False
+        message.text = &quot;ACCESS GRANTED&quot;
+        under.text = &quot;the password was &quot; + password
+        wait(2, next_server)
+
+    def next_server():
+        go(&quot;server&quot;, number + 1)
+
+    def locked_out(password):
+        global playing
+
+        playing = False
+        shake(12)
+
+        message.text = &quot;LOCKED OUT&quot;
+        message.color = RED
+        under.text = &quot;it was &quot; + password + &quot; -- servers hacked: &quot; + str(number - 1)
+
+        # A second before you can start again, so a click meant for a word
+        # does not skip past what happened.
+        wait(1, ready_again)
+
+    def ready_again():
+        global over
+
+        over = True
+        add([text(&quot;press SPACE or click to start again&quot;, size=22),
+             pos(560, 540), anchor(&quot;center&quot;), color(GREEN)])
+
+    def again():
+        if over:
+            go(&quot;server&quot;, 1)
+
+    onKeyPress(&quot;space&quot;, again)
+    onClick(again)
+
+
+go(&quot;server&quot;, 1)</code></pre>
+
+<ul>
+<li><strong><code>WORDS</code> has words of three lengths</strong>, all mixed
+together. <code>write_files</code> is told the length and picks out only the
+words that are that long: <code>if len(word) == length</code>. A password
+and its guesses always have the same number of letters.</li>
+<li><strong>The scene is given the server's number</strong>:
+<code>def server(number)</code>, and <code>go("server", number + 1)</code>
+goes to the next one. <code>(number - 1) // 2</code> goes up by one every
+two servers, so servers 1 and 2 have five-letter words, 3 and 4 six, and
+from 5 on, seven. Every server has one more word than the last, up to
+<code>WORDS_MOST</code>, because fourteen is all that fit on the
+screen.</li>
+<li><strong>There are 24 words of each length.</strong> Ask
+<code>write_files</code> for more than there are and its <code>while</code>
+loop could never find them: it would go round for ever, and the game would
+freeze. So it never asks for more than <code>len(fits)</code>.</li>
+</ul>
+
+<div class="callout"><p><strong>Break it.</strong> In
+<code>write_files</code>, take out <code>if len(word) == length:</code> and
+move <code>fits.append(word)</code> back to line up with it, so every word
+fits. Now the words on the screen are all different lengths. Guess a word
+that is shorter than the password and it stops with</p>
+<pre><code class="language-plaintext">IndexError: string index out of range</code></pre>
+<p>on <code>if guess[i] == password[i]:</code>. <code>letters_right</code>
+goes along the password, and the guess runs out of letters first.
+<code>guess[5]</code> of a five-letter word is a place that isn't
+there.</p></div>
 
 <h2 id="step-6-the-whole-game">Step 6 — the whole game</h2>
 
-<p>The servers get harder, there are sounds, the best score is remembered, and
-the first time you play, a message says what to do. This is the game you
-played, line for line.</p>
+<p>Sounds, the best score, and, the first time you play, a message that says
+what to do. This is the game you played, line for line.</p>
 
 <ul>
-<li><strong>The scene is given the server's number</strong>:
-<code>def server(number)</code>, and <code>go("server", number + 1)</code>
-goes to the next one. Every setting has a <code>_START</code> for server 1
-and a <code>_MORE</code> for each one after. So server 3 has
-<code>USERS_START + 2 * USERS_MORE</code> users, which is 6, a longer
-log, and a faster one.</li>
-<li><strong>There are twelve names</strong>, and one more user on every server,
-so server 10 would want thirteen different ones. The <code>while</code> loop in
-<code>write_files</code> could never find them. It would go round for ever,
-and the game would freeze. So the scene stops at <code>len(NAMES)</code>.</li>
-<li><strong><code>say()</code></strong> puts the instructions up the first time
-and pauses the game until you close them. <code>told</code> remembers that it
-has been said, so it isn't said again every server.</li>
 <li><strong>The best score</strong> is the most servers you got into.
 <code>setData</code> saves it and <code>getData</code> reads it back, even
 after the page is closed.</li>
+<li><strong><code>say()</code></strong> puts the instructions up the first time
+and waits until you close them. <code>told</code> remembers that it has been
+said, so it isn't said again every server.</li>
 </ul>
 
-<pre><code class="language-python">&quot;&quot;&quot;Log Hacker -- somewhere in the server&#x27;s log is a password. Find it.
+<pre><code class="language-python">&quot;&quot;&quot;Log Hacker -- guess the server&#x27;s password. Every guess tells you how close.
 
-    click the line that gives a password away
+    click a word to try it as the password
 
-You have broken into a server and you are reading its log: one line for
-every time somebody tried to log in, saying when, who, and whether it
-worked. People make mistakes. Now and then somebody types their PASSWORD
-into the box where their NAME should go, and the server writes it down in
-the log, in plain sight.
+You have broken into a server. One of the words on the left is its
+password, and you have four tries. Every wrong guess goes in the log on
+the right, with how many of its letters are the right letter in the
+right place. Use that to rule words out: the password has to match every
+line in the log. Get it, and the next server&#x27;s password is longer.
 
-The people who really have accounts are listed on the right. A failed
-login by a name that is NOT on that list is not a name at all -- it is
-somebody&#x27;s password. Click it before the trace reaches 100% and you are
-in. Every server is faster than the last.
+There is no clock. Take as long as you like.
 
 HOW THIS FILE IS PUT TOGETHER
 
     1. the window and the sounds
-    2. the names and the passwords
+    2. the words
     3. the settings
     4. writing the server&#x27;s files
     5. reading them back
-    6. the game scene: the log going past, clicking, the trace
-    7. start the game
+    6. how close a guess is
+    7. the game scene: the words, guessing, the log
+    8. start the game
 
-This is the game for files. A real hacker would find the files already
-on the server. This game has to make its own first, with open(&quot;users.txt&quot;,
-&quot;w&quot;), and then it reads them back with open(&quot;users.txt&quot;, &quot;r&quot;) exactly as
-it would read any file. It makes new ones for every server, so the log is
-never the same twice.
+This is the game for files. A real hacker would find the files already on
+the server. This game has to make its own first, and then it reads them
+back exactly as it would read any file. There are three:
+
+    words.txt       the words it could be, one on each line
+    password.txt    the one it is
+    log.txt         every guess so far, and how close it was
+
+Every file is opened with `with`, which closes it again by itself at the
+end of the indented lines underneath.
 &quot;&quot;&quot;
 
 from kaypy import *
@@ -1146,23 +1059,28 @@ kaypy(width=800, height=600, background=[8, 14, 10])
 loadSound(&quot;blip&quot;, &quot;sounds/small_beep.wav&quot;)
 loadSound(&quot;granted&quot;, &quot;sounds/rising_beep.wav&quot;)
 loadSound(&quot;wrong&quot;, &quot;sounds/thump.wav&quot;)
-loadSound(&quot;caught&quot;, &quot;sounds/small_boom.wav&quot;)
+loadSound(&quot;locked&quot;, &quot;sounds/small_boom.wav&quot;)
 
 
-# ------------------------------------------------- 2. names and passwords
+# --------------------------------------------------------------- 2. the words
 #
-# The users on each server are picked from NAMES. The passwords somebody
-# types by mistake are picked from PASSWORDS -- every one of them a real
-# password that thousands of real people use, which is exactly why they
-# are easy to guess. A lot of them are names. So a password in the log
-# can look just like a user: the only way to tell is to check the list.
+# Every password is one of these. A server only uses words of one length,
+# so they are mixed together here and picked out by length later. A lot of
+# them look alike -- crash, crack, track -- which is what makes how close a
+# guess was worth knowing.
 
-NAMES = [&quot;ada&quot;, &quot;max&quot;, &quot;zoe&quot;, &quot;leo&quot;, &quot;mia&quot;, &quot;raj&quot;,
-         &quot;olivia&quot;, &quot;lucas&quot;, &quot;amara&quot;, &quot;kenji&quot;, &quot;sofia&quot;, &quot;mateo&quot;]
-
-PASSWORDS = [&quot;dragon&quot;, &quot;qwerty&quot;, &quot;letmein&quot;, &quot;monkey&quot;, &quot;sunshine&quot;,
-             &quot;football&quot;, &quot;shadow&quot;, &quot;jordan&quot;, &quot;michael&quot;, &quot;jessica&quot;,
-             &quot;charlie&quot;, &quot;ashley&quot;, &quot;daniel&quot;, &quot;thomas&quot;, &quot;maggie&quot;, &quot;taylor&quot;]
+WORDS = [&quot;admin&quot;, &quot;login&quot;, &quot;guest&quot;, &quot;pixel&quot;, &quot;cyber&quot;, &quot;virus&quot;, &quot;token&quot;,
+         &quot;cache&quot;, &quot;patch&quot;, &quot;debug&quot;, &quot;shell&quot;, &quot;stack&quot;, &quot;crash&quot;, &quot;crack&quot;,
+         &quot;track&quot;, &quot;trace&quot;, &quot;trick&quot;, &quot;brick&quot;, &quot;block&quot;, &quot;clock&quot;, &quot;click&quot;,
+         &quot;flash&quot;, &quot;stash&quot;, &quot;slash&quot;,
+         &quot;server&quot;, &quot;binary&quot;, &quot;cookie&quot;, &quot;kernel&quot;, &quot;packet&quot;, &quot;router&quot;,
+         &quot;script&quot;, &quot;secret&quot;, &quot;socket&quot;, &quot;pocket&quot;, &quot;rocket&quot;, &quot;locket&quot;,
+         &quot;system&quot;, &quot;matrix&quot;, &quot;shadow&quot;, &quot;access&quot;, &quot;backup&quot;, &quot;buffer&quot;,
+         &quot;hacker&quot;, &quot;logger&quot;, &quot;loader&quot;, &quot;locker&quot;, &quot;master&quot;, &quot;poster&quot;,
+         &quot;account&quot;, &quot;browser&quot;, &quot;network&quot;, &quot;malware&quot;, &quot;monitor&quot;, &quot;program&quot;,
+         &quot;console&quot;, &quot;hacking&quot;, &quot;decrypt&quot;, &quot;encrypt&quot;, &quot;virtual&quot;, &quot;digital&quot;,
+         &quot;gateway&quot;, &quot;storage&quot;, &quot;process&quot;, &quot;compile&quot;, &quot;install&quot;, &quot;payload&quot;,
+         &quot;cracker&quot;, &quot;tracker&quot;, &quot;packets&quot;, &quot;sockets&quot;, &quot;rockets&quot;, &quot;pockets&quot;]
 
 
 # -------------------------------------------------------------- 3. settings
@@ -1170,133 +1088,116 @@ PASSWORDS = [&quot;dragon&quot;, &quot;qwerty&quot;, &quot;letmein&quot;, &quot;
 # Everything else you would want to change is here. Change one at a time
 # and play it.
 
-USERS_START = 4        # how many users the first server has
-LINES_START = 20       # how many lines are in its log
-SCROLL_START = 40      # how fast its log goes past, in pixels a second
-TRACE_START = 3        # how fast the trace rises, in % a second
+TRIES = 4              # how many guesses you get on each server
 
-# ...and how much more each server after it has.
-USERS_MORE = 1
-LINES_MORE = 6
-SCROLL_MORE = 12
-TRACE_MORE = 0.5
+WORDS_START = 8        # how many words the first server has
+WORDS_MORE = 1         # ...one more on each server after it
+WORDS_MOST = 14        # ...and never more than this, or they run off the screen
 
-WRONG_CLICK = 15       # how much the trace jumps when you click a wrong line
-FAIL_CHANCE = 0.3      # how often an ordinary login fails: 0.3 is 3 in 10
-
-ROW = 28               # how tall one line of the log is, in pixels
-LOG_TOP = 90           # a line that goes above this has gone
-LOG_BOTTOM = 560       # ...and a new one comes in here
+LENGTH_START = 5       # how long the first server&#x27;s password is
+LENGTH_MOST = 7        # every two servers it is one longer, up to this
 
 GREEN = rgb(90, 230, 120)
 DIM = rgb(50, 110, 65)
+BRIGHT = rgb(200, 255, 210)
 
 # The name the best score is saved under. Every game on a website shares
 # the same storage, so the game&#x27;s own name goes in it.
 BEST_KEY = &quot;log_hacker_best&quot;
 
 
-# ------------------------------------------------ 4. writing the server&#x27;s files
+# --------------------------------------------- 4. writing the server&#x27;s files
 #
-# Two files. users.txt has one name on each line:
-#
-#     ada
-#     zoe
-#
-# and log.txt has one login on each line, its three parts with commas
-# between them -- when, who, and whether it worked:
-#
-#     01:07,zoe,ok
-#     01:12,ada,failed
+# with open(&quot;words.txt&quot;, &quot;w&quot;) as words_file: opens the file, and calls it
+# words_file for the indented lines underneath. When they end, the file is
+# closed by itself. &quot;w&quot; means write: it makes the file, or empties it if
+# it is already there.
 #
 # &quot;\n&quot; is the end of a line. write() does not add one for you, so without
-# it every name would end up on the same line: adazoemaxsam.
+# it every word would end up on the same line: crashcracktrack.
 
-def two_digits(number):
-    if number &lt; 10:
-        return &quot;0&quot; + str(number)
-    return str(number)
+def write_files(length, how_many):
+    # Every word in WORDS that is the right length.
+    fits = []
+    for word in WORDS:
+        if len(word) == length:
+            fits.append(word)
 
+    # The while loop below picks different words until it has enough. Ask
+    # it for more than there are and it could never finish: it would go
+    # round for ever, and the game would freeze. So never ask for more.
+    if how_many &gt; len(fits):
+        how_many = len(fits)
 
-def clock(minutes):
-    # 75 minutes after midnight is 01:15. // is how many whole hours, and
-    # % is the minutes left over.
-    hours = minutes // 60 % 24
-    return two_digits(hours) + &quot;:&quot; + two_digits(minutes % 60)
+    words = []
+    while len(words) &lt; how_many:
+        word = choose(fits)
+        if word not in words:
+            words.append(word)
 
+    with open(&quot;words.txt&quot;, &quot;w&quot;) as words_file:
+        for word in words:
+            words_file.write(word + &quot;\n&quot;)
 
-def write_files(how_many_users, how_many_lines):
-    # Pick the users. A name that is already picked is skipped, so the
-    # loop goes round until there are enough different ones.
-    users = []
-    while len(users) &lt; how_many_users:
-        name = choose(NAMES)
-        if name not in users:
-            users.append(name)
+    # One of them is the password.
+    with open(&quot;password.txt&quot;, &quot;w&quot;) as password_file:
+        password_file.write(choose(words) + &quot;\n&quot;)
 
-    users_file = open(&quot;users.txt&quot;, &quot;w&quot;)
-    for name in users:
-        users_file.write(name + &quot;\n&quot;)
-    users_file.close()
-
-    # The line where somebody slips up. Not one of the first few, so you
-    # have read a little of the log before it comes.
-    slip = randi(4, how_many_lines - 1)
-
-    log_file = open(&quot;log.txt&quot;, &quot;w&quot;)
-    minutes = randi(0, 300)
-    for number in range(how_many_lines):
-        minutes = minutes + randi(1, 9)
-        when = clock(minutes)
-
-        if number == slip:
-            # A password where the name should be, which fails -- and then
-            # the same person, a moment later, getting it right.
-            victim = choose(users)
-            log_file.write(when + &quot;,&quot; + choose(PASSWORDS) + &quot;,failed\n&quot;)
-            log_file.write(when + &quot;,&quot; + victim + &quot;,ok\n&quot;)
-        else:
-            name = choose(users)
-            if chance(FAIL_CHANCE):
-                result = &quot;failed&quot;
-            else:
-                result = &quot;ok&quot;
-            log_file.write(when + &quot;,&quot; + name + &quot;,&quot; + result + &quot;\n&quot;)
-
-    log_file.close()
+    # A new log, with nothing in it yet. &quot;w&quot; empties it.
+    with open(&quot;log.txt&quot;, &quot;w&quot;) as log_file:
+        log_file.write(&quot;&quot;)
 
 
 # --------------------------------------------------- 5. reading them back
 #
-# users.txt is read all at once, with a for loop: each time round, line is
-# the next line of the file. Every line ends in its &quot;\n&quot;, and strip()
-# takes it off -- without that, &quot;ada\n&quot; is not &quot;ada&quot;, and nobody would
-# ever be on the list.
+# &quot;r&quot; means read. A for loop over a file goes round once for each line,
+# and line is the line, &quot;\n&quot; and all. strip() takes the &quot;\n&quot; off --
+# without it, &quot;crash\n&quot; is not &quot;crash&quot;, and no guess would ever be right.
 
-def read_users():
-    users = []
-    users_file = open(&quot;users.txt&quot;, &quot;r&quot;)
-    for line in users_file:
-        users.append(line.strip())
-    users_file.close()
-    return users
+def read_words():
+    words = []
+    with open(&quot;words.txt&quot;, &quot;r&quot;) as words_file:
+        for line in words_file:
+            words.append(line.strip())
+    return words
 
 
-# log.txt is read one line at a time, while you play, with readline().
-# The file stays open in between, and remembers where it got to, so each
-# readline() hands over the line after the last one. At the end of the
-# file there is nothing left to hand over, and readline() gives back &quot;&quot;.
+def read_password():
+    # read() is the whole file, as one string.
+    with open(&quot;password.txt&quot;, &quot;r&quot;) as password_file:
+        password = password_file.read().strip()
+    return password
 
-log_file = None
+
+def read_log():
+    # Each line of the log is a guess and how many letters it got right,
+    # with a comma between: crash,2
+    guesses = []
+    with open(&quot;log.txt&quot;, &quot;r&quot;) as log_file:
+        for line in log_file:
+            guesses.append(line.strip())
+    return guesses
 
 
-# ------------------------------------------------------- 6. the game scene
+# ------------------------------------------------- 6. how close a guess is
+#
+# How many letters of the guess are the right letter in the right place.
+# crash and crack share c, r, a in the same places, so that is 3.
+
+def letters_right(guess, password):
+    right = 0
+    for i in range(len(password)):
+        if guess[i] == password[i]:
+            right = right + 1
+    return right
+
+
+# ------------------------------------------------------- 7. the game scene
 #
 # These change while you play. A function that CHANGES one has to say
 # `global` first, which means &quot;the one up here, not a new one of my own&quot;.
 
-users = []
-trace = 0
+tries_left = TRIES
 playing = True
 over = False
 told = False
@@ -1304,219 +1205,158 @@ told = False
 
 @scene(&quot;server&quot;)
 def server(number):
-    global users, log_file, trace, playing, over, told
+    global tries_left, playing, over, told
 
-    # A new server: its own files, written and then read.
-    #
-    # There are twelve names. Ask write_files for thirteen different
-    # ones and its while loop could never find them: it would go round
-    # for ever, and the game would freeze. So it stops at twelve.
-    how_many_users = USERS_START + (number - 1) * USERS_MORE
-    if how_many_users &gt; len(NAMES):
-        how_many_users = len(NAMES)
-    write_files(how_many_users, LINES_START + (number - 1) * LINES_MORE)
-    users = read_users()
-    log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
+    # A new server: its own files, written and then read. The password is
+    # one letter longer every two servers.
+    length = LENGTH_START + (number - 1) // 2
+    if length &gt; LENGTH_MOST:
+        length = LENGTH_MOST
+    how_many = WORDS_START + (number - 1) * WORDS_MORE
+    if how_many &gt; WORDS_MOST:
+        how_many = WORDS_MOST
+    write_files(length, how_many)
+    words = read_words()
 
-    scroll = SCROLL_START + (number - 1) * SCROLL_MORE
-    trace_speed = TRACE_START + (number - 1) * TRACE_MORE
-
-    trace = 0
+    tries_left = TRIES
     playing = True
     over = False
     best = getData(BEST_KEY, 0)
 
     # ------------------------------------------------------- the screen
 
-    add([text(&quot;SERVER &quot; + str(number), size=28), pos(20, 20),
-         color(GREEN), z(10)])
+    add([text(&quot;SERVER &quot; + str(number), size=28), pos(20, 20), color(GREEN)])
     best_label = add([text(&quot;best &quot; + str(best), size=18), pos(20, 52),
-                      color(DIM), z(10)])
+                      color(DIM)])
+    tries_label = add([text(&quot;TRIES LEFT &quot; + str(TRIES), size=24),
+                       pos(780, 24), anchor(&quot;topright&quot;), color(GREEN)])
 
-    add([text(&quot;TRACE&quot;, size=20), pos(470, 28), color(GREEN), z(10)])
-    add([rect(200, 18), pos(540, 28), color(20, 40, 26), z(10)])
-    trace_bar = add([rect(1, 18), pos(540, 28), color(GREEN), z(11)])
-    trace_label = add([text(&quot;0%&quot;, size=20), pos(750, 28), color(GREEN),
-                       z(10)])
+    add([text(&quot;words.txt&quot;, size=20), pos(40, 100), color(DIM)])
+    add([text(&quot;log.txt&quot;, size=20), pos(330, 100), color(DIM)])
 
-    # The users, read from users.txt, down the right-hand side.
-    add([text(&quot;users.txt&quot;, size=20), pos(600, 100), color(DIM), z(10)])
+    # The words, read from words.txt. Each one is something to click:
+    # area() lets it know when the mouse is over it, and the dictionary
+    # gives it two values of its own -- the word, and whether it has been
+    # tried yet.
     y = 130
-    for name in users:
-        add([text(name, size=26), pos(610, y), color(GREEN), z(10)])
+    for word in words:
+        add([text(word, size=26), pos(50, y), color(GREEN), area(),
+             {&quot;word&quot;: word, &quot;tried&quot;: False}, &quot;word&quot;])
         y = y + 32
 
-    add([text(&quot;log.txt&quot;, size=20), pos(20, 72), color(DIM), z(10)])
+    message = add([text(&quot;&quot;, size=36), pos(560, 450), anchor(&quot;center&quot;),
+                   color(GREEN), z(10)])
+    under = add([text(&quot;&quot;, size=22), pos(560, 495), anchor(&quot;center&quot;),
+                 color(GREEN), z(10)])
 
-    # Two dark bands over the top and bottom of the log, so lines slide
-    # in and out of sight behind them rather than over the words above.
-    add([rect(800, LOG_TOP), pos(0, 0), color(8, 14, 10), z(5)])
-    add([rect(560, 600 - LOG_BOTTOM - ROW), pos(0, LOG_BOTTOM + ROW),
-         color(8, 14, 10), z(5)])
-
-    message = add([text(&quot;&quot;, size=40), pos(280, 300), anchor(&quot;center&quot;),
-                   color(GREEN), z(20)])
-
-    # ----------------------------------------------- the log going past
-
-    def show(when, name, result):
-        # One line of the log: a dark strip at the bottom, which moves up.
-        # area() lets it know when the mouse is over it, and the dictionary
-        # keeps the name it is showing, to check against the users when it
-        # is clicked. The words are its children, so they move with it.
-        row = add([rect(540, ROW - 2), pos(10, LOG_BOTTOM), color(8, 14, 10),
-                   area(), {&quot;name&quot;: name}, &quot;row&quot;, &quot;line&quot;])
-        row.add([text(when, size=22), pos(10, 4), color(DIM)])
-        row.add([text(name, size=22), pos(100, 4), color(GREEN)])
-        if result == &quot;failed&quot;:
-            row.add([text(&quot;FAILED&quot;, size=22), pos(300, 4), color(RED)])
-        else:
-            row.add([text(&quot;ok&quot;, size=22), pos(300, 4), color(GREEN)])
-
-    def next_line():
-        global log_file
-
-        if not playing:
-            return
-
-        line = log_file.readline()
-
-        # &quot;&quot; means the end of the file. Close it, open it again, and start
-        # from the top: the password comes round again -- but the trace
-        # has not stopped.
-        if line == &quot;&quot;:
-            log_file.close()
-            log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
-
-            # A row of its own to say so. It has no &quot;line&quot; tag, so it
-            # moves up with the rest but clicking it does nothing.
-            row = add([rect(540, ROW - 2), pos(10, LOG_BOTTOM),
-                       color(8, 14, 10), &quot;row&quot;])
-            row.add([text(&quot;----- end of log.txt, reading it again&quot;,
-                          size=22), pos(10, 4), color(DIM)])
-            wait(ROW / scroll, next_line)
-            return
-
-        # &quot;01:07,zoe,ok\n&quot; becomes [&quot;01:07&quot;, &quot;zoe&quot;, &quot;ok&quot;]: strip() takes
-        # the &quot;\n&quot; off the end, and split(&quot;,&quot;) cuts what is left at
-        # every comma.
-        parts = line.strip().split(&quot;,&quot;)
-        show(parts[0], parts[1], parts[2])
-        play(&quot;blip&quot;, volume=0.2)
-
-        # The next line once this one has moved up out of its way.
-        wait(ROW / scroll, next_line)
-
-    # Every row moves up, and one that has gone past the top is gone.
-    @onUpdate(&quot;row&quot;)
-    def move_up(row):
-        if not playing:
-            return
-        row.pos.y = row.pos.y - scroll * dt()
-        if row.pos.y &lt; LOG_TOP - ROW:
-            row.destroy()
-
-    # A line you can click lights up while the mouse is over it.
-    @onUpdate(&quot;line&quot;)
-    def light_up(row):
-        if row.isHovering():
-            row.color = rgb(25, 50, 32)
-        else:
-            row.color = rgb(8, 14, 10)
-
-    # ------------------------------------------------------------ clicking
+    # ------------------------------------------------------------ the log
     #
-    # onClick runs on every click, wherever it is, and a tap on a phone
-    # counts as a click. isHovering() asks whether the mouse is over a
-    # line, which needs area() on it.
+    # Read log.txt and put every line of it on the screen. The old lines
+    # are taken away first, so each guess is shown once.
 
+    def show_log():
+        destroyAll(&quot;entry&quot;)
+        y = 130
+        for guess in read_log():
+            # &quot;crash,2&quot; becomes [&quot;crash&quot;, &quot;2&quot;]: split(&quot;,&quot;) cuts it up at
+            # the comma.
+            parts = guess.split(&quot;,&quot;)
+            add([text(&quot;&gt; &quot; + parts[0], size=24), pos(340, y), color(GREEN),
+                 &quot;entry&quot;])
+            add([text(parts[1] + &quot;/&quot; + str(length) + &quot; right&quot;, size=24),
+                 pos(500, y), color(DIM), &quot;entry&quot;])
+            y = y + 32
+
+    # ------------------------------------------------------------ guessing
+
+    # A word lights up while the mouse is over it, unless it has been tried.
+    @onUpdate(&quot;word&quot;)
+    def light_up(row):
+        if row.tried:
+            row.color = DIM
+        elif row.isHovering() and playing:
+            row.color = BRIGHT
+        else:
+            row.color = GREEN
+
+    # onClick runs on every click, wherever it is, and a tap on a phone
+    # counts as a click. isHovering() asks whether the mouse is over a word,
+    # which needs area() on it.
     @onClick
     def click():
         if not playing:
             return
-        for row in get(&quot;line&quot;):
-            if row.isHovering():
-                check(row)
+        for row in get(&quot;word&quot;):
+            if row.isHovering() and not row.tried:
+                guess(row)
                 return
 
-    def check(row):
-        global trace
+    def guess(row):
+        global tries_left
 
-        # A name on the list is only a name. A name that is NOT on the
-        # list is somebody&#x27;s password.
-        if row.name in users:
-            trace = trace + WRONG_CLICK
-            play(&quot;wrong&quot;)
-            shake(6)
-            add([text(&quot;+&quot; + str(WRONG_CLICK) + &quot;% trace&quot;, size=26),
-                 pos(mousePos().x, mousePos().y - 30), anchor(&quot;center&quot;),
-                 color(RED), opacity(1), lifespan(0.6, fade=0.3), z(20)])
-        else:
-            granted(row.name)
+        row.tried = True
+        password = read_password()
+        right = letters_right(row.word, password)
 
-    # --------------------------------------------------------- the trace
+        # The guess goes on the end of the log. &quot;a&quot; means add: it keeps
+        # what is there and writes after it, where &quot;w&quot; would empty it.
+        with open(&quot;log.txt&quot;, &quot;a&quot;) as log_file:
+            log_file.write(row.word + &quot;,&quot; + str(right) + &quot;\n&quot;)
+        show_log()
 
-    @onUpdate
-    def tracing():
-        global trace
-
-        if not playing:
+        if row.word == password:
+            granted(password)
             return
-        trace = trace + trace_speed * dt()
-        if trace &gt;= 100:
-            trace = 100
-            caught()
-        trace_bar.width = trace * 2
-        trace_label.text = str(int(trace)) + &quot;%&quot;
 
-    # --------------------------------------------------- in, or caught
+        tries_left = tries_left - 1
+        tries_label.text = &quot;TRIES LEFT &quot; + str(tries_left)
+        play(&quot;wrong&quot;)
+        shake(4)
+        if tries_left == 0:
+            locked_out(password)
+
+    # --------------------------------------------------- in, or locked out
 
     def granted(password):
         global playing
 
         playing = False
-        log_file.close()
         play(&quot;granted&quot;)
-        destroyAll(&quot;row&quot;)
         message.text = &quot;ACCESS GRANTED&quot;
-        add([text(&quot;the password was &quot; + password, size=26),
-             pos(280, 350), anchor(&quot;center&quot;), color(GREEN), z(20)])
+        under.text = &quot;the password was &quot; + password
         wait(2, next_server)
 
     def next_server():
         go(&quot;server&quot;, number + 1)
 
-    def caught():
+    def locked_out(password):
         global playing
 
         playing = False
-        log_file.close()
-        play(&quot;caught&quot;)
+        play(&quot;locked&quot;)
         shake(12)
-        destroyAll(&quot;row&quot;)
 
         # The servers you got into is one less than the one you were
-        # caught on.
+        # locked out of.
         hacked = number - 1
         if hacked &gt; best:
             setData(BEST_KEY, hacked)
             best_label.text = &quot;best &quot; + str(hacked)
 
-        message.text = &quot;TRACED&quot;
+        message.text = &quot;LOCKED OUT&quot;
         message.color = RED
-        add([text(&quot;servers hacked: &quot; + str(hacked), size=28),
-             pos(280, 360), anchor(&quot;center&quot;), color(GREEN), z(20)])
+        under.text = &quot;it was &quot; + password + &quot; -- servers hacked: &quot; + str(hacked)
 
-        # A second before you can start again, so a click meant for the
-        # log does not skip past what happened.
+        # A second before you can start again, so a click meant for a word
+        # does not skip past what happened.
         wait(1, ready_again)
 
     def ready_again():
         global over
 
         over = True
-        add([text(&quot;press SPACE or click to start again&quot;, size=24),
-             pos(280, 420), anchor(&quot;center&quot;), color(GREEN), z(20)])
+        add([text(&quot;press SPACE or click to start again&quot;, size=22),
+             pos(560, 540), anchor(&quot;center&quot;), color(GREEN)])
 
     def again():
         if over:
@@ -1525,16 +1365,16 @@ def server(number):
     onKeyPress(&quot;space&quot;, again)
     onClick(again)
 
-    # The log starts. The first time, how to play comes up first.
+    # The first time, how to play comes up first.
     if not told:
         told = True
-        say(&quot;A password is hiding in this log. Somebody typed it where &quot;
-            &quot;their name should go. Click the FAILED line whose name is &quot;
-            &quot;not in users.txt -- before the trace reaches 100%.&quot;)
-    next_line()
+        say(&quot;One of these words is the server&#x27;s password, and you have &quot;
+            &quot;four tries. Click a word to guess it. The log tells you how &quot;
+            &quot;many of its letters are in the right place -- the password &quot;
+            &quot;has to match every line of it. There is no clock.&quot;)
 
 
-# ------------------------------------------------------- 7. start the game
+# ------------------------------------------------------- 8. start the game
 
 go(&quot;server&quot;, 1)</code></pre>
 
@@ -1544,23 +1384,19 @@ go(&quot;server&quot;, 1)</code></pre>
 It goes straight into the editor, ready to change and run.</p>
 
 <ul>
-<li><strong>Your own names.</strong> Put your class in <code>NAMES</code>. Use
-more than twelve and the cap in the scene uses all of them, because it is
-<code>len(NAMES)</code> and not 12.</li>
-<li><strong>Your own passwords.</strong> Look up a list of the most common
-passwords, and you will see why the ones in <code>PASSWORDS</code> are
-there. Add the names on it that you think look most like users.</li>
-<li><strong>Keep what you found.</strong> Open a file with
-<code>"a"</code> instead of <code>"w"</code> and what you write goes on the
-end, instead of emptying it first. Put this in <code>granted</code>:
-<pre><code class="language-python">        found_file = open(&quot;found.txt&quot;, &quot;a&quot;)
-        found_file.write(password + &quot;\n&quot;)
-        found_file.close()</code></pre>
-and every password you find is added to <code>found.txt</code>, one to a
-line. Then read it back in <code>caught</code> and show them all.</li>
-<li><strong>Easier, or harder.</strong> <code>SCROLL_MORE = 6</code> keeps
-the log slower for longer. <code>FAIL_CHANCE = 0.6</code> fills it with
-FAILED lines, so the slip doesn't stand out.</li>
+<li><strong>Your own words.</strong> Put your own in <code>WORDS</code>. Words
+that look alike make the best game: <code>pocket</code>,
+<code>rocket</code>, <code>socket</code> and <code>locket</code> are all one
+letter apart.</li>
+<li><strong>Easier, or harder.</strong> <code>TRIES = 6</code> to start with.
+<code>TRIES = 3</code> once you're good at it.</li>
+<li><strong>A record of every game.</strong> In <code>granted</code>, open
+<code>"history.txt"</code> with <code>"a"</code> and write the password on the
+end. Nothing ever empties it, so it grows by one line every server you get
+into. Read it back and show how many lines it has.</li>
+<li><strong>A hint file.</strong> Write a <code>hints.txt</code> with a line
+for each word, like <code>brick,a building block</code>, read it back with
+<code>split(",")</code>, and show the hint for the password at the start.</li>
 </ul>
 
       </article>

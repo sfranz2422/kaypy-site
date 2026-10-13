@@ -121,19 +121,34 @@ points and how long it stays up, so adding a monster of your own is one line
 in each dictionary.
 <a href="../tutorials/goblin-hit/">How it was built, step by step →</a></p>
 <h2 id="log-hacker">Log Hacker</h2>
-<p>Click the line in the log that gives a password away, or tap it.</p>
+<p>Click a word to guess the password, or tap it. There is no clock.</p>
 <p><a href="../static/games/log_hacker/">Play Log Hacker →</a> · <a href="https://github.com/sfranz2422/kaypy-site/blob/main/site/static/games/log_hacker/log_hacker.py">Read the code on GitHub →</a> · <a href="../play/?game=log_hacker">Remix it in the playground →</a></p>
-<p>You are reading a server's log, and somewhere in it somebody typed their
-password where their name should go. The real users are listed on the right:
-click the failed login by a name that isn't one of them, before the trace
-reaches 100%. Every server is faster than the last, and the most servers you
-got into is remembered.</p>
+<p>You have broken into a server. One of the words on the left is its
+password, and you have four tries to find it.</p>
+<p><strong>How to play:</strong></p>
+<ul>
+<li>Click any word to guess it. To begin with, every word is as likely as any
+other.</li>
+<li>A wrong guess goes in the log on the right, with how many of its letters
+are the <em>right letter in the right place</em>. <code>clock 2/5</code> means
+two of its letters are exactly where the password has them.</li>
+<li>Use that to rule words out. The password must score the same against
+every guess in the log. If <code>clock</code> got 2, then <code>track</code>
+could be it (it matches clock in exactly two places, the <code>ck</code>), but
+<code>crash</code> can't (it matches in only one).</li>
+<li>Guess one of the words that's left. Each new line in the log narrows it
+down further.</li>
+<li>Get it in four tries and you're in: ACCESS GRANTED, and on to the next
+server, with more words and, every two servers, a longer password. Use up
+your four tries and you're locked out. The most servers you got into is
+remembered.</li>
+</ul>
 <p>It is the one for after <a href="../learn/files/">files</a>, and comes
-between Goblin Hit and Paddle Ball.
-The game writes its own <code>users.txt</code> and <code>log.txt</code> for
-every server, then reads them back: the users all at once with a
-<code>for</code> loop, and the log one line at a time with
-<code>readline()</code> while you play.
+between Goblin Hit and Paddle Ball. The game writes three files for every
+server — <code>words.txt</code>, <code>password.txt</code> and
+<code>log.txt</code> — and reads them back, opening every one with
+<code>with open(...)</code>. Each guess is added to the end of the log with
+<code>"a"</code>.
 <a href="../tutorials/log-hacker/">How it was built, step by step →</a></p>
 <h2 id="paddle-ball">Paddle Ball</h2>
 <p>Left and right arrows to move your paddle, or hold the mouse (or your
