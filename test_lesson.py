@@ -59,6 +59,7 @@ import pathlib
 import re
 import subprocess
 import sys
+import tempfile
 
 import pagecode
 
@@ -70,7 +71,7 @@ ASSETS = SITE / "assets"
 #: would silently pick up nothing at all if the folder were renamed, and
 #: "0 programs found" is a pass in a suite that only counts failures.
 LESSONS = ["variables", "input", "conditionals", "loops", "lists",
-           "functions", "decorators", "dictionaries"]
+           "functions", "decorators", "dictionaries", "files"]
 
 #: Prepended to any block that asks a question, so that a run here reads like
 #: a run in the playground.
@@ -219,13 +220,24 @@ for n, (name, body, claimed, answers) in enumerate(programs, 1):
     # and a program that asks a question would sit there waiting for a person
     # who is not watching until the timeout.
     stdin = "" if answers is None else "".join(a + "\n" for a in answers)
-    try:
-        proc = subprocess.run(
-            [sys.executable, "-c", source], input=stdin,
-            cwd=ASSETS, env=env, capture_output=True, text=True, timeout=60)
-    except subprocess.TimeoutExpired:
-        crashed.append("%s block %d timed out" % (name, n))
-        continue
+
+    # Each program runs in an empty folder of its own, with everything in
+    # site/assets linked in so loadSprite("images/bean.png") still finds
+    # it. Lesson 9 writes files: run in site/assets itself, every
+    # scores.txt it made would be left there and deployed, and a block that
+    # reads a file somebody else wrote would pass here and fail for a
+    # student who ran it on its own.
+    with tempfile.TemporaryDirectory() as folder:
+        for pack in ASSETS.iterdir():
+            (pathlib.Path(folder) / pack.name).symlink_to(pack)
+        try:
+            proc = subprocess.run(
+                [sys.executable, "-c", source], input=stdin,
+                cwd=folder, env=env, capture_output=True, text=True,
+                timeout=60)
+        except subprocess.TimeoutExpired:
+            crashed.append("%s block %d timed out" % (name, n))
+            continue
 
     if proc.returncode != 0:
         last = [ln for ln in proc.stderr.strip().splitlines() if ln.strip()]
@@ -267,11 +279,11 @@ check("and prints exactly what the page says it prints", not wrong,
 # concatenated blob, because a check on the union passes when one lesson has
 # all of it and another has none — which is exactly the state a newly split
 # page arrives in.
-#: Solutions folded away, counted across all eight lessons. It is a total and
+#: Solutions folded away, counted across all nine lessons. It is a total and
 #: not a per-page floor because the lessons are not the same shape: loops has
-#: three foldaways, the other seven one each. A per-page floor of three fails
+#: three foldaways, the other eight one each. A per-page floor of three fails
 #: honest pages, and a floor of one passes a page that lost two.
-EXPECTED_DETAILS = 10
+EXPECTED_DETAILS = 11
 
 details = 0
 for name, path in pages:

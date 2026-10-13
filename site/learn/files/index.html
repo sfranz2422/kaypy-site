@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 9 — Files · KayPy</title>
+<meta name="description" content="Learn Python with KayPy: lesson 9, files.">
+<meta property="og:title" content="Lesson 9 — Files · KayPy">
+<meta property="og:description" content="Learn Python with KayPy: lesson 9, files.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All nine lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li><li><a class="dropdown-item" href="../../learn/functions/">6 — Functions</a></li><li><a class="dropdown-item" href="../../learn/decorators/">7 — Decorators</a></li><li><a class="dropdown-item" href="../../learn/dictionaries/">8 — Dictionaries</a></li><li><a class="dropdown-item active" href="../../learn/files/">9 — Files</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../tutorials/">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row gx-xl-5">
+    <div class="col-lg-8 col-xl-9">
+      <article class="prose">
+<h1 id="lesson-9-files">Lesson 9 — Files</h1>
+<p><strong>By the end of this you can:</strong> write text into a file and read it back,
+all at once, a line at a time, or one line when you ask for it; cut each line
+into its parts; add to the end of a file without losing what is there; and
+build a game's level out of one.</p>
+<h2 id="a-variable-forgets">A variable forgets</h2>
+<p>Everything so far has lived in variables, and a variable lasts exactly as
+long as the program does. Press Stop and every score, every name, every list
+is gone. Run it again and it all starts from the beginning.</p>
+<p>A <strong>file</strong> is text kept somewhere else, under a name, and it stays there when
+the program ends. The next program — or the same one, run again — can open it
+and read what the last one wrote. High score tables, saved games, level maps
+and server logs are all files.</p>
+<p>On your own computer a file is one you can see: it appears in the folder
+your program runs in, and you can open it in any text editor. In
+<a href="../../play/">the playground</a> it is just as real, but it lives inside
+the page. It lasts from one Run to the next, and it is gone when you reload.</p>
+<h2 id="writing-a-file">Writing a file</h2>
+<p>Three moves: open it, use it, close it.</p>
+<pre><code class="language-python">names_file = open(&quot;names.txt&quot;, &quot;w&quot;)
+names_file.write(&quot;Ada\n&quot;)
+names_file.write(&quot;Max\n&quot;)
+names_file.write(&quot;Zoe\n&quot;)
+names_file.close()
+
+names_file = open(&quot;names.txt&quot;, &quot;r&quot;)
+print(names_file.read())
+names_file.close()
+</code></pre>
+<pre><code>Ada
+Max
+Zoe
+</code></pre>
+<p><code>open("names.txt", "w")</code> makes the file and hands back something to
+get at it with, which goes in <code>names_file</code>. The <code>"w"</code> means
+<strong>write</strong>. <code>write()</code> puts text in, and <code>close()</code> says you
+have finished.</p>
+<p>Then it is opened again with <code>"r"</code>, for <strong>read</strong>, and
+<code>read()</code> hands back everything in it as one string.</p>
+<p>Look at what went in: <code>"Ada\n"</code>, not <code>"Ada"</code>. <code>\n</code> is
+how you write the end of a line in a string — it's one character, a
+<em>newline</em>. <code>print()</code> adds one for you; <code>write()</code> does
+not, and puts in exactly what you give it and nothing more:</p>
+<pre><code class="language-python">names_file = open(&quot;names.txt&quot;, &quot;w&quot;)
+names_file.write(&quot;Ada&quot;)
+names_file.write(&quot;Max&quot;)
+names_file.write(&quot;Zoe&quot;)
+names_file.close()
+
+names_file = open(&quot;names.txt&quot;, &quot;r&quot;)
+print(names_file.read())
+names_file.close()
+</code></pre>
+<pre><code>AdaMaxZoe
+</code></pre>
+<p>No error. Three names, one line, no gaps.</p>
+<h2 id="w-starts-again">"w" starts again</h2>
+<p>Opening a file with <code>"w"</code> empties it first, if it was already
+there:</p>
+<pre><code class="language-python">notes_file = open(&quot;notes.txt&quot;, &quot;w&quot;)
+notes_file.write(&quot;the first note\n&quot;)
+notes_file.close()
+
+notes_file = open(&quot;notes.txt&quot;, &quot;w&quot;)
+notes_file.write(&quot;the second note\n&quot;)
+notes_file.close()
+
+notes_file = open(&quot;notes.txt&quot;, &quot;r&quot;)
+print(notes_file.read())
+notes_file.close()
+</code></pre>
+<pre><code>the second note
+</code></pre>
+<p>The first note is gone. That is what you want for a file that holds one
+thing — the latest save — and exactly what you don't want for a list you are
+adding to. For that there is <code>"a"</code>, further down.</p>
+<h2 id="only-text-goes-in">Only text goes in</h2>
+<p>A file holds text and nothing else. Give <code>write()</code> a number:</p>
+<pre><code class="language-text">score = 42
+
+score_file = open(&quot;score.txt&quot;, &quot;w&quot;)
+score_file.write(score)
+score_file.close()
+</code></pre>
+<pre><code class="language-text">TypeError: write() argument must be str, not int
+</code></pre>
+<p><code>str</code> is Python's name for text, so this says it wanted text and
+got a whole number. <code>str(score)</code> turns the number into text first.</p>
+<p>Coming back out, it is still text, even if it looks like a number:</p>
+<pre><code class="language-text">score = 42
+
+score_file = open(&quot;score.txt&quot;, &quot;w&quot;)
+score_file.write(str(score) + &quot;\n&quot;)
+score_file.close()
+
+score_file = open(&quot;score.txt&quot;, &quot;r&quot;)
+saved = score_file.read()
+score_file.close()
+
+print(saved + 8)
+</code></pre>
+<pre><code class="language-text">TypeError: can only concatenate str (not "int") to str
+</code></pre>
+<p><code>saved</code> is <code>"42\n"</code>, and you can't add 8 to some text.
+<code>int()</code> turns it back into a number — and it doesn't mind the
+<code>\n</code> on the end:</p>
+<pre><code class="language-python">score_file = open(&quot;score.txt&quot;, &quot;w&quot;)
+score_file.write(&quot;42\n&quot;)
+score_file.close()
+
+score_file = open(&quot;score.txt&quot;, &quot;r&quot;)
+saved = int(score_file.read())
+score_file.close()
+
+print(saved + 8)
+</code></pre>
+<pre><code>50
+</code></pre>
+<p>So: <strong><code>str()</code> on the way in, <code>int()</code> on the way out.</strong></p>
+<h2 id="reading-line-by-line">Reading line by line</h2>
+<p>A <code>for</code> loop over a file goes round once for every line in it, top
+to bottom:</p>
+<pre><code class="language-python">names_file = open(&quot;names.txt&quot;, &quot;w&quot;)
+names_file.write(&quot;Ada\n&quot;)
+names_file.write(&quot;Max\n&quot;)
+names_file.write(&quot;Zoe\n&quot;)
+names_file.close()
+
+names_file = open(&quot;names.txt&quot;, &quot;r&quot;)
+for line in names_file:
+    print(line)
+names_file.close()
+</code></pre>
+<pre><code>Ada
+
+Max
+
+Zoe
+</code></pre>
+<p>There's a gap after every name. Each <code>line</code> still has its <code>\n</code>
+on the end, and <code>print()</code> adds another, so every line ends twice.</p>
+<p><code>strip()</code> takes the <code>\n</code> off, and any spaces at either end.
+Here the names go into a list:</p>
+<pre><code class="language-python">names_file = open(&quot;names.txt&quot;, &quot;w&quot;)
+names_file.write(&quot;Ada\n&quot;)
+names_file.write(&quot;Max\n&quot;)
+names_file.write(&quot;Zoe\n&quot;)
+names_file.close()
+
+names = []
+names_file = open(&quot;names.txt&quot;, &quot;r&quot;)
+for line in names_file:
+    names.append(line.strip())
+names_file.close()
+
+print(names)
+print(&quot;Max&quot; in names)
+</code></pre>
+<pre><code>[&#x27;Ada&#x27;, &#x27;Max&#x27;, &#x27;Zoe&#x27;]
+True
+</code></pre>
+<p>Forget the <code>strip()</code>, and the list looks almost the same:</p>
+<pre><code class="language-python">names_file = open(&quot;names.txt&quot;, &quot;w&quot;)
+names_file.write(&quot;Ada\n&quot;)
+names_file.write(&quot;Max\n&quot;)
+names_file.write(&quot;Zoe\n&quot;)
+names_file.close()
+
+names = []
+names_file = open(&quot;names.txt&quot;, &quot;r&quot;)
+for line in names_file:
+    names.append(line)
+names_file.close()
+
+print(names)
+print(&quot;Max&quot; in names)
+</code></pre>
+<pre><code>[&#x27;Ada\n&#x27;, &#x27;Max\n&#x27;, &#x27;Zoe\n&#x27;]
+False
+</code></pre>
+<p><code>"Max"</code> is not the same string as <code>"Max\n"</code>, so <code>"Max" in names</code>
+is <code>False</code>, even though Max is plainly in the file. On the screen of a game
+you would never spot it, because a <code>\n</code> can't be seen. This is the most
+common mistake there is with files, and there is never an error message to
+tell you.</p>
+<h2 id="one-line-when-you-ask">One line when you ask</h2>
+<p><code>readline()</code> reads one line, and only one. The file stays open and
+remembers how far it has got, so the next <code>readline()</code> hands back the line
+after it. <code>repr()</code> shows a string the way you would type it, quotes and
+<code>\n</code> included, so you can see what is really in it:</p>
+<pre><code class="language-python">log_file = open(&quot;log.txt&quot;, &quot;w&quot;)
+log_file.write(&quot;first\n&quot;)
+log_file.write(&quot;second\n&quot;)
+log_file.close()
+
+log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
+print(repr(log_file.readline()))
+print(repr(log_file.readline()))
+print(repr(log_file.readline()))
+log_file.close()
+</code></pre>
+<pre><code>&#x27;first\n&#x27;
+&#x27;second\n&#x27;
+&#x27;&#x27;
+</code></pre>
+<p>At the end there is nothing left to hand back, and <code>readline()</code> gives
+<code>''</code>, an empty string. A blank line in the middle of a file is
+<code>'\n'</code>, never <code>''</code>, so <code>''</code> always means the end.</p>
+<p>A <code>while</code> loop that reads until then:</p>
+<pre><code class="language-python">log_file = open(&quot;log.txt&quot;, &quot;w&quot;)
+log_file.write(&quot;01:07,zoe,ok\n&quot;)
+log_file.write(&quot;01:12,ada,failed\n&quot;)
+log_file.write(&quot;01:20,max,ok\n&quot;)
+log_file.close()
+
+log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
+line = log_file.readline()
+while line != &quot;&quot;:
+    print(&quot;read:&quot;, line.strip())
+    line = log_file.readline()
+log_file.close()
+print(&quot;the end of the file&quot;)
+</code></pre>
+<pre><code>read: 01:07,zoe,ok
+read: 01:12,ada,failed
+read: 01:20,max,ok
+the end of the file
+</code></pre>
+<p>The <code>for</code> loop is shorter, so why ever do this? Because a
+<code>for</code> loop goes through every line before the program moves on. With
+<code>readline()</code> you can read one line now, do something else, and read the
+next one later — a log that scrolls past one line at a time, say, or the next
+line of dialogue when the player presses a key.</p>
+<h2 id="cutting-a-line-up">Cutting a line up</h2>
+<p>A line usually holds more than one thing. Put a comma between them, and
+<code>split(",")</code> cuts the line at every comma and hands back a list:</p>
+<pre><code class="language-python">line = &quot;01:12,ada,failed\n&quot;
+
+parts = line.strip().split(&quot;,&quot;)
+
+print(parts)
+print(parts[1], &quot;logged in at&quot;, parts[0])
+</code></pre>
+<pre><code>[&#x27;01:12&#x27;, &#x27;ada&#x27;, &#x27;failed&#x27;]
+ada logged in at 01:12
+</code></pre>
+<p>Strip first, then split — otherwise the last part is <code>"failed\n"</code>.
+With a number in it, <code>int()</code> the part that is a number:</p>
+<pre><code class="language-python">scores_file = open(&quot;scores.txt&quot;, &quot;w&quot;)
+scores_file.write(&quot;Ada,12\n&quot;)
+scores_file.write(&quot;Max,30\n&quot;)
+scores_file.write(&quot;Zoe,21\n&quot;)
+scores_file.close()
+
+total = 0
+scores_file = open(&quot;scores.txt&quot;, &quot;r&quot;)
+for line in scores_file:
+    parts = line.strip().split(&quot;,&quot;)
+    name = parts[0]
+    score = int(parts[1])
+    print(name, &quot;scored&quot;, score)
+    total = total + score
+scores_file.close()
+
+print(&quot;total:&quot;, total)
+</code></pre>
+<pre><code>Ada scored 12
+Max scored 30
+Zoe scored 21
+total: 63
+</code></pre>
+<h2 id="adding-to-the-end">Adding to the end</h2>
+<p><code>"a"</code> is for <strong>append</strong>. It opens the file and adds to the end of
+what is there, instead of emptying it first:</p>
+<pre><code class="language-python">scores_file = open(&quot;scores.txt&quot;, &quot;w&quot;)
+scores_file.write(&quot;Ada,12\n&quot;)
+scores_file.close()
+
+scores_file = open(&quot;scores.txt&quot;, &quot;a&quot;)
+scores_file.write(&quot;Max,30\n&quot;)
+scores_file.close()
+
+scores_file = open(&quot;scores.txt&quot;, &quot;a&quot;)
+scores_file.write(&quot;Zoe,21\n&quot;)
+scores_file.close()
+
+scores_file = open(&quot;scores.txt&quot;, &quot;r&quot;)
+print(scores_file.read())
+scores_file.close()
+</code></pre>
+<pre><code>Ada,12
+Max,30
+Zoe,21
+</code></pre>
+<p>If the file isn't there yet, <code>"a"</code> makes it, just like <code>"w"</code>.</p>
+<h2 id="when-the-file-is-not-there">When the file is not there</h2>
+<p><code>"w"</code> and <code>"a"</code> make a file that isn't there. <code>"r"</code> can't:</p>
+<pre><code class="language-text">save_file = open(&quot;save.txt&quot;, &quot;r&quot;)
+</code></pre>
+<pre><code class="language-text">FileNotFoundError: [Errno 44] No such file or directory: 'save.txt'
+</code></pre>
+<p>That is the message in the playground. On your own computer the number is
+2 instead of 44, and the rest is the same. Check the name for a typo first:
+<code>"Save.txt"</code> and <code>"save.txt"</code> are two different files.</p>
+<h2 id="with">with</h2>
+<p>You will see files opened another way, too, in other people's code:</p>
+<pre><code class="language-python">names_file = open(&quot;names.txt&quot;, &quot;w&quot;)
+names_file.write(&quot;Ada\n&quot;)
+names_file.write(&quot;Max\n&quot;)
+names_file.close()
+
+with open(&quot;names.txt&quot;, &quot;r&quot;) as names_file:
+    for line in names_file:
+        print(line.strip())
+
+print(names_file.closed)
+</code></pre>
+<pre><code>Ada
+Max
+True
+</code></pre>
+<p>Everything indented under <code>with</code> can use the file, and when the
+indenting ends, the file is closed for you — <code>names_file.closed</code> says so.
+It is the same open-use-close, with the close written for you, so you can't
+forget it. These lessons and the games write <code>close()</code> out, so you can
+see it happen.</p>
+<h2 id="a-level-from-a-file">A level from a file</h2>
+<p>The level in <a href="../dictionaries/#a-table-of-what-to-build">lesson 8</a> was a
+list of strings, one for each row. A file is lines of text — the same thing,
+kept outside the program:</p>
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[20, 24, 36])
+
+# The level, written into a file. A real game would ship it beside the
+# program; the playground has no files of its own, so this one makes it.
+level_file = open(&quot;level.txt&quot;, &quot;w&quot;)
+level_file.write(&quot;########\n&quot;)
+level_file.write(&quot;#o....o#\n&quot;)
+level_file.write(&quot;#..oo..#\n&quot;)
+level_file.write(&quot;########\n&quot;)
+level_file.close()
+
+# Read it back into a list of strings, one for each row.
+layout = []
+level_file = open(&quot;level.txt&quot;, &quot;r&quot;)
+for line in level_file:
+    layout.append(line.strip())
+level_file.close()
+
+TILES = {
+    &quot;#&quot;: lambda: [rect(48, 48), color(90, 90, 110), area(), &quot;wall&quot;],
+    &quot;o&quot;: lambda: [circle(12), color(240, 200, 60), area(), &quot;coin&quot;],
+}
+
+addLevel(layout, {&quot;tileWidth&quot;: 48, &quot;tileHeight&quot;: 48, &quot;tiles&quot;: TILES})
+
+print(layout)
+print(&quot;walls:&quot;, len(get(&quot;wall&quot;)))
+print(&quot;coins:&quot;, len(get(&quot;coin&quot;)))
+</code></pre>
+<pre><code>[&#x27;########&#x27;, &#x27;#o....o#&#x27;, &#x27;#..oo..#&#x27;, &#x27;########&#x27;]
+walls: 20
+coins: 4
+</code></pre>
+<p>Change a line in the file and the level changes, without touching the
+code that builds it. That's how a game with fifty levels keeps them: fifty
+little files, and one program that reads whichever one comes next.</p>
+<p>For a score that has to survive the page being reloaded, kaypy has
+<a href="../../api/#saving"><code>setData()</code> and <code>getData()</code></a>, which
+keep it in the browser even after the page is closed. A file in the playground
+lasts until you reload.</p>
+<h2 id="watch-for">Watch for</h2>
+<p><strong><code>write()</code> doesn't end the line.</strong> Put <code>"\n"</code> on the end yourself.</p>
+<p><strong>Every line you read still has its <code>\n</code>.</strong> <code>strip()</code> it, every
+time, before you compare it with anything.</p>
+<p><strong><code>"w"</code> empties the file.</strong> <code>"a"</code> adds to the end.
+<code>"r"</code> needs it to be there already.</p>
+<p><strong>Only text goes in and comes out.</strong> <code>str()</code> on the way in,
+<code>int()</code> on the way out.</p>
+<p><strong>Close it when you have finished</strong>, before anything reads it. Until
+then, what you wrote may not be in the file at all.</p>
+<p><strong><code>readline()</code> gives <code>""</code> at the end</strong>, and only at the end.</p>
+<p>Every one of those is in <a href="../../tutorials/log-hacker/">Log Hacker</a>,
+a game built step by step around two files it writes and then reads — and
+its "break it" boxes are a forgotten <code>\n</code>, a forgotten
+<code>close()</code>, a forgotten <code>strip()</code> and a missing check for
+<code>""</code>.</p>
+<h2 id="classwork-1-the-high-score-table">Classwork 1 — The High Score Table</h2>
+<p>Start here and press Run:</p>
+<pre><code class="language-python">scores_file = open(&quot;scores.txt&quot;, &quot;w&quot;)
+scores_file.write(&quot;Ada,12\n&quot;)
+scores_file.write(&quot;Max,30\n&quot;)
+scores_file.write(&quot;Zoe,21\n&quot;)
+scores_file.close()
+
+scores_file = open(&quot;scores.txt&quot;, &quot;r&quot;)
+for line in scores_file:
+    print(line.strip())
+scores_file.close()
+</code></pre>
+<pre><code>Ada,12
+Max,30
+Zoe,21
+</code></pre>
+<p>Then, running after each step:</p>
+<ol>
+<li>Add two more players to the file. Check they are printed.</li>
+<li>Instead of printing the whole line, <code>split(",")</code> it and print
+   <code>Max scored 30</code>.</li>
+<li>Find the best. Keep a <code>best_name</code> and a <code>best_score</code>
+   (start it at 0), and every time round the loop, if this score is bigger,
+   remember this one instead. After the loop, print
+   <code>Top score: Max with 30</code>. You will need <code>int()</code>.</li>
+<li>Ask for a new name and score with <code>input()</code> from
+   <a href="../input/">lesson 2</a>, and add them to the end of the file with
+   <code>"a"</code>, before it is read.</li>
+<li>Now take out the part that writes the file with <code>"w"</code>. The file is
+   still there from the last Run, so every Run adds one more player to it.
+   Run it three times.</li>
+</ol>
+<p><strong>Stretch:</strong> write the top score into a second file, <code>best.txt</code>,
+and print <code>New record!</code> when a new score beats the one saved in it.
+The first time, <code>best.txt</code> isn't there — make it once with
+<code>"w"</code> before you take that part out.</p>
+<h2 id="classwork-2-your-level-in-a-file">Classwork 2 — Your Level in a File</h2>
+<p>Start from <a href="#a-level-from-a-file">the level above</a>.</p>
+<ol>
+<li>Make the level bigger: more rows, and longer ones. Every row must be the
+   same length.</li>
+<li>Add a <code>^</code> to <code>TILES</code> that builds a red spike, and put some
+   in the file.</li>
+<li>Write a second level into <code>level2.txt</code>. Then put
+   <code>level_number = 2</code> at the top and open
+   <code>"level" + str(level_number) + ".txt"</code>, so changing the number
+   changes the level. (Call the first one <code>level1.txt</code>.)</li>
+<li>Put a player in with a <code>p</code> tile, and move it with the
+   <code>@onKeyDown</code> handlers from <a href="../decorators/">lesson 7</a>.</li>
+</ol>
+<p><strong>Stretch:</strong> make a <code>scene</code> that takes the level number,
+and when every coin is collected, <code>go()</code> to the next one. A new level is
+now a new file, and no new code.</p>
+<h2 id="check-yourself">Check yourself</h2>
+<p>What does this print?</p>
+<pre><code class="language-python">count_file = open(&quot;count.txt&quot;, &quot;w&quot;)
+count_file.write(&quot;1\n2\n3\n&quot;)
+count_file.close()
+
+count_file = open(&quot;count.txt&quot;, &quot;r&quot;)
+for line in count_file:
+    print(line.strip())
+for line in count_file:
+    print(&quot;again&quot;, line.strip())
+count_file.close()
+</code></pre>
+<pre><code>1
+2
+3
+</code></pre>
+<details>
+<summary>Why doesn't the second loop print anything?</summary>
+<p>A file that is open remembers how far it has been read, just like
+<code>readline()</code> does. The first <code>for</code> loop read every line,
+so the file is at the end. The second one asks for the next line, and there
+isn't one — the same <code>""</code> that <code>readline()</code> gives at the
+end — so it goes round no times at all. No error, nothing printed.</p>
+<p>To read it again, <code>close()</code> it and <code>open()</code> it again. A
+file always opens at the top. That is how
+<a href="../../tutorials/log-hacker/">Log Hacker</a> reads its log over and
+over: when <code>readline()</code> gives <code>""</code>, it closes the file and
+opens it again.</p>
+</details>
+<hr />
+<p><a href="../dictionaries/">← Lesson 8 — Dictionaries</a> · <a href="../">All nine lessons</a></p>
+      
+      </article>
+    </div>
+    <aside class="col-lg-4 col-xl-3 toc-col">
+      <nav class="toc" aria-label="On this page">
+        <p class="toc-head">On this page</p>
+      <a class="toc-link toc-d1" href="#lesson-9-files">Lesson 9 — Files</a>
+      <a class="toc-link toc-d2" href="#a-variable-forgets">A variable forgets</a>
+      <a class="toc-link toc-d2" href="#writing-a-file">Writing a file</a>
+      <a class="toc-link toc-d2" href="#w-starts-again">"w" starts again</a>
+      <a class="toc-link toc-d2" href="#only-text-goes-in">Only text goes in</a>
+      <a class="toc-link toc-d2" href="#reading-line-by-line">Reading line by line</a>
+      <a class="toc-link toc-d2" href="#one-line-when-you-ask">One line when you ask</a>
+      <a class="toc-link toc-d2" href="#cutting-a-line-up">Cutting a line up</a>
+      <a class="toc-link toc-d2" href="#adding-to-the-end">Adding to the end</a>
+      <a class="toc-link toc-d2" href="#when-the-file-is-not-there">When the file is not there</a>
+      <a class="toc-link toc-d2" href="#with">with</a>
+      <a class="toc-link toc-d2" href="#a-level-from-a-file">A level from a file</a>
+      <a class="toc-link toc-d2" href="#watch-for">Watch for</a>
+      <a class="toc-link toc-d2" href="#classwork-1-the-high-score-table">Classwork 1 — The High Score Table</a>
+      <a class="toc-link toc-d2" href="#classwork-2-your-level-in-a-file">Classwork 2 — Your Level in a File</a>
+      <a class="toc-link toc-d2" href="#check-yourself">Check yourself</a>
+      </nav>
+    </aside>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>

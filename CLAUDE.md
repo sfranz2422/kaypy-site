@@ -1,6 +1,6 @@
 # kaypy-site
 
-The kaypy website: the guide, the API reference, the tutorials, eight Learn
+The kaypy website: the guide, the API reference, the tutorials, nine Learn
 Python lessons, a games page, and a playground you can write a game in.
 
 **There is no backend.** Not a small one — none. Everything happens in the
@@ -72,7 +72,7 @@ a global `hljs`, which is the question that matters.
 
 ```
 site/            the website, served as-is
-  learn/         eight lessons, one folder each
+  learn/         nine lessons, one folder each
   guide/ api/ tutorials/ games/ start/ play/
   static/        site.css, site.js, the exported games
   assets/        sprite packs and the manifest
