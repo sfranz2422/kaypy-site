@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Building Goblin Whack · KayPy</title>
-<meta name="description" content="How Goblin Whack was built, a step at a time: holes, monsters that pop up and duck, what each one is worth, a clock and a tally — the game for after dictionaries, in plain Python a student can copy.">
-<meta property="og:title" content="Building Goblin Whack · KayPy">
-<meta property="og:description" content="How Goblin Whack was built, a step at a time.">
+<title>Building Goblin Hit · KayPy</title>
+<meta name="description" content="How Goblin Hit was built, a step at a time: holes, monsters that pop up and duck, what each one is worth, a clock and a tally — the game for after dictionaries, in plain Python a student can copy.">
+<meta property="og:title" content="Building Goblin Hit · KayPy">
+<meta property="og:description" content="How Goblin Hit was built, a step at a time.">
 <meta property="og:image" content="../../static/social.png">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
@@ -75,12 +75,12 @@
   <div class="row">
     <div class="col-lg-9 col-xl-8">
       <article class="prose">
-<h1 id="building-goblin-whack">Building Goblin Whack</h1>
+<h1 id="building-goblin-hit">Building Goblin Hit</h1>
 
-<p><a href="../../static/games/goblin_whack/">Play it first →</a> Monsters
+<p><a href="../../static/games/goblin_hit/">Play it first →</a> Monsters
 pop up out of nine holes. Click one before it ducks back down. Every kind is
 worth something different, and the quick ones are worth the most. Don't
-click the angel. After thirty seconds you see what you whacked, and your best
+click the angel. After thirty seconds you see what you hit, and your best
 score is remembered.</p>
 
 <p>This is how it was built, a step at a time. Every numbered step below is a
@@ -111,7 +111,7 @@ name its picture is loaded under, so <code>sprite("imp")</code> shows it. It
 is the key in a dictionary of points, so <code>POINTS["imp"]</code> is what an
 imp is worth. It is the key in a dictionary of times, so
 <code>STAY["imp"]</code> is how long an imp stays up. And at the end, it is
-the key in a dictionary that counts how many imps you whacked.</p>
+the key in a dictionary that counts how many imps you hit.</p>
 
 <p>Nothing in the game ever says <em>if it is an imp, then…</em>. It
 looks the name up. That is why adding a monster of your own is one new line
@@ -260,11 +260,11 @@ def stay_up(monster):
 def click():
     for monster in get(&quot;monster&quot;):
         if monster.isHovering():
-            whack(monster)
+            hit(monster)
             return
 
 
-def whack(monster):
+def hit(monster):
     global score
 
     score = score + 1
@@ -297,7 +297,7 @@ It books its own next turn, the way <code>drop_bomb</code> did in Bomb Dodge.
 The <code>wait()</code> is outside the <code>if</code>, so when the hole it
 picked is busy there is no goblin this time, but there is still a next
 time.</li>
-<li><strong><code>click</code> goes through every goblin</strong> and whacks
+<li><strong><code>click</code> goes through every goblin</strong> and hits
 the first one the mouse is over. The <code>return</code> stops there, so one
 click is one goblin.</li>
 </ul>
@@ -312,7 +312,7 @@ one in each hole, and then there are never any more. In five runs the last
 goblin came up somewhere between 13 and 21 seconds in.</p>
 <p>A goblin that gets away now leaves its hole busy for ever, and once all
 nine are busy, <code>pop_up</code> never finds a free one. A goblin you
-<em>whack</em> still frees its hole, because <code>whack</code> has that line
+<em>hit</em> still frees its hole, because <code>hit</code> has that line
 too, so if you click every one, the game seems fine. It is the ones you miss
 that jam it.</p></div>
 
@@ -393,11 +393,11 @@ def stay_up(monster):
 def click():
     for monster in get(&quot;monster&quot;):
         if monster.isHovering():
-            whack(monster)
+            hit(monster)
             return
 
 
-def whack(monster):
+def hit(monster):
     global score
 
     # Look the monster&#x27;s points up by its name.
@@ -543,11 +543,11 @@ def stay_up(monster):
 def click():
     for monster in get(&quot;monster&quot;):
         if monster.isHovering():
-            whack(monster)
+            hit(monster)
             return
 
 
-def whack(monster):
+def hit(monster):
     global score
 
     # Look the monster&#x27;s points up by its name.
@@ -598,7 +598,7 @@ it looked for.</p></div>
 
 <p>A game now lasts thirty seconds. The time counts down in the corner. When
 it gets to zero, the monsters and the holes go, and you see each kind you
-whacked: its picture, how many, and how many points they came to. Click or
+hit: its picture, how many, and how many points they came to. Click or
 press <strong>space</strong> to play again.</p>
 
 <p>Playing again means building everything fresh, which is what a scene is
@@ -642,20 +642,20 @@ score = 0
 time_left = ROUND
 playing = True
 
-# How many of each monster you whacked. It starts empty, and a monster&#x27;s
-# name goes in the first time you whack one.
-whacked = {}
+# How many of each monster you hit. It starts empty, and a monster&#x27;s
+# name goes in the first time you hit one.
+hits = {}
 
 
 @scene(&quot;game&quot;)
 def game():
-    global score, time_left, playing, whacked
+    global score, time_left, playing, hits
 
     # A new game, so everything starts again.
     score = 0
     time_left = ROUND
     playing = True
-    whacked = {}
+    hits = {}
 
     for row in range(3):
         for column in range(3):
@@ -702,10 +702,10 @@ def game():
             return
         for monster in get(&quot;monster&quot;):
             if monster.isHovering():
-                whack(monster)
+                hit(monster)
                 return
 
-    def whack(monster):
+    def hit(monster):
         global score
 
         kind = monster.kind
@@ -713,9 +713,9 @@ def game():
         score = score + points
         score_label.text = str(score)
 
-        # One more of this kind. whacked.get(kind, 0) is how many there
+        # One more of this kind. hits.get(kind, 0) is how many there
         # were, or 0 if this is the first.
-        whacked[kind] = whacked.get(kind, 0) + 1
+        hits[kind] = hits.get(kind, 0) + 1
 
         if points &gt; 0:
             words = &quot;+&quot; + str(points)
@@ -752,10 +752,10 @@ def game():
         destroyAll(&quot;hole&quot;)
         message.text = &quot;Time! &quot; + str(score) + &quot; points -- click to play again&quot;
 
-        # One line for each kind you whacked: its picture, how many, and
+        # One line for each kind you hit: its picture, how many, and
         # what they came to. .items() hands over each key with its value.
         y = 180
-        for kind, count in whacked.items():
+        for kind, count in hits.items():
             add([sprite(kind), pos(300, y), anchor(&quot;center&quot;), scale(3)])
             add([text(&quot;x &quot; + str(count) + &quot; = &quot; + str(count * POINTS[kind]),
                       size=28), pos(350, y), anchor(&quot;left&quot;)])
@@ -771,50 +771,50 @@ def game():
 
 go(&quot;game&quot;)</code></pre>
 
-<p><strong><code>whacked</code> is a dictionary that starts empty</strong>,
-<code>{}</code>, and fills up as you play. Each time you whack a monster,</p>
+<p><strong><code>hits</code> is a dictionary that starts empty</strong>,
+<code>{}</code>, and fills up as you play. Each time you hit a monster,</p>
 
-<pre><code class="language-python">whacked[kind] = whacked.get(kind, 0) + 1</code></pre>
+<pre><code class="language-python">hits[kind] = hits.get(kind, 0) + 1</code></pre>
 
-<p>adds one to that kind's count. <code>whacked.get(kind, 0)</code> means
+<p>adds one to that kind's count. <code>hits.get(kind, 0)</code> means
 <em>how many of this kind there are so far, or 0 if there are none yet</em>.
-The first goblin you whack, <code>"goblin"</code> isn't in
-<code>whacked</code> yet, so <code>.get</code> gives 0, and
-<code>whacked["goblin"]</code> is set to 1. Assigning to a key that isn't
+The first goblin you hit, <code>"goblin"</code> isn't in
+<code>hits</code> yet, so <code>.get</code> gives 0, and
+<code>hits["goblin"]</code> is set to 1. Assigning to a key that isn't
 there adds it. The second goblin, <code>.get</code> gives 1, and it becomes
 2.</p>
 
-<p><strong><code>whack</code> changes <code>whacked</code> without saying
+<p><strong><code>hit</code> changes <code>hits</code> without saying
 <code>global</code>.</strong> It changes what is <em>inside</em> the
 dictionary, which needs nothing special. The scene does say
-<code>global whacked</code>, because <code>whacked = {}</code> doesn't
+<code>global hits</code>, because <code>hits = {}</code> doesn't
 change the dictionary: it replaces it with a new, empty one.</p>
 
 <p><strong>The tally is a <code>for</code> loop over
-<code>whacked.items()</code></strong>, which hands over each key with its
+<code>hits.items()</code></strong>, which hands over each key with its
 value: <code>kind</code> is the monster's name and <code>count</code> is how
 many. The name shows the picture, <code>sprite(kind)</code>, and
 <code>count * POINTS[kind]</code> is the points they came to. Each line goes
 60 pixels below the last. A dictionary remembers the order its keys went in,
-so the tally starts with the kind you whacked first. A kind you never whacked
-isn't in <code>whacked</code> at all, so it has no line.</p>
+so the tally starts with the kind you hit first. A kind you never hit
+isn't in <code>hits</code> at all, so it has no line.</p>
 
 <p><strong>The clock is <code>loop(1, tick)</code></strong>, which runs
 <code>tick</code> once a second. When <code>time_left</code> reaches 0,
 <code>tick</code> calls <code>time_up</code>, which sets
 <code>playing</code> to <code>False</code>. That stops everything else:
-<code>pop_up</code> makes no more monsters, <code>click</code> whacks
+<code>pop_up</code> makes no more monsters, <code>click</code> hits
 nothing, and <code>tick</code> stops counting.</p>
 
 <div class="callout"><p><strong>Two things to break.</strong></p>
 <p>Use square brackets instead of <code>.get</code>:
-<code>whacked[kind] = whacked[kind] + 1</code>. The first monster you whack
+<code>hits[kind] = hits[kind] + 1</code>. The first monster you hit
 stops the game with</p>
 <pre><code class="language-plaintext">KeyError: 'goblin'</code></pre>
 <p>or whichever kind it was. To add one, Python first has to read
-<code>whacked["goblin"]</code>, and the first time, there isn't one. That is
+<code>hits["goblin"]</code>, and the first time, there isn't one. That is
 what the <code>0</code> in <code>.get(kind, 0)</code> is for.</p>
-<p>Take <code>whacked = {}</code> out of the scene. There's no error message,
+<p>Take <code>hits = {}</code> out of the scene. There's no error message,
 and the first game looks right. Play a second one, and the tally at the end
 has both games in it. In one run the second game scored 84, and the tally
 under it said 24 goblins, 16 skeletons, 22 imps and 9 chorts, which comes to
@@ -835,7 +835,7 @@ four monsters up at once.</li>
 <li><strong>A best score that is remembered.</strong>
 <code>getData(BEST_KEY, 0)</code> reads it, and <code>setData</code> saves a
 new one when you beat it, as in Bomb Dodge.</li>
-<li><strong>Sounds</strong>, a thump for a whack and a bang for the angel,
+<li><strong>Sounds</strong>, a thump for a hit and a bang for the angel,
 and a message at the start saying what to do.</li>
 <li><strong>A second before you can play again.</strong> In step 5, a click
 a moment too late, meant for the last monster, starts a new game straight
@@ -848,13 +848,13 @@ click start a new game.</li>
 <p>It also has all the numbers worth changing in one settings block near the
 top, and comments that explain why each part is there.</p>
 
-<pre><code class="language-python">&quot;&quot;&quot;Goblin Whack -- monsters pop out of holes. Whack them before they duck.
+<pre><code class="language-python">&quot;&quot;&quot;Goblin Hit -- monsters pop out of holes. Hit them before they duck.
 
-    click a monster (or tap it) to whack it
+    click a monster (or tap it) to hit it
 
 Nine holes, thirty seconds. Every kind of monster is worth something
-different, and the quick ones are worth the most. Don&#x27;t whack the angel.
-When the time is up you see what you whacked, and your best score is
+different, and the quick ones are worth the most. Don&#x27;t hit the angel.
+When the time is up you see what you hit, and your best score is
 remembered.
 
 HOW THIS FILE IS PUT TOGETHER
@@ -863,12 +863,12 @@ HOW THIS FILE IS PUT TOGETHER
     2. the monsters: what each one is worth, and how long it stays up
     3. the settings
     4. how hard the game is
-    5. the game scene: the holes, popping up, whacking, time up
+    5. the game scene: the holes, popping up, hitting, time up
     6. start the game
 
 This is the game for after dictionaries. Every monster has a name, and the
 name is the key that looks up everything else about it: its picture, its
-points, how long it stays up, and how many of it you whacked. Add a monster
+points, how long it stays up, and how many of it you hit. Add a monster
 of your own and you will see -- it is one new line in each dictionary.
 &quot;&quot;&quot;
 
@@ -886,7 +886,7 @@ loadSprite(&quot;imp&quot;, &quot;dungeon/imp.png&quot;, sliceX=8)
 loadSprite(&quot;chort&quot;, &quot;dungeon/chort.png&quot;, sliceX=8)
 loadSprite(&quot;angel&quot;, &quot;dungeon/angel.png&quot;, sliceX=8)
 
-loadSound(&quot;whack&quot;, &quot;sounds/thump.wav&quot;)
+loadSound(&quot;hit&quot;, &quot;sounds/thump.wav&quot;)
 loadSound(&quot;ouch&quot;, &quot;sounds/small_boom.wav&quot;)
 
 
@@ -935,7 +935,7 @@ WAIT_DROP = 0.015      # ...and how much shorter each second makes it
 
 # The name the best score is saved under. Every game on a website shares
 # the same storage, so the game&#x27;s own name goes in it.
-BEST_KEY = &quot;goblin_whack_best&quot;
+BEST_KEY = &quot;goblin_hit_best&quot;
 
 
 # -------------------------------------------------- 4. how hard the game is
@@ -962,21 +962,21 @@ score = 0
 playing = True
 over = False
 
-# How many of each monster you whacked. It starts empty, and a monster&#x27;s
-# name goes in the first time you whack one.
-whacked = {}
+# How many of each monster you hit. It starts empty, and a monster&#x27;s
+# name goes in the first time you hit one.
+hits = {}
 
 
 @scene(&quot;game&quot;)
 def game():
-    global score, time_left, playing, over, whacked
+    global score, time_left, playing, over, hits
 
     # A new game, so everything starts again.
     score = 0
     time_left = ROUND
     playing = True
     over = False
-    whacked = {}
+    hits = {}
     best = getData(BEST_KEY, 0)
 
     # The nine holes, in three rows of three. A hole is a dark rectangle
@@ -1038,7 +1038,7 @@ def game():
             monster.hole.busy = False
             monster.destroy()
 
-    # ----------------------------------------------------------- whacking
+    # ------------------------------------------------------------ hitting
     #
     # onClick runs on every click, wherever it is, and a tap on a phone
     # counts as a click. isHovering() asks whether the mouse is over a
@@ -1050,10 +1050,10 @@ def game():
             return
         for monster in get(&quot;monster&quot;):
             if monster.isHovering():
-                whack(monster)
+                hit(monster)
                 return
 
-    def whack(monster):
+    def hit(monster):
         global score
 
         kind = monster.kind
@@ -1062,13 +1062,13 @@ def game():
         score_label.text = str(score)
         message.text = &quot;&quot;
 
-        # One more of this kind. whacked.get(kind, 0) is how many there
+        # One more of this kind. hits.get(kind, 0) is how many there
         # were, or 0 if this is the first.
-        whacked[kind] = whacked.get(kind, 0) + 1
+        hits[kind] = hits.get(kind, 0) + 1
 
         # How many points it was, just where the monster was.
         if points &gt; 0:
-            play(&quot;whack&quot;)
+            play(&quot;hit&quot;)
             words = &quot;+&quot; + str(points)
             colour = YELLOW
         else:
@@ -1112,10 +1112,10 @@ def game():
 
         message.text = &quot;Time! &quot; + str(score) + &quot; points&quot;
 
-        # One line for each kind you whacked: its picture, how many, and
+        # One line for each kind you hit: its picture, how many, and
         # what they came to. .items() hands over each key with its value.
         y = 180
-        for kind, count in whacked.items():
+        for kind, count in hits.items():
             add([sprite(kind), pos(300, y), anchor(&quot;center&quot;), scale(3)])
             add([text(&quot;x &quot; + str(count) + &quot; = &quot; + str(count * POINTS[kind]),
                       size=28), pos(350, y), anchor(&quot;left&quot;)])
@@ -1146,7 +1146,7 @@ go(&quot;game&quot;)</code></pre>
 
 <h2 id="make-it-yours">Make it yours</h2>
 
-<p><a href="../../play/?game=goblin_whack">Open the whole game in the playground →</a>
+<p><a href="../../play/?game=goblin_hit">Open the whole game in the playground →</a>
 It goes straight into the editor, ready to change and run.</p>
 
 <ul>
@@ -1168,8 +1168,8 @@ way.</li>
 <code>pop_wait()</code> stops getting shorter at about 27 seconds, so the
 second half is all at full speed.</li>
 <li><strong>A sound for each kind.</strong> Make a third dictionary,
-<code>SOUNDS = {"goblin": "whack", "angel": "ouch", ...}</code>, load the
-sounds, and <code>play(SOUNDS[kind])</code> in <code>whack</code>. Leave a
+<code>SOUNDS = {"goblin": "hit", "angel": "ouch", ...}</code>, load the
+sounds, and <code>play(SOUNDS[kind])</code> in <code>hit</code>. Leave a
 monster out of it and you know what you'll see.</li>
 </ul>
 

@@ -78,7 +78,7 @@ PAGES = [
     "tutorials/index.html",
     "tutorials/ghost-chase/index.html",
     "tutorials/bomb-dodge/index.html",
-    "tutorials/goblin-whack/index.html",
+    "tutorials/goblin-hit/index.html",
     "tutorials/paddle-ball/index.html",
     "tutorials/spiral-storm/index.html",
     "tutorials/pong/index.html",

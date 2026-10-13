@@ -1,10 +1,10 @@
-"""Goblin Whack -- monsters pop out of holes. Whack them before they duck.
+"""Goblin Hit -- monsters pop out of holes. Hit them before they duck.
 
-    click a monster (or tap it) to whack it
+    click a monster (or tap it) to hit it
 
 Nine holes, thirty seconds. Every kind of monster is worth something
-different, and the quick ones are worth the most. Don't whack the angel.
-When the time is up you see what you whacked, and your best score is
+different, and the quick ones are worth the most. Don't hit the angel.
+When the time is up you see what you hit, and your best score is
 remembered.
 
 HOW THIS FILE IS PUT TOGETHER
@@ -13,12 +13,12 @@ HOW THIS FILE IS PUT TOGETHER
     2. the monsters: what each one is worth, and how long it stays up
     3. the settings
     4. how hard the game is
-    5. the game scene: the holes, popping up, whacking, time up
+    5. the game scene: the holes, popping up, hitting, time up
     6. start the game
 
 This is the game for after dictionaries. Every monster has a name, and the
 name is the key that looks up everything else about it: its picture, its
-points, how long it stays up, and how many of it you whacked. Add a monster
+points, how long it stays up, and how many of it you hit. Add a monster
 of your own and you will see -- it is one new line in each dictionary.
 """
 
@@ -36,7 +36,7 @@ loadSprite("imp", "dungeon/imp.png", sliceX=8)
 loadSprite("chort", "dungeon/chort.png", sliceX=8)
 loadSprite("angel", "dungeon/angel.png", sliceX=8)
 
-loadSound("whack", "sounds/thump.wav")
+loadSound("hit", "sounds/thump.wav")
 loadSound("ouch", "sounds/small_boom.wav")
 
 
@@ -85,7 +85,7 @@ WAIT_DROP = 0.015      # ...and how much shorter each second makes it
 
 # The name the best score is saved under. Every game on a website shares
 # the same storage, so the game's own name goes in it.
-BEST_KEY = "goblin_whack_best"
+BEST_KEY = "goblin_hit_best"
 
 
 # -------------------------------------------------- 4. how hard the game is
@@ -112,21 +112,21 @@ score = 0
 playing = True
 over = False
 
-# How many of each monster you whacked. It starts empty, and a monster's
-# name goes in the first time you whack one.
-whacked = {}
+# How many of each monster you hit. It starts empty, and a monster's
+# name goes in the first time you hit one.
+hits = {}
 
 
 @scene("game")
 def game():
-    global score, time_left, playing, over, whacked
+    global score, time_left, playing, over, hits
 
     # A new game, so everything starts again.
     score = 0
     time_left = ROUND
     playing = True
     over = False
-    whacked = {}
+    hits = {}
     best = getData(BEST_KEY, 0)
 
     # The nine holes, in three rows of three. A hole is a dark rectangle
@@ -188,7 +188,7 @@ def game():
             monster.hole.busy = False
             monster.destroy()
 
-    # ----------------------------------------------------------- whacking
+    # ------------------------------------------------------------ hitting
     #
     # onClick runs on every click, wherever it is, and a tap on a phone
     # counts as a click. isHovering() asks whether the mouse is over a
@@ -200,10 +200,10 @@ def game():
             return
         for monster in get("monster"):
             if monster.isHovering():
-                whack(monster)
+                hit(monster)
                 return
 
-    def whack(monster):
+    def hit(monster):
         global score
 
         kind = monster.kind
@@ -212,13 +212,13 @@ def game():
         score_label.text = str(score)
         message.text = ""
 
-        # One more of this kind. whacked.get(kind, 0) is how many there
+        # One more of this kind. hits.get(kind, 0) is how many there
         # were, or 0 if this is the first.
-        whacked[kind] = whacked.get(kind, 0) + 1
+        hits[kind] = hits.get(kind, 0) + 1
 
         # How many points it was, just where the monster was.
         if points > 0:
-            play("whack")
+            play("hit")
             words = "+" + str(points)
             colour = YELLOW
         else:
@@ -262,10 +262,10 @@ def game():
 
         message.text = "Time! " + str(score) + " points"
 
-        # One line for each kind you whacked: its picture, how many, and
+        # One line for each kind you hit: its picture, how many, and
         # what they came to. .items() hands over each key with its value.
         y = 180
-        for kind, count in whacked.items():
+        for kind, count in hits.items():
             add([sprite(kind), pos(300, y), anchor("center"), scale(3)])
             add([text("x " + str(count) + " = " + str(count * POINTS[kind]),
                       size=28), pos(350, y), anchor("left")])
