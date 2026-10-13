@@ -116,10 +116,24 @@ different, and the quick ones are worth the most. Don't click the angel.
 After thirty seconds you see what you hit, and your best score is
 remembered.</p>
 <p>It is the one for after dictionaries, and comes between Bomb Dodge and
-Paddle Ball. Every monster's name is the key that looks up its picture, its
+Log Hacker. Every monster's name is the key that looks up its picture, its
 points and how long it stays up, so adding a monster of your own is one line
 in each dictionary.
 <a href="../tutorials/goblin-hit/">How it was built, step by step →</a></p>
+<h2 id="log-hacker">Log Hacker</h2>
+<p>Click the line in the log that gives a password away, or tap it.</p>
+<p><a href="../static/games/log_hacker/">Play Log Hacker →</a> · <a href="https://github.com/sfranz2422/kaypy-site/blob/main/site/static/games/log_hacker/log_hacker.py">Read the code on GitHub →</a> · <a href="../play/?game=log_hacker">Remix it in the playground →</a></p>
+<p>You are reading a server's log, and somewhere in it somebody typed their
+password where their name should go. The real users are listed on the right:
+click the failed login by a name that isn't one of them, before the trace
+reaches 100%. Every server is faster than the last, and the most servers you
+got into is remembered.</p>
+<p>It is the one for files, and comes between Goblin Hit and Paddle Ball.
+The game writes its own <code>users.txt</code> and <code>log.txt</code> for
+every server, then reads them back: the users all at once with a
+<code>for</code> loop, and the log one line at a time with
+<code>readline()</code> while you play.
+<a href="../tutorials/log-hacker/">How it was built, step by step →</a></p>
 <h2 id="paddle-ball">Paddle Ball</h2>
 <p>Left and right arrows to move your paddle, or hold the mouse (or your
 finger) where you want it. Click the picture first so the keys reach it.</p>
@@ -342,6 +356,7 @@ classroom. Games get played before they go up, so allow a few days.</p>
       <a class="toc-link toc-d2" href="#ghost-chase">Ghost Chase</a>
       <a class="toc-link toc-d2" href="#bomb-dodge">Bomb Dodge</a>
       <a class="toc-link toc-d2" href="#goblin-hit">Goblin Hit</a>
+      <a class="toc-link toc-d2" href="#log-hacker">Log Hacker</a>
       <a class="toc-link toc-d2" href="#paddle-ball">Paddle Ball</a>
       <a class="toc-link toc-d2" href="#spiral-storm">Spiral Storm</a>
       <a class="toc-link toc-d2" href="#pong">Pong</a>

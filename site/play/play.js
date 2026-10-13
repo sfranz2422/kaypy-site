@@ -227,6 +227,7 @@
     ghost_chase: { title: "Ghost Chase", file: "ghost_chase/ghost_chase.py" },
     bomb_dodge: { title: "Bomb Dodge", file: "bomb_dodge/bomb_dodge.py" },
     goblin_hit: { title: "Goblin Hit", file: "goblin_hit/goblin_hit.py" },
+    log_hacker: { title: "Log Hacker", file: "log_hacker/log_hacker.py" },
     paddle_ball: { title: "Paddle Ball", file: "paddle_ball/paddle_ball.py" },
     spiral_storm: { title: "Spiral Storm", file: "spiral_storm/spiral_storm.py" },
     pong: { title: "Pong", file: "pong/pong.py" },

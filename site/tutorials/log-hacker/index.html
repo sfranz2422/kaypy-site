@@ -1,0 +1,1598 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Log Hacker · KayPy</title>
+<meta name="description" content="How Log Hacker was built, a step at a time: writing a file, reading it back, a log that goes past one line at a time, a password to find and a trace to beat — the game for files, in plain Python a student can copy.">
+<meta property="og:title" content="Building Log Hacker · KayPy">
+<meta property="og:description" content="How Log Hacker was built, a step at a time.">
+<meta property="og:image" content="../../static/social.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../static/favicon.png">
+<link rel="apple-touch-icon" href="../../static/icon-180.png">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- Two highlight.js themes, chosen by the media attribute rather than by
+     JavaScript: a script that swaps the href runs after the first paint, so
+     the code on the page flashes light before going dark. The browser only
+     fetches the one that matches. -->
+<link rel="stylesheet" media="(prefers-color-scheme: light)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github.min.css">
+<link rel="stylesheet" media="(prefers-color-scheme: dark)"
+      href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../../static/site.css">
+<!-- Bootstrap's own components (dropdown, cards, the toggler icon) follow
+     data-bs-theme, not a media query. Set here, in the head, so it is true
+     before anything is painted. -->
+<script>
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+  }
+</script>
+</head>
+<body>
+
+<a class="visually-hidden-focusable skip" href="#content">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg site-nav sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand" href="../../">
+      <img src="../../static/creature.png" alt="" width="34" height="36">
+      <span class="brand-name">KayPy</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sitenav" aria-controls="sitenav"
+            aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="../../">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../start/">Get started</a></li>
+        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Learn Python</a><ul class="dropdown-menu"><li><a class="dropdown-item" href="../../learn/">All eight lessons</a></li><li><a class="dropdown-item" href="../../learn/variables/">1 — Variables</a></li><li><a class="dropdown-item" href="../../learn/input/">2 — Input</a></li><li><a class="dropdown-item" href="../../learn/conditionals/">3 — Conditionals</a></li><li><a class="dropdown-item" href="../../learn/loops/">4 — Loops</a></li><li><a class="dropdown-item" href="../../learn/lists/">5 — Lists</a></li><li><a class="dropdown-item" href="../../learn/functions/">6 — Functions</a></li><li><a class="dropdown-item" href="../../learn/decorators/">7 — Decorators</a></li><li><a class="dropdown-item" href="../../learn/dictionaries/">8 — Dictionaries</a></li></ul></li>
+        <li class="nav-item"><a class="nav-link" href="../../guide/">Guide</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../api/">API</a></li>
+        <li class="nav-item"><a class="nav-link active" href="../../tutorials/" aria-current="page">Tutorials</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../games/">Games</a></li>
+        <li class="nav-item"><a class="nav-link" href="../../play/">Playground</a></li>
+      </ul>
+      <ul class="navbar-nav nav-side">
+        <li class="nav-item">
+          <a class="nav-link" href="https://discord.gg/sVXnsDZNm">Discord</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sfranz2422/kaypy">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="content">
+<div class="container-xl py-4 py-lg-5">
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <article class="prose">
+<h1 id="building-log-hacker">Building Log Hacker</h1>
+
+<p><a href="../../static/games/log_hacker/">Play it first →</a> You have
+broken into a server and you are reading its log: one line for every time
+somebody tried to log in. Somewhere in it, somebody typed their
+<em>password</em> into the box where their <em>name</em> should go, and the
+server wrote it down. The real users are listed on the right. Click the
+FAILED line whose name isn't on the list before the trace reaches 100%. Every
+server is faster than the last.</p>
+
+<p>This is how it was built, a step at a time. Every numbered step below is a
+whole program: copy it into
+<a href="../../play/">the playground</a>, press Run, and it works. Each step
+is the one before it with something added, so you can build the game the way
+it was built. Then break something on purpose and see what changes. That
+teaches you more than reading does.</p>
+
+<p>There is nothing clever in it. No list comprehensions, no tricks, and every
+kaypy function it uses is on the <a href="../../api/">API page</a>. There are
+no pictures at all, only words, and four sounds from the playground.</p>
+
+<p>It is the game for files, and it comes after
+<a href="../goblin-hit/">Goblin Hit</a>. It uses the same pieces:
+functions, <code>global</code>, <code>wait()</code>, <code>onClick</code> with
+<code>isHovering()</code>, and a scene. If any of those are new, build Goblin
+Hit first. After this one, try <a href="../paddle-ball/">Paddle Ball</a>.</p>
+
+<h2 id="the-one-big-idea">The one big idea: write it, close it, read it back</h2>
+
+<p>A file is text with a name, kept somewhere other than your program. You get
+at it in three moves: <code>open()</code> it, use it, <code>close()</code>
+it. Open it with <code>"w"</code> and you can write in it; open it with
+<code>"r"</code> and you can read it.</p>
+
+<p>A real hacker would find the files already on the server. This game has no
+server, so it makes its own: it writes <code>users.txt</code> and
+<code>log.txt</code> first, then reads them back exactly as it would read any
+file. It writes new ones for every server, so the log is never the same
+twice.</p>
+
+<p>Run it on your own computer and the two files appear in the folder your
+program runs in, where you can open them and look. In the playground they are
+just as real, but they live inside the page, and they are gone when you
+reload it.</p>
+
+<h2 id="step-1-a-file-of-users">Step 1 — a file of users</h2>
+
+<p>Write four names into a file, read them back, and put them on the
+screen.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[8, 14, 10])
+
+GREEN = rgb(90, 230, 120)
+DIM = rgb(50, 110, 65)
+
+# Write the file. &quot;w&quot; means write: it makes users.txt, or empties it if
+# it is already there. &quot;\n&quot; is the end of a line -- write() does not add
+# one for you.
+users_file = open(&quot;users.txt&quot;, &quot;w&quot;)
+users_file.write(&quot;ada\n&quot;)
+users_file.write(&quot;zoe\n&quot;)
+users_file.write(&quot;max\n&quot;)
+users_file.write(&quot;sam\n&quot;)
+users_file.close()
+
+# Read it back. &quot;r&quot; means read. Each time round the for loop, line is the
+# next line of the file, &quot;\n&quot; and all, and strip() takes the &quot;\n&quot; off.
+users = []
+users_file = open(&quot;users.txt&quot;, &quot;r&quot;)
+for line in users_file:
+    users.append(line.strip())
+users_file.close()
+
+# The users, down the right-hand side.
+add([text(&quot;users.txt&quot;, size=20), pos(600, 100), color(DIM)])
+y = 130
+for name in users:
+    add([text(name, size=26), pos(610, y), color(GREEN)])
+    y = y + 32</code></pre>
+
+<ul>
+<li><strong><code>open("users.txt", "w")</code></strong> makes the file and
+hands it back, ready to write in. <code>"w"</code> means write. If there is
+already a <code>users.txt</code>, it is emptied first. The variable
+<code>users_file</code> is how the rest of the program gets at it.</li>
+<li><strong><code>write()</code> puts exactly what you give it into the file,
+and nothing else.</strong> It doesn't start a new line for you.
+<code>"\n"</code> is the end of a line, so <code>"ada\n"</code> is "ada" and
+then a new line.</li>
+<li><strong><code>close()</code></strong> says you have finished with it.
+Until then, what you wrote may not be in the file yet. The second
+<em>Break it</em> below shows that.</li>
+<li><strong><code>open("users.txt", "r")</code></strong> opens it again to
+read. <code>for line in users_file</code> goes round once for each line in the
+file, top to bottom, and each time <code>line</code> is the next one.</li>
+<li><strong><code>line</code> still has its <code>"\n"</code> on the
+end.</strong> The first time round it is <code>"ada\n"</code>, not
+<code>"ada"</code>. <code>strip()</code> takes it off, along with any spaces
+at either end. Step 4 shows what goes wrong if you forget.</li>
+</ul>
+
+<div class="callout"><p><strong>Break it.</strong> Take the
+<code>\n</code> out of all four <code>write()</code> lines. There is no error,
+but there is only one user now, and it is called
+<code>adazoemaxsam</code>.</p>
+<p>The four names went into the file one after another with nothing between
+them, so the file is one line long. Reading it back, the loop finds one
+line.</p></div>
+
+<div class="callout"><p><strong>Break it.</strong> Put the <code>\n</code>s
+back, and take out the first <code>users_file.close()</code>, the one after
+the writing. There is no error this time either, but no users at all. The
+list under <code>users.txt</code> is empty.</p>
+<p>Python doesn't write to the file the moment you call <code>write()</code>.
+It saves it up and writes it all at once, and <code>close()</code> is what
+makes it do that. Here the file is read before it was ever closed, so it is
+still empty. Close a file as soon as you have finished with it.</p></div>
+
+<h2 id="step-2-a-log-to-read">Step 2 — a log to read</h2>
+
+<p>Now the program makes up a server. It picks four users at random and writes
+them, then writes a log of sixteen logins and reads it back onto the
+screen.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[8, 14, 10])
+
+GREEN = rgb(90, 230, 120)
+DIM = rgb(50, 110, 65)
+
+NAMES = [&quot;ada&quot;, &quot;max&quot;, &quot;zoe&quot;, &quot;leo&quot;, &quot;mia&quot;, &quot;raj&quot;,
+         &quot;olivia&quot;, &quot;lucas&quot;, &quot;amara&quot;, &quot;kenji&quot;, &quot;sofia&quot;, &quot;mateo&quot;]
+
+
+def two_digits(number):
+    if number &lt; 10:
+        return &quot;0&quot; + str(number)
+    return str(number)
+
+
+def clock(minutes):
+    # 75 minutes after midnight is 01:15. // is how many whole hours, and
+    # % is the minutes left over.
+    hours = minutes // 60 % 24
+    return two_digits(hours) + &quot;:&quot; + two_digits(minutes % 60)
+
+
+def write_files(how_many_users, how_many_lines):
+    # Pick the users. A name that is already picked is skipped, so the
+    # loop goes round until there are enough different ones.
+    users = []
+    while len(users) &lt; how_many_users:
+        name = choose(NAMES)
+        if name not in users:
+            users.append(name)
+
+    users_file = open(&quot;users.txt&quot;, &quot;w&quot;)
+    for name in users:
+        users_file.write(name + &quot;\n&quot;)
+    users_file.close()
+
+    # The log: one login on each line, when, who, and whether it worked,
+    # with commas between them -- 01:07,zoe,ok
+    log_file = open(&quot;log.txt&quot;, &quot;w&quot;)
+    minutes = randi(0, 300)
+    for number in range(how_many_lines):
+        minutes = minutes + randi(1, 9)
+        name = choose(users)
+        if chance(0.3):
+            result = &quot;failed&quot;
+        else:
+            result = &quot;ok&quot;
+        log_file.write(clock(minutes) + &quot;,&quot; + name + &quot;,&quot; + result + &quot;\n&quot;)
+    log_file.close()
+
+
+def read_users():
+    users = []
+    users_file = open(&quot;users.txt&quot;, &quot;r&quot;)
+    for line in users_file:
+        users.append(line.strip())
+    users_file.close()
+    return users
+
+
+write_files(4, 16)
+users = read_users()
+
+add([text(&quot;users.txt&quot;, size=20), pos(600, 100), color(DIM)])
+y = 130
+for name in users:
+    add([text(name, size=26), pos(610, y), color(GREEN)])
+    y = y + 32
+
+# Read the log, and put each line on the screen. split(&quot;,&quot;) cuts a line
+# up at every comma: &quot;01:07,zoe,ok&quot; becomes [&quot;01:07&quot;, &quot;zoe&quot;, &quot;ok&quot;].
+add([text(&quot;log.txt&quot;, size=20), pos(20, 72), color(DIM)])
+y = 100
+log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
+for line in log_file:
+    parts = line.strip().split(&quot;,&quot;)
+    add([text(parts[0], size=22), pos(20, y), color(DIM)])
+    add([text(parts[1], size=22), pos(110, y), color(GREEN)])
+    if parts[2] == &quot;failed&quot;:
+        add([text(&quot;FAILED&quot;, size=22), pos(310, y), color(RED)])
+    else:
+        add([text(&quot;ok&quot;, size=22), pos(310, y), color(GREEN)])
+    y = y + 28
+log_file.close()</code></pre>
+
+<ul>
+<li><strong>Every line of the log is one login</strong>, with three parts and
+a comma between each: when it was, who it was, and whether it worked.
+<code>01:07,zoe,ok</code>. That is how the program writes it, so that is how it
+can read it back.</li>
+<li><strong><code>write_files</code> picks the users with a
+<code>while</code> loop.</strong> <code>choose(NAMES)</code> picks a name, and
+it only goes on the list if it isn't on it already. A <code>for</code> loop
+would go round exactly four times and could pick the same name twice. The
+<code>while</code> loop goes round until there are four
+<em>different</em> ones.</li>
+<li><strong>The times go up</strong> a few minutes at a time:
+<code>randi(1, 9)</code> is a whole number from 1 to 9. <code>clock()</code>
+turns minutes into a time. <code>minutes // 60</code> is how many whole hours
+there are, and <code>minutes % 60</code> is the minutes left over, so 75
+minutes is <code>01:15</code>. <code>two_digits()</code> puts a 0 in front of
+a number less than ten, so it says <code>01</code> rather than
+<code>1</code>.</li>
+<li><strong><code>chance(0.3)</code></strong> is <code>True</code> three times
+in ten, so about a third of the logins fail.</li>
+<li><strong><code>split(",")</code> cuts a line up at every comma</strong> and
+gives back a list. <code>"01:07,zoe,ok"</code> becomes
+<code>["01:07", "zoe", "ok"]</code>, so <code>parts[0]</code> is the time,
+<code>parts[1]</code> the name and <code>parts[2]</code> whether it
+worked.</li>
+</ul>
+
+<div class="callout"><p><strong>Break it.</strong> Change
+<code>split(",")</code> to <code>split()</code>, with nothing in the
+brackets. It stops straight away with</p>
+<pre><code class="language-plaintext">IndexError: list index out of range</code></pre>
+<p>on the line that uses <code>parts[1]</code>. With nothing in the brackets,
+<code>split()</code> cuts at spaces, and there are no spaces in
+<code>01:07,zoe,ok</code>. So it comes back in one piece,
+<code>["01:07,zoe,ok"]</code>, and there is no <code>parts[1]</code>. "Out of
+range" means you asked a list for a position it doesn't have.</p></div>
+
+<h2 id="step-3-the-log-goes-past">Step 3 — the log goes past</h2>
+
+<p>A real log doesn't sit still. Now the lines come in at the bottom one at a
+time and move up, and when the log runs out it starts again from the top.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[8, 14, 10])
+
+GREEN = rgb(90, 230, 120)
+DIM = rgb(50, 110, 65)
+
+SCROLL = 40       # how fast the log goes past, in pixels a second
+ROW = 28          # how tall one line of the log is, in pixels
+LOG_TOP = 90      # a line that goes above this has gone
+LOG_BOTTOM = 560  # ...and a new one comes in here
+
+NAMES = [&quot;ada&quot;, &quot;max&quot;, &quot;zoe&quot;, &quot;leo&quot;, &quot;mia&quot;, &quot;raj&quot;,
+         &quot;olivia&quot;, &quot;lucas&quot;, &quot;amara&quot;, &quot;kenji&quot;, &quot;sofia&quot;, &quot;mateo&quot;]
+
+
+def two_digits(number):
+    if number &lt; 10:
+        return &quot;0&quot; + str(number)
+    return str(number)
+
+
+def clock(minutes):
+    # 75 minutes after midnight is 01:15. // is how many whole hours, and
+    # % is the minutes left over.
+    hours = minutes // 60 % 24
+    return two_digits(hours) + &quot;:&quot; + two_digits(minutes % 60)
+
+
+def write_files(how_many_users, how_many_lines):
+    # Pick the users. A name that is already picked is skipped, so the
+    # loop goes round until there are enough different ones.
+    users = []
+    while len(users) &lt; how_many_users:
+        name = choose(NAMES)
+        if name not in users:
+            users.append(name)
+
+    users_file = open(&quot;users.txt&quot;, &quot;w&quot;)
+    for name in users:
+        users_file.write(name + &quot;\n&quot;)
+    users_file.close()
+
+    # The log: one login on each line, when, who, and whether it worked,
+    # with commas between them -- 01:07,zoe,ok
+    log_file = open(&quot;log.txt&quot;, &quot;w&quot;)
+    minutes = randi(0, 300)
+    for number in range(how_many_lines):
+        minutes = minutes + randi(1, 9)
+        name = choose(users)
+        if chance(0.3):
+            result = &quot;failed&quot;
+        else:
+            result = &quot;ok&quot;
+        log_file.write(clock(minutes) + &quot;,&quot; + name + &quot;,&quot; + result + &quot;\n&quot;)
+    log_file.close()
+
+
+def read_users():
+    users = []
+    users_file = open(&quot;users.txt&quot;, &quot;r&quot;)
+    for line in users_file:
+        users.append(line.strip())
+    users_file.close()
+    return users
+
+
+write_files(4, 16)
+users = read_users()
+
+add([text(&quot;users.txt&quot;, size=20), pos(600, 100), color(DIM)])
+y = 130
+for name in users:
+    add([text(name, size=26), pos(610, y), color(GREEN)])
+    y = y + 32
+
+add([text(&quot;log.txt&quot;, size=20), pos(20, 72), color(DIM), z(10)])
+
+# Two dark bands over the top and bottom of the log, so lines slide in
+# and out of sight behind them.
+add([rect(800, LOG_TOP), pos(0, 0), color(8, 14, 10), z(5)])
+add([rect(560, 600 - LOG_BOTTOM - ROW), pos(0, LOG_BOTTOM + ROW),
+     color(8, 14, 10), z(5)])
+
+
+def show(when, name, result):
+    # One line of the log: a dark strip at the bottom, which moves up.
+    # The words are its children, so they move with it.
+    row = add([rect(540, ROW - 2), pos(10, LOG_BOTTOM), color(8, 14, 10),
+               &quot;row&quot;])
+    row.add([text(when, size=22), pos(10, 4), color(DIM)])
+    row.add([text(name, size=22), pos(100, 4), color(GREEN)])
+    if result == &quot;failed&quot;:
+        row.add([text(&quot;FAILED&quot;, size=22), pos(300, 4), color(RED)])
+    else:
+        row.add([text(&quot;ok&quot;, size=22), pos(300, 4), color(GREEN)])
+
+
+# The log is read one line at a time, with readline(). The file stays
+# open in between, and remembers where it got to, so each readline()
+# hands over the line after the last one.
+log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
+
+
+def next_line():
+    global log_file
+
+    line = log_file.readline()
+
+    # At the end of the file there is nothing left, and readline() gives
+    # back &quot;&quot;. Close it, open it again, and start from the top.
+    if line == &quot;&quot;:
+        log_file.close()
+        log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
+        row = add([rect(540, ROW - 2), pos(10, LOG_BOTTOM),
+                   color(8, 14, 10), &quot;row&quot;])
+        row.add([text(&quot;----- end of log.txt, reading it again&quot;, size=22),
+                 pos(10, 4), color(DIM)])
+        wait(ROW / SCROLL, next_line)
+        return
+
+    parts = line.strip().split(&quot;,&quot;)
+    show(parts[0], parts[1], parts[2])
+
+    # The next line once this one has moved up out of its way.
+    wait(ROW / SCROLL, next_line)
+
+
+next_line()
+
+
+# Every row moves up, and one that has gone past the top is gone.
+@onUpdate(&quot;row&quot;)
+def move_up(row):
+    row.pos.y = row.pos.y - SCROLL * dt()
+    if row.pos.y &lt; LOG_TOP - ROW:
+        row.destroy()</code></pre>
+
+<ul>
+<li><strong><code>readline()</code> reads one line, and only one.</strong> The
+file stays open, and remembers how far it has got, so the next
+<code>readline()</code> gives back the line after that. That is how the
+game can show one line now and the next a moment later.</li>
+<li><strong>At the end of the file, <code>readline()</code> gives back
+<code>""</code></strong>, an empty string, because there is nothing left.
+That's how you know the file has run out. Even a blank line in the middle of
+a file is <code>"\n"</code>, so <code>""</code> only ever means the end.</li>
+<li><strong>To start again from the top</strong>, the program closes the file
+and opens it again. A newly opened file always starts at its first line. A row
+saying so goes past first.</li>
+<li><strong>Each line is a dark strip</strong>, a <code>rect()</code>, and the
+words are its <em>children</em>, added with <code>row.add()</code>. A child's
+<code>pos()</code> is measured from its parent, and it moves when the parent
+moves, so moving the strip moves all three words.</li>
+<li><strong><code>wait(ROW / SCROLL, next_line)</code></strong> asks for the
+next line once this one has moved up out of its way. A line is 28 pixels tall
+and the log moves 40 pixels a second, so that is every 0.7 seconds.</li>
+<li><strong>The two dark bands</strong> at <code>z(5)</code> are drawn over the
+lines at the top and bottom, so the lines slide out from behind one and away
+behind the other.</li>
+</ul>
+
+<div class="callout"><p><strong>Break it.</strong> Take out the whole
+<code>if line == "":</code> part, down to its <code>return</code>. The log
+goes past as before, until about eleven seconds in, when all sixteen lines have
+been read. Then it stops with</p>
+<pre><code class="language-plaintext">IndexError: list index out of range</code></pre>
+<p>on <code>show(parts[0], parts[1], parts[2])</code>. At the end of the file
+<code>line</code> is <code>""</code>, and splitting nothing gives a list with
+one empty thing in it, <code>[""]</code>. There is no <code>parts[1]</code>.
+Reading a file one line at a time, you always have to check for the end.</p></div>
+
+<h2 id="step-4-the-password">Step 4 — the password, and clicking</h2>
+
+<p>Now somebody slips up. Somewhere in the log is a password where a name
+should be. Find it and click it.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[8, 14, 10])
+
+GREEN = rgb(90, 230, 120)
+DIM = rgb(50, 110, 65)
+
+SCROLL = 40       # how fast the log goes past, in pixels a second
+ROW = 28          # how tall one line of the log is, in pixels
+LOG_TOP = 90      # a line that goes above this has gone
+LOG_BOTTOM = 560  # ...and a new one comes in here
+
+NAMES = [&quot;ada&quot;, &quot;max&quot;, &quot;zoe&quot;, &quot;leo&quot;, &quot;mia&quot;, &quot;raj&quot;,
+         &quot;olivia&quot;, &quot;lucas&quot;, &quot;amara&quot;, &quot;kenji&quot;, &quot;sofia&quot;, &quot;mateo&quot;]
+
+# Real passwords that real people use. A lot of them are names.
+PASSWORDS = [&quot;dragon&quot;, &quot;qwerty&quot;, &quot;letmein&quot;, &quot;monkey&quot;, &quot;sunshine&quot;,
+             &quot;football&quot;, &quot;shadow&quot;, &quot;jordan&quot;, &quot;michael&quot;, &quot;jessica&quot;,
+             &quot;charlie&quot;, &quot;ashley&quot;, &quot;daniel&quot;, &quot;thomas&quot;, &quot;maggie&quot;, &quot;taylor&quot;]
+
+
+def two_digits(number):
+    if number &lt; 10:
+        return &quot;0&quot; + str(number)
+    return str(number)
+
+
+def clock(minutes):
+    # 75 minutes after midnight is 01:15. // is how many whole hours, and
+    # % is the minutes left over.
+    hours = minutes // 60 % 24
+    return two_digits(hours) + &quot;:&quot; + two_digits(minutes % 60)
+
+
+def write_files(how_many_users, how_many_lines):
+    # Pick the users. A name that is already picked is skipped, so the
+    # loop goes round until there are enough different ones.
+    users = []
+    while len(users) &lt; how_many_users:
+        name = choose(NAMES)
+        if name not in users:
+            users.append(name)
+
+    users_file = open(&quot;users.txt&quot;, &quot;w&quot;)
+    for name in users:
+        users_file.write(name + &quot;\n&quot;)
+    users_file.close()
+
+    # The line where somebody slips up. Not one of the first few, so you
+    # have read a little of the log before it comes.
+    slip = randi(4, how_many_lines - 1)
+
+    # The log: one login on each line, when, who, and whether it worked,
+    # with commas between them -- 01:07,zoe,ok
+    log_file = open(&quot;log.txt&quot;, &quot;w&quot;)
+    minutes = randi(0, 300)
+    for number in range(how_many_lines):
+        minutes = minutes + randi(1, 9)
+        when = clock(minutes)
+
+        if number == slip:
+            # A password where the name should be, which fails -- and then
+            # the same person, a moment later, getting it right.
+            victim = choose(users)
+            log_file.write(when + &quot;,&quot; + choose(PASSWORDS) + &quot;,failed\n&quot;)
+            log_file.write(when + &quot;,&quot; + victim + &quot;,ok\n&quot;)
+        else:
+            name = choose(users)
+            if chance(0.3):
+                result = &quot;failed&quot;
+            else:
+                result = &quot;ok&quot;
+            log_file.write(when + &quot;,&quot; + name + &quot;,&quot; + result + &quot;\n&quot;)
+
+    log_file.close()
+
+
+def read_users():
+    users = []
+    users_file = open(&quot;users.txt&quot;, &quot;r&quot;)
+    for line in users_file:
+        users.append(line.strip())
+    users_file.close()
+    return users
+
+
+write_files(4, 16)
+users = read_users()
+
+add([text(&quot;users.txt&quot;, size=20), pos(600, 100), color(DIM)])
+y = 130
+for name in users:
+    add([text(name, size=26), pos(610, y), color(GREEN)])
+    y = y + 32
+
+add([text(&quot;log.txt&quot;, size=20), pos(20, 72), color(DIM), z(10)])
+
+# Two dark bands over the top and bottom of the log, so lines slide in
+# and out of sight behind them.
+add([rect(800, LOG_TOP), pos(0, 0), color(8, 14, 10), z(5)])
+add([rect(560, 600 - LOG_BOTTOM - ROW), pos(0, LOG_BOTTOM + ROW),
+     color(8, 14, 10), z(5)])
+
+
+message = add([text(&quot;&quot;, size=40), pos(280, 300), anchor(&quot;center&quot;),
+               color(GREEN), z(20)])
+
+playing = True
+
+
+def show(when, name, result):
+    # One line of the log: a dark strip at the bottom, which moves up.
+    # area() lets it know when the mouse is over it, and the dictionary
+    # keeps the name it is showing, to check against the users when it is
+    # clicked. The words are its children, so they move with it.
+    row = add([rect(540, ROW - 2), pos(10, LOG_BOTTOM), color(8, 14, 10),
+               area(), {&quot;name&quot;: name}, &quot;row&quot;, &quot;line&quot;])
+    row.add([text(when, size=22), pos(10, 4), color(DIM)])
+    row.add([text(name, size=22), pos(100, 4), color(GREEN)])
+    if result == &quot;failed&quot;:
+        row.add([text(&quot;FAILED&quot;, size=22), pos(300, 4), color(RED)])
+    else:
+        row.add([text(&quot;ok&quot;, size=22), pos(300, 4), color(GREEN)])
+
+
+# The log is read one line at a time, with readline(). The file stays
+# open in between, and remembers where it got to, so each readline()
+# hands over the line after the last one.
+log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
+
+
+def next_line():
+    global log_file
+
+    if not playing:
+        return
+
+    line = log_file.readline()
+
+    # At the end of the file there is nothing left, and readline() gives
+    # back &quot;&quot;. Close it, open it again, and start from the top.
+    if line == &quot;&quot;:
+        log_file.close()
+        log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
+        row = add([rect(540, ROW - 2), pos(10, LOG_BOTTOM),
+                   color(8, 14, 10), &quot;row&quot;])
+        row.add([text(&quot;----- end of log.txt, reading it again&quot;, size=22),
+                 pos(10, 4), color(DIM)])
+        wait(ROW / SCROLL, next_line)
+        return
+
+    parts = line.strip().split(&quot;,&quot;)
+    show(parts[0], parts[1], parts[2])
+
+    # The next line once this one has moved up out of its way.
+    wait(ROW / SCROLL, next_line)
+
+
+next_line()
+
+
+# Every row moves up, and one that has gone past the top is gone.
+@onUpdate(&quot;row&quot;)
+def move_up(row):
+    if not playing:
+        return
+    row.pos.y = row.pos.y - SCROLL * dt()
+    if row.pos.y &lt; LOG_TOP - ROW:
+        row.destroy()
+
+
+# A line you can click lights up while the mouse is over it.
+@onUpdate(&quot;line&quot;)
+def light_up(row):
+    if row.isHovering():
+        row.color = rgb(25, 50, 32)
+    else:
+        row.color = rgb(8, 14, 10)
+
+
+@onClick
+def click():
+    if not playing:
+        return
+    for row in get(&quot;line&quot;):
+        if row.isHovering():
+            check(row)
+            return
+
+
+def check(row):
+    global playing
+
+    # A name on the list is only a name. A name that is NOT on the list
+    # is somebody&#x27;s password.
+    if row.name in users:
+        shake(6)
+    else:
+        playing = False
+        log_file.close()
+        destroyAll(&quot;row&quot;)
+        message.text = &quot;ACCESS GRANTED&quot;
+        add([text(&quot;the password was &quot; + row.name, size=26),
+             pos(280, 350), anchor(&quot;center&quot;), color(GREEN), z(20)])</code></pre>
+
+<ul>
+<li><strong>The slip</strong> is a line picked at random, but not one of the
+first four, so you have read some of the log before it comes. There the log
+gets two lines instead of one: a password from <code>PASSWORDS</code> that
+FAILED, then the person who typed it logging in properly a moment later.</li>
+<li><strong>Look at <code>PASSWORDS</code>.</strong> They are real passwords
+that thousands of real people use, which is why they are the first ones a
+hacker tries. A lot of them are names, so <code>jordan</code> in the log looks
+just like a user. The only way to tell is to check the list.</li>
+<li><strong>Each row has <code>area()</code></strong>, so it knows when the
+mouse is over it, and <code>{"name": name}</code>, so it remembers the name it
+is showing as <code>row.name</code>. It has two tags. <code>"row"</code>
+is every row, so they all move up. <code>"line"</code> is only the rows you
+can click, so the <em>end of log.txt</em> row moves with them but can't be
+clicked.</li>
+<li><strong><code>check()</code> is the whole game in one
+<code>if</code>.</strong> <code>row.name in users</code> asks whether the name
+is on the list read from <code>users.txt</code>. If it is, it is only a
+name. If it isn't, it is somebody's password.</li>
+<li><strong><code>playing</code></strong> stops everything once you are in:
+no new lines, nothing moves, and no more clicks count.</li>
+</ul>
+
+<div class="callout"><p><strong>Break it.</strong> In
+<code>read_users</code>, change <code>users.append(line.strip())</code> to
+<code>users.append(line)</code>. The users down the right look exactly the
+same. Now click any line at all: ACCESS GRANTED, every time, and the
+password was <code>olivia</code>, or whoever you clicked.</p>
+<p>Without <code>strip()</code> the list is <code>["olivia\n", "max\n", ...]</code>.
+A <code>"\n"</code> doesn't show on the screen, so the names look right, but
+<code>"olivia"</code> is not the same string as <code>"olivia\n"</code>. No
+name in the log is on the list any more, so every name is a password. This is
+the most common mistake there is with files, and it never makes an error
+message.</p></div>
+
+<h2 id="step-5-the-trace">Step 5 — the trace</h2>
+
+<p>Now there is a clock you can see. The trace rises all the time, a wrong
+click makes it jump, and at 100% you are caught. The whole thing goes into a
+scene, so getting in, or getting caught, can start a new server.</p>
+
+<pre><code class="language-python">from kaypy import *
+
+kaypy(width=800, height=600, background=[8, 14, 10])
+
+NAMES = [&quot;ada&quot;, &quot;max&quot;, &quot;zoe&quot;, &quot;leo&quot;, &quot;mia&quot;, &quot;raj&quot;,
+         &quot;olivia&quot;, &quot;lucas&quot;, &quot;amara&quot;, &quot;kenji&quot;, &quot;sofia&quot;, &quot;mateo&quot;]
+
+PASSWORDS = [&quot;dragon&quot;, &quot;qwerty&quot;, &quot;letmein&quot;, &quot;monkey&quot;, &quot;sunshine&quot;,
+             &quot;football&quot;, &quot;shadow&quot;, &quot;jordan&quot;, &quot;michael&quot;, &quot;jessica&quot;,
+             &quot;charlie&quot;, &quot;ashley&quot;, &quot;daniel&quot;, &quot;thomas&quot;, &quot;maggie&quot;, &quot;taylor&quot;]
+
+SCROLL = 40        # how fast the log goes past, in pixels a second
+TRACE_SPEED = 3    # how fast the trace rises, in % a second
+WRONG_CLICK = 15   # how much the trace jumps when you click a wrong line
+
+ROW = 28           # how tall one line of the log is, in pixels
+LOG_TOP = 90       # a line that goes above this has gone
+LOG_BOTTOM = 560   # ...and a new one comes in here
+
+GREEN = rgb(90, 230, 120)
+DIM = rgb(50, 110, 65)
+
+
+def two_digits(number):
+    if number &lt; 10:
+        return &quot;0&quot; + str(number)
+    return str(number)
+
+
+def clock(minutes):
+    # 75 minutes after midnight is 01:15. // is how many whole hours, and
+    # % is the minutes left over.
+    hours = minutes // 60 % 24
+    return two_digits(hours) + &quot;:&quot; + two_digits(minutes % 60)
+
+
+def write_files(how_many_users, how_many_lines):
+    # Pick the users. A name that is already picked is skipped, so the
+    # loop goes round until there are enough different ones.
+    users = []
+    while len(users) &lt; how_many_users:
+        name = choose(NAMES)
+        if name not in users:
+            users.append(name)
+
+    users_file = open(&quot;users.txt&quot;, &quot;w&quot;)
+    for name in users:
+        users_file.write(name + &quot;\n&quot;)
+    users_file.close()
+
+    # The line where somebody slips up. Not one of the first few, so you
+    # have read a little of the log before it comes.
+    slip = randi(4, how_many_lines - 1)
+
+    log_file = open(&quot;log.txt&quot;, &quot;w&quot;)
+    minutes = randi(0, 300)
+    for number in range(how_many_lines):
+        minutes = minutes + randi(1, 9)
+        when = clock(minutes)
+
+        if number == slip:
+            # A password where the name should be, which fails -- and then
+            # the same person, a moment later, getting it right.
+            victim = choose(users)
+            log_file.write(when + &quot;,&quot; + choose(PASSWORDS) + &quot;,failed\n&quot;)
+            log_file.write(when + &quot;,&quot; + victim + &quot;,ok\n&quot;)
+        else:
+            name = choose(users)
+            if chance(0.3):
+                result = &quot;failed&quot;
+            else:
+                result = &quot;ok&quot;
+            log_file.write(when + &quot;,&quot; + name + &quot;,&quot; + result + &quot;\n&quot;)
+
+    log_file.close()
+
+
+def read_users():
+    users = []
+    users_file = open(&quot;users.txt&quot;, &quot;r&quot;)
+    for line in users_file:
+        users.append(line.strip())
+    users_file.close()
+    return users
+
+
+log_file = None
+
+
+users = []
+trace = 0
+playing = True
+over = False
+
+
+# A scene, so that the whole game can start again with go(&quot;server&quot;): a
+# new server, with new files.
+@scene(&quot;server&quot;)
+def server():
+    global users, log_file, trace, playing, over
+
+    write_files(4, 20)
+    users = read_users()
+    log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
+
+    trace = 0
+    playing = True
+    over = False
+
+    # ------------------------------------------------------- the screen
+
+    add([text(&quot;TRACE&quot;, size=20), pos(470, 28), color(GREEN), z(10)])
+    add([rect(200, 18), pos(540, 28), color(20, 40, 26), z(10)])
+    trace_bar = add([rect(1, 18), pos(540, 28), color(GREEN), z(11)])
+    trace_label = add([text(&quot;0%&quot;, size=20), pos(750, 28), color(GREEN),
+                       z(10)])
+
+    # The users, read from users.txt, down the right-hand side.
+    add([text(&quot;users.txt&quot;, size=20), pos(600, 100), color(DIM), z(10)])
+    y = 130
+    for name in users:
+        add([text(name, size=26), pos(610, y), color(GREEN), z(10)])
+        y = y + 32
+
+    add([text(&quot;log.txt&quot;, size=20), pos(20, 72), color(DIM), z(10)])
+
+    # Two dark bands over the top and bottom of the log, so lines slide
+    # in and out of sight behind them rather than over the words above.
+    add([rect(800, LOG_TOP), pos(0, 0), color(8, 14, 10), z(5)])
+    add([rect(560, 600 - LOG_BOTTOM - ROW), pos(0, LOG_BOTTOM + ROW),
+         color(8, 14, 10), z(5)])
+
+    message = add([text(&quot;&quot;, size=40), pos(280, 300), anchor(&quot;center&quot;),
+                   color(GREEN), z(20)])
+
+    # ----------------------------------------------- the log going past
+
+    def show(when, name, result):
+        # One line of the log: a dark strip at the bottom, which moves up.
+        # area() lets it know when the mouse is over it, and the dictionary
+        # keeps the name it is showing, to check against the users when it
+        # is clicked. The words are its children, so they move with it.
+        row = add([rect(540, ROW - 2), pos(10, LOG_BOTTOM), color(8, 14, 10),
+                   area(), {&quot;name&quot;: name}, &quot;row&quot;, &quot;line&quot;])
+        row.add([text(when, size=22), pos(10, 4), color(DIM)])
+        row.add([text(name, size=22), pos(100, 4), color(GREEN)])
+        if result == &quot;failed&quot;:
+            row.add([text(&quot;FAILED&quot;, size=22), pos(300, 4), color(RED)])
+        else:
+            row.add([text(&quot;ok&quot;, size=22), pos(300, 4), color(GREEN)])
+
+    def next_line():
+        global log_file
+
+        if not playing:
+            return
+
+        line = log_file.readline()
+
+        # &quot;&quot; means the end of the file. Close it, open it again, and start
+        # from the top: the password comes round again -- but the trace
+        # has not stopped.
+        if line == &quot;&quot;:
+            log_file.close()
+            log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
+
+            # A row of its own to say so. It has no &quot;line&quot; tag, so it
+            # moves up with the rest but clicking it does nothing.
+            row = add([rect(540, ROW - 2), pos(10, LOG_BOTTOM),
+                       color(8, 14, 10), &quot;row&quot;])
+            row.add([text(&quot;----- end of log.txt, reading it again&quot;,
+                          size=22), pos(10, 4), color(DIM)])
+            wait(ROW / SCROLL, next_line)
+            return
+
+        # &quot;01:07,zoe,ok\n&quot; becomes [&quot;01:07&quot;, &quot;zoe&quot;, &quot;ok&quot;]: strip() takes
+        # the &quot;\n&quot; off the end, and split(&quot;,&quot;) cuts what is left at
+        # every comma.
+        parts = line.strip().split(&quot;,&quot;)
+        show(parts[0], parts[1], parts[2])
+
+        # The next line once this one has moved up out of its way.
+        wait(ROW / SCROLL, next_line)
+
+    # Every row moves up, and one that has gone past the top is gone.
+    @onUpdate(&quot;row&quot;)
+    def move_up(row):
+        if not playing:
+            return
+        row.pos.y = row.pos.y - SCROLL * dt()
+        if row.pos.y &lt; LOG_TOP - ROW:
+            row.destroy()
+
+    # A line you can click lights up while the mouse is over it.
+    @onUpdate(&quot;line&quot;)
+    def light_up(row):
+        if row.isHovering():
+            row.color = rgb(25, 50, 32)
+        else:
+            row.color = rgb(8, 14, 10)
+
+    # ------------------------------------------------------------ clicking
+    #
+    # onClick runs on every click, wherever it is, and a tap on a phone
+    # counts as a click. isHovering() asks whether the mouse is over a
+    # line, which needs area() on it.
+
+    @onClick
+    def click():
+        if not playing:
+            return
+        for row in get(&quot;line&quot;):
+            if row.isHovering():
+                check(row)
+                return
+
+    def check(row):
+        global trace
+
+        # A name on the list is only a name. A name that is NOT on the
+        # list is somebody&#x27;s password.
+        if row.name in users:
+            trace = trace + WRONG_CLICK
+            shake(6)
+            add([text(&quot;+&quot; + str(WRONG_CLICK) + &quot;% trace&quot;, size=26),
+                 pos(mousePos().x, mousePos().y - 30), anchor(&quot;center&quot;),
+                 color(RED), opacity(1), lifespan(0.6, fade=0.3), z(20)])
+        else:
+            granted(row.name)
+
+    # --------------------------------------------------------- the trace
+
+    @onUpdate
+    def tracing():
+        global trace
+
+        if not playing:
+            return
+        trace = trace + TRACE_SPEED * dt()
+        if trace &gt;= 100:
+            trace = 100
+            caught()
+        trace_bar.width = trace * 2
+        trace_label.text = str(int(trace)) + &quot;%&quot;
+
+    # --------------------------------------------------- in, or caught
+
+    def granted(password):
+        global playing
+
+        playing = False
+        log_file.close()
+        destroyAll(&quot;row&quot;)
+        message.text = &quot;ACCESS GRANTED&quot;
+        add([text(&quot;the password was &quot; + password, size=26),
+             pos(280, 350), anchor(&quot;center&quot;), color(GREEN), z(20)])
+        wait(2, next_server)
+
+    def next_server():
+        go(&quot;server&quot;)
+
+    def caught():
+        global playing
+
+        playing = False
+        log_file.close()
+        shake(12)
+        destroyAll(&quot;row&quot;)
+
+        message.text = &quot;TRACED&quot;
+        message.color = RED
+
+        # A second before you can start again, so a click meant for the
+        # log does not skip past what happened.
+        wait(1, ready_again)
+
+    def ready_again():
+        global over
+
+        over = True
+        add([text(&quot;press SPACE or click to start again&quot;, size=24),
+             pos(280, 420), anchor(&quot;center&quot;), color(GREEN), z(20)])
+
+    def again():
+        if over:
+            go(&quot;server&quot;)
+
+    onKeyPress(&quot;space&quot;, again)
+    onClick(again)
+
+    # The log starts.
+    next_line()
+
+
+go(&quot;server&quot;)</code></pre>
+
+<ul>
+<li><strong>Everything is inside <code>@scene("server")</code></strong>, so
+<code>go("server")</code> starts it again from the top: new files, an empty
+log, the trace back at zero. After ACCESS GRANTED, <code>wait(2,
+next_server)</code> does that two seconds later.</li>
+<li><strong>The trace goes up in <code>tracing</code></strong>, every frame, by
+<code>TRACE_SPEED * dt()</code>. That's 3% a second however fast the computer
+is. The bar is 200 pixels wide when it is full, so its width is
+<code>trace * 2</code>. <code>int()</code> cuts the decimals off for the
+label.</li>
+<li><strong>A wrong click</strong> adds <code>WRONG_CLICK</code> to the trace,
+shakes the screen and shows how much it cost, just where you clicked.</li>
+<li><strong><code>caught()</code></strong> takes the log away, shows TRACED,
+and waits a second before you can start again. That way a click meant for the
+log doesn't start a new game before you have seen what happened.</li>
+<li><strong><code>global</code></strong>: <code>trace</code>,
+<code>playing</code> and the others are made at the top of the program and
+changed inside functions, so every function that changes one says
+<code>global</code> first.</li>
+</ul>
+
+<div class="callout"><p><strong>Break it.</strong> Take out the line
+<code>trace = 0</code> inside the scene. There is no error. The first server
+is the same, but the second one starts with the trace where the first left
+off. In one run it got in at 34%, so server two started at 34%, and server
+three at 67%, and the trace caught it there.</p>
+<p><code>trace</code> lives outside the scene, so going to the scene again
+doesn't reset it. Anything that has to start again with every server has to
+be set again at the top of the scene.</p></div>
+
+<h2 id="step-6-the-whole-game">Step 6 — the whole game</h2>
+
+<p>The servers get harder, there are sounds, the best score is remembered, and
+the first time you play, a message says what to do. This is the game you
+played, line for line.</p>
+
+<ul>
+<li><strong>The scene is given the server's number</strong>:
+<code>def server(number)</code>, and <code>go("server", number + 1)</code>
+goes to the next one. Every setting has a <code>_START</code> for server 1
+and a <code>_MORE</code> for each one after. So server 3 has
+<code>USERS_START + 2 * USERS_MORE</code> users, which is 6, a longer
+log, and a faster one.</li>
+<li><strong>There are twelve names</strong>, and one more user on every server,
+so server 10 would want thirteen different ones. The <code>while</code> loop in
+<code>write_files</code> could never find them. It would go round for ever,
+and the game would freeze. So the scene stops at <code>len(NAMES)</code>.</li>
+<li><strong><code>say()</code></strong> puts the instructions up the first time
+and pauses the game until you close them. <code>told</code> remembers that it
+has been said, so it isn't said again every server.</li>
+<li><strong>The best score</strong> is the most servers you got into.
+<code>setData</code> saves it and <code>getData</code> reads it back, even
+after the page is closed.</li>
+</ul>
+
+<pre><code class="language-python">&quot;&quot;&quot;Log Hacker -- somewhere in the server&#x27;s log is a password. Find it.
+
+    click the line that gives a password away
+
+You have broken into a server and you are reading its log: one line for
+every time somebody tried to log in, saying when, who, and whether it
+worked. People make mistakes. Now and then somebody types their PASSWORD
+into the box where their NAME should go, and the server writes it down in
+the log, in plain sight.
+
+The people who really have accounts are listed on the right. A failed
+login by a name that is NOT on that list is not a name at all -- it is
+somebody&#x27;s password. Click it before the trace reaches 100% and you are
+in. Every server is faster than the last.
+
+HOW THIS FILE IS PUT TOGETHER
+
+    1. the window and the sounds
+    2. the names and the passwords
+    3. the settings
+    4. writing the server&#x27;s files
+    5. reading them back
+    6. the game scene: the log going past, clicking, the trace
+    7. start the game
+
+This is the game for files. A real hacker would find the files already
+on the server. This game has to make its own first, with open(&quot;users.txt&quot;,
+&quot;w&quot;), and then it reads them back with open(&quot;users.txt&quot;, &quot;r&quot;) exactly as
+it would read any file. It makes new ones for every server, so the log is
+never the same twice.
+&quot;&quot;&quot;
+
+from kaypy import *
+
+# ----------------------------------------------------------------- 1. setup
+
+kaypy(width=800, height=600, background=[8, 14, 10])
+
+loadSound(&quot;blip&quot;, &quot;sounds/small_beep.wav&quot;)
+loadSound(&quot;granted&quot;, &quot;sounds/rising_beep.wav&quot;)
+loadSound(&quot;wrong&quot;, &quot;sounds/thump.wav&quot;)
+loadSound(&quot;caught&quot;, &quot;sounds/small_boom.wav&quot;)
+
+
+# ------------------------------------------------- 2. names and passwords
+#
+# The users on each server are picked from NAMES. The passwords somebody
+# types by mistake are picked from PASSWORDS -- every one of them a real
+# password that thousands of real people use, which is exactly why they
+# are easy to guess. A lot of them are names. So a password in the log
+# can look just like a user: the only way to tell is to check the list.
+
+NAMES = [&quot;ada&quot;, &quot;max&quot;, &quot;zoe&quot;, &quot;leo&quot;, &quot;mia&quot;, &quot;raj&quot;,
+         &quot;olivia&quot;, &quot;lucas&quot;, &quot;amara&quot;, &quot;kenji&quot;, &quot;sofia&quot;, &quot;mateo&quot;]
+
+PASSWORDS = [&quot;dragon&quot;, &quot;qwerty&quot;, &quot;letmein&quot;, &quot;monkey&quot;, &quot;sunshine&quot;,
+             &quot;football&quot;, &quot;shadow&quot;, &quot;jordan&quot;, &quot;michael&quot;, &quot;jessica&quot;,
+             &quot;charlie&quot;, &quot;ashley&quot;, &quot;daniel&quot;, &quot;thomas&quot;, &quot;maggie&quot;, &quot;taylor&quot;]
+
+
+# -------------------------------------------------------------- 3. settings
+#
+# Everything else you would want to change is here. Change one at a time
+# and play it.
+
+USERS_START = 4        # how many users the first server has
+LINES_START = 20       # how many lines are in its log
+SCROLL_START = 40      # how fast its log goes past, in pixels a second
+TRACE_START = 3        # how fast the trace rises, in % a second
+
+# ...and how much more each server after it has.
+USERS_MORE = 1
+LINES_MORE = 6
+SCROLL_MORE = 12
+TRACE_MORE = 0.5
+
+WRONG_CLICK = 15       # how much the trace jumps when you click a wrong line
+FAIL_CHANCE = 0.3      # how often an ordinary login fails: 0.3 is 3 in 10
+
+ROW = 28               # how tall one line of the log is, in pixels
+LOG_TOP = 90           # a line that goes above this has gone
+LOG_BOTTOM = 560       # ...and a new one comes in here
+
+GREEN = rgb(90, 230, 120)
+DIM = rgb(50, 110, 65)
+
+# The name the best score is saved under. Every game on a website shares
+# the same storage, so the game&#x27;s own name goes in it.
+BEST_KEY = &quot;log_hacker_best&quot;
+
+
+# ------------------------------------------------ 4. writing the server&#x27;s files
+#
+# Two files. users.txt has one name on each line:
+#
+#     ada
+#     zoe
+#
+# and log.txt has one login on each line, its three parts with commas
+# between them -- when, who, and whether it worked:
+#
+#     01:07,zoe,ok
+#     01:12,ada,failed
+#
+# &quot;\n&quot; is the end of a line. write() does not add one for you, so without
+# it every name would end up on the same line: adazoemaxsam.
+
+def two_digits(number):
+    if number &lt; 10:
+        return &quot;0&quot; + str(number)
+    return str(number)
+
+
+def clock(minutes):
+    # 75 minutes after midnight is 01:15. // is how many whole hours, and
+    # % is the minutes left over.
+    hours = minutes // 60 % 24
+    return two_digits(hours) + &quot;:&quot; + two_digits(minutes % 60)
+
+
+def write_files(how_many_users, how_many_lines):
+    # Pick the users. A name that is already picked is skipped, so the
+    # loop goes round until there are enough different ones.
+    users = []
+    while len(users) &lt; how_many_users:
+        name = choose(NAMES)
+        if name not in users:
+            users.append(name)
+
+    users_file = open(&quot;users.txt&quot;, &quot;w&quot;)
+    for name in users:
+        users_file.write(name + &quot;\n&quot;)
+    users_file.close()
+
+    # The line where somebody slips up. Not one of the first few, so you
+    # have read a little of the log before it comes.
+    slip = randi(4, how_many_lines - 1)
+
+    log_file = open(&quot;log.txt&quot;, &quot;w&quot;)
+    minutes = randi(0, 300)
+    for number in range(how_many_lines):
+        minutes = minutes + randi(1, 9)
+        when = clock(minutes)
+
+        if number == slip:
+            # A password where the name should be, which fails -- and then
+            # the same person, a moment later, getting it right.
+            victim = choose(users)
+            log_file.write(when + &quot;,&quot; + choose(PASSWORDS) + &quot;,failed\n&quot;)
+            log_file.write(when + &quot;,&quot; + victim + &quot;,ok\n&quot;)
+        else:
+            name = choose(users)
+            if chance(FAIL_CHANCE):
+                result = &quot;failed&quot;
+            else:
+                result = &quot;ok&quot;
+            log_file.write(when + &quot;,&quot; + name + &quot;,&quot; + result + &quot;\n&quot;)
+
+    log_file.close()
+
+
+# --------------------------------------------------- 5. reading them back
+#
+# users.txt is read all at once, with a for loop: each time round, line is
+# the next line of the file. Every line ends in its &quot;\n&quot;, and strip()
+# takes it off -- without that, &quot;ada\n&quot; is not &quot;ada&quot;, and nobody would
+# ever be on the list.
+
+def read_users():
+    users = []
+    users_file = open(&quot;users.txt&quot;, &quot;r&quot;)
+    for line in users_file:
+        users.append(line.strip())
+    users_file.close()
+    return users
+
+
+# log.txt is read one line at a time, while you play, with readline().
+# The file stays open in between, and remembers where it got to, so each
+# readline() hands over the line after the last one. At the end of the
+# file there is nothing left to hand over, and readline() gives back &quot;&quot;.
+
+log_file = None
+
+
+# ------------------------------------------------------- 6. the game scene
+#
+# These change while you play. A function that CHANGES one has to say
+# `global` first, which means &quot;the one up here, not a new one of my own&quot;.
+
+users = []
+trace = 0
+playing = True
+over = False
+told = False
+
+
+@scene(&quot;server&quot;)
+def server(number):
+    global users, log_file, trace, playing, over, told
+
+    # A new server: its own files, written and then read.
+    #
+    # There are twelve names. Ask write_files for thirteen different
+    # ones and its while loop could never find them: it would go round
+    # for ever, and the game would freeze. So it stops at twelve.
+    how_many_users = USERS_START + (number - 1) * USERS_MORE
+    if how_many_users &gt; len(NAMES):
+        how_many_users = len(NAMES)
+    write_files(how_many_users, LINES_START + (number - 1) * LINES_MORE)
+    users = read_users()
+    log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
+
+    scroll = SCROLL_START + (number - 1) * SCROLL_MORE
+    trace_speed = TRACE_START + (number - 1) * TRACE_MORE
+
+    trace = 0
+    playing = True
+    over = False
+    best = getData(BEST_KEY, 0)
+
+    # ------------------------------------------------------- the screen
+
+    add([text(&quot;SERVER &quot; + str(number), size=28), pos(20, 20),
+         color(GREEN), z(10)])
+    best_label = add([text(&quot;best &quot; + str(best), size=18), pos(20, 52),
+                      color(DIM), z(10)])
+
+    add([text(&quot;TRACE&quot;, size=20), pos(470, 28), color(GREEN), z(10)])
+    add([rect(200, 18), pos(540, 28), color(20, 40, 26), z(10)])
+    trace_bar = add([rect(1, 18), pos(540, 28), color(GREEN), z(11)])
+    trace_label = add([text(&quot;0%&quot;, size=20), pos(750, 28), color(GREEN),
+                       z(10)])
+
+    # The users, read from users.txt, down the right-hand side.
+    add([text(&quot;users.txt&quot;, size=20), pos(600, 100), color(DIM), z(10)])
+    y = 130
+    for name in users:
+        add([text(name, size=26), pos(610, y), color(GREEN), z(10)])
+        y = y + 32
+
+    add([text(&quot;log.txt&quot;, size=20), pos(20, 72), color(DIM), z(10)])
+
+    # Two dark bands over the top and bottom of the log, so lines slide
+    # in and out of sight behind them rather than over the words above.
+    add([rect(800, LOG_TOP), pos(0, 0), color(8, 14, 10), z(5)])
+    add([rect(560, 600 - LOG_BOTTOM - ROW), pos(0, LOG_BOTTOM + ROW),
+         color(8, 14, 10), z(5)])
+
+    message = add([text(&quot;&quot;, size=40), pos(280, 300), anchor(&quot;center&quot;),
+                   color(GREEN), z(20)])
+
+    # ----------------------------------------------- the log going past
+
+    def show(when, name, result):
+        # One line of the log: a dark strip at the bottom, which moves up.
+        # area() lets it know when the mouse is over it, and the dictionary
+        # keeps the name it is showing, to check against the users when it
+        # is clicked. The words are its children, so they move with it.
+        row = add([rect(540, ROW - 2), pos(10, LOG_BOTTOM), color(8, 14, 10),
+                   area(), {&quot;name&quot;: name}, &quot;row&quot;, &quot;line&quot;])
+        row.add([text(when, size=22), pos(10, 4), color(DIM)])
+        row.add([text(name, size=22), pos(100, 4), color(GREEN)])
+        if result == &quot;failed&quot;:
+            row.add([text(&quot;FAILED&quot;, size=22), pos(300, 4), color(RED)])
+        else:
+            row.add([text(&quot;ok&quot;, size=22), pos(300, 4), color(GREEN)])
+
+    def next_line():
+        global log_file
+
+        if not playing:
+            return
+
+        line = log_file.readline()
+
+        # &quot;&quot; means the end of the file. Close it, open it again, and start
+        # from the top: the password comes round again -- but the trace
+        # has not stopped.
+        if line == &quot;&quot;:
+            log_file.close()
+            log_file = open(&quot;log.txt&quot;, &quot;r&quot;)
+
+            # A row of its own to say so. It has no &quot;line&quot; tag, so it
+            # moves up with the rest but clicking it does nothing.
+            row = add([rect(540, ROW - 2), pos(10, LOG_BOTTOM),
+                       color(8, 14, 10), &quot;row&quot;])
+            row.add([text(&quot;----- end of log.txt, reading it again&quot;,
+                          size=22), pos(10, 4), color(DIM)])
+            wait(ROW / scroll, next_line)
+            return
+
+        # &quot;01:07,zoe,ok\n&quot; becomes [&quot;01:07&quot;, &quot;zoe&quot;, &quot;ok&quot;]: strip() takes
+        # the &quot;\n&quot; off the end, and split(&quot;,&quot;) cuts what is left at
+        # every comma.
+        parts = line.strip().split(&quot;,&quot;)
+        show(parts[0], parts[1], parts[2])
+        play(&quot;blip&quot;, volume=0.2)
+
+        # The next line once this one has moved up out of its way.
+        wait(ROW / scroll, next_line)
+
+    # Every row moves up, and one that has gone past the top is gone.
+    @onUpdate(&quot;row&quot;)
+    def move_up(row):
+        if not playing:
+            return
+        row.pos.y = row.pos.y - scroll * dt()
+        if row.pos.y &lt; LOG_TOP - ROW:
+            row.destroy()
+
+    # A line you can click lights up while the mouse is over it.
+    @onUpdate(&quot;line&quot;)
+    def light_up(row):
+        if row.isHovering():
+            row.color = rgb(25, 50, 32)
+        else:
+            row.color = rgb(8, 14, 10)
+
+    # ------------------------------------------------------------ clicking
+    #
+    # onClick runs on every click, wherever it is, and a tap on a phone
+    # counts as a click. isHovering() asks whether the mouse is over a
+    # line, which needs area() on it.
+
+    @onClick
+    def click():
+        if not playing:
+            return
+        for row in get(&quot;line&quot;):
+            if row.isHovering():
+                check(row)
+                return
+
+    def check(row):
+        global trace
+
+        # A name on the list is only a name. A name that is NOT on the
+        # list is somebody&#x27;s password.
+        if row.name in users:
+            trace = trace + WRONG_CLICK
+            play(&quot;wrong&quot;)
+            shake(6)
+            add([text(&quot;+&quot; + str(WRONG_CLICK) + &quot;% trace&quot;, size=26),
+                 pos(mousePos().x, mousePos().y - 30), anchor(&quot;center&quot;),
+                 color(RED), opacity(1), lifespan(0.6, fade=0.3), z(20)])
+        else:
+            granted(row.name)
+
+    # --------------------------------------------------------- the trace
+
+    @onUpdate
+    def tracing():
+        global trace
+
+        if not playing:
+            return
+        trace = trace + trace_speed * dt()
+        if trace &gt;= 100:
+            trace = 100
+            caught()
+        trace_bar.width = trace * 2
+        trace_label.text = str(int(trace)) + &quot;%&quot;
+
+    # --------------------------------------------------- in, or caught
+
+    def granted(password):
+        global playing
+
+        playing = False
+        log_file.close()
+        play(&quot;granted&quot;)
+        destroyAll(&quot;row&quot;)
+        message.text = &quot;ACCESS GRANTED&quot;
+        add([text(&quot;the password was &quot; + password, size=26),
+             pos(280, 350), anchor(&quot;center&quot;), color(GREEN), z(20)])
+        wait(2, next_server)
+
+    def next_server():
+        go(&quot;server&quot;, number + 1)
+
+    def caught():
+        global playing
+
+        playing = False
+        log_file.close()
+        play(&quot;caught&quot;)
+        shake(12)
+        destroyAll(&quot;row&quot;)
+
+        # The servers you got into is one less than the one you were
+        # caught on.
+        hacked = number - 1
+        if hacked &gt; best:
+            setData(BEST_KEY, hacked)
+            best_label.text = &quot;best &quot; + str(hacked)
+
+        message.text = &quot;TRACED&quot;
+        message.color = RED
+        add([text(&quot;servers hacked: &quot; + str(hacked), size=28),
+             pos(280, 360), anchor(&quot;center&quot;), color(GREEN), z(20)])
+
+        # A second before you can start again, so a click meant for the
+        # log does not skip past what happened.
+        wait(1, ready_again)
+
+    def ready_again():
+        global over
+
+        over = True
+        add([text(&quot;press SPACE or click to start again&quot;, size=24),
+             pos(280, 420), anchor(&quot;center&quot;), color(GREEN), z(20)])
+
+    def again():
+        if over:
+            go(&quot;server&quot;, 1)
+
+    onKeyPress(&quot;space&quot;, again)
+    onClick(again)
+
+    # The log starts. The first time, how to play comes up first.
+    if not told:
+        told = True
+        say(&quot;A password is hiding in this log. Somebody typed it where &quot;
+            &quot;their name should go. Click the FAILED line whose name is &quot;
+            &quot;not in users.txt -- before the trace reaches 100%.&quot;)
+    next_line()
+
+
+# ------------------------------------------------------- 7. start the game
+
+go(&quot;server&quot;, 1)</code></pre>
+
+<h2 id="make-it-yours">Make it yours</h2>
+
+<p><a href="../../play/?game=log_hacker">Open the whole game in the playground →</a>
+It goes straight into the editor, ready to change and run.</p>
+
+<ul>
+<li><strong>Your own names.</strong> Put your class in <code>NAMES</code>. Use
+more than twelve and the cap in the scene uses all of them, because it is
+<code>len(NAMES)</code> and not 12.</li>
+<li><strong>Your own passwords.</strong> Look up a list of the most common
+passwords, and you will see why the ones in <code>PASSWORDS</code> are
+there. Add the names on it that you think look most like users.</li>
+<li><strong>Keep what you found.</strong> Open a file with
+<code>"a"</code> instead of <code>"w"</code> and what you write goes on the
+end, instead of emptying it first. Put this in <code>granted</code>:
+<pre><code class="language-python">        found_file = open(&quot;found.txt&quot;, &quot;a&quot;)
+        found_file.write(password + &quot;\n&quot;)
+        found_file.close()</code></pre>
+and every password you find is added to <code>found.txt</code>, one to a
+line. Then read it back in <code>caught</code> and show them all.</li>
+<li><strong>Easier, or harder.</strong> <code>SCROLL_MORE = 6</code> keeps
+the log slower for longer. <code>FAIL_CHANCE = 0.6</code> fills it with
+FAILED lines, so the slip doesn't stand out.</li>
+</ul>
+
+      </article>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="container-xl">
+    <p>
+      <a href="https://discord.gg/sVXnsDZNm">Discord</a> ·
+      <a href="https://github.com/sfranz2422/kaypy">GitHub</a> ·
+      <a href="https://pypi.org/project/kaypy/">PyPI</a>
+    </p>
+    <p class="dim">
+      MIT licensed · Built on <a href="https://pyga.me">pygame-ce</a> ·
+      Runs in a browser on <a href="https://pyodide.org">Pyodide</a> ·
+      Sprites from <a href="https://github.com/kaplayjs/crew">KAPLAY's crew</a> (MIT)
+      and <a href="https://0x72.itch.io/dungeontileset-ii">0x72's DungeonTileset II</a> (CC0)
+    </p>
+    <p class="dim">
+      KayPy is an independent project, not affiliated with or endorsed by the
+      KAPLAY team.
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js"></script>
+<script src="../../static/site.js"></script>
+
+</body>
+</html>
